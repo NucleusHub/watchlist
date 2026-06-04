@@ -110,9 +110,9 @@ async function confirmDelete() {
         </svg>
       </div>
 
-      <!-- Watch checkbox — hover to reveal, always shown when completed -->
+      <!-- Watch checkbox — hover to reveal on planned -->
       <button
-        v-if="item.status !== 'completed'"
+        v-if="item.status === 'planned'"
         @click.stop="markWatched"
         :disabled="marking"
         title="Mark as watched"
@@ -123,6 +123,23 @@ async function confirmDelete() {
         </svg>
       </button>
 
+      <!-- Clock badge — always visible on watching, swaps to checkmark on hover -->
+      <button
+        v-else-if="item.status === 'watching'"
+        @click.stop="markWatched"
+        :disabled="marking"
+        title="Mark as watched"
+        class="cursor-pointer watched-btn absolute top-2 left-2 w-7 h-7 rounded-full bg-blue-500 shadow-md flex items-center justify-center transition-all duration-200 hover:bg-green-500 hover:scale-110 disabled:cursor-wait group/clock"
+      >
+        <svg class="w-3.5 h-3.5 text-white group-hover/clock:hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6l4 2m6-2a10 10 0 11-20 0 10 10 0 0120 0z" />
+        </svg>
+        <svg class="w-3.5 h-3.5 text-white hidden group-hover/clock:block" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+        </svg>
+      </button>
+
+      <!-- Green checkmark — always visible on completed -->
       <div
         v-else
         class="absolute top-2 left-2 w-7 h-7 rounded-full bg-green-500 flex items-center justify-center shadow-md"
