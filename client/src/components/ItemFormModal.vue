@@ -172,7 +172,8 @@ function handleSubmit(addAnother = false) {
     delete payload.runtime
   }
   for (const f of ['rating', 'year', 'runtime', 'seasons', 'episodes', 'showRuntime']) {
-    if (!payload[f]) delete payload[f]
+    if (!(f in payload)) continue
+    if (payload[f] === '' || payload[f] == null) payload[f] = null
     else payload[f] = Number(payload[f])
   }
   emit('submit', payload, addAnother)
