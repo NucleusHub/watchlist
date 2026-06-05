@@ -279,11 +279,18 @@ onMounted(load)
 </script>
 
 <template>
-  <div class="min-h-screen bg-slate-100 dark:bg-slate-900 text-slate-900 dark:text-white overflow-x-hidden">
+  <div class="relative min-h-screen bg-slate-100 dark:bg-[#0d0d1a] text-slate-900 dark:text-white overflow-x-hidden">
+    <!-- Background blobs -->
+    <div class="pointer-events-none fixed inset-0 overflow-hidden z-0">
+      <div class="absolute -top-32 -right-32 w-[450px] h-[450px] rounded-full bg-violet-400/30 dark:bg-violet-700/45 blur-[100px]" />
+      <div class="absolute -bottom-32 -left-32 w-[450px] h-[450px] rounded-full bg-indigo-400/30 dark:bg-indigo-700/45 blur-[100px]" />
+      <div class="absolute top-1/2 right-0 w-64 h-64 rounded-full bg-blue-400/20 dark:bg-blue-600/30 blur-[80px]" />
+    </div>
+    <div class="relative z-10">
     <!-- Hamburger — fixed to viewport left -->
     <button
       @click="sidebarOpen = !sidebarOpen"
-      class="cursor-pointer fixed left-4 top-[18px] z-40 flex flex-col justify-center gap-[5px] p-2 rounded-lg text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+      class="cursor-pointer fixed left-4 top-[18px] z-40 flex flex-col justify-center gap-[5px] p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-white/10 backdrop-blur-sm transition-colors"
       title="Menu"
     >
       <span class="block w-5 h-0.5 rounded-full bg-current transition-all duration-200"
@@ -294,7 +301,7 @@ onMounted(load)
             :class="sidebarOpen ? '-rotate-45 -translate-y-[7px]' : ''" />
     </button>
 
-    <header class="border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-transparent px-4 py-4">
+    <header class="sticky top-0 z-30 border-b border-white/50 dark:border-white/8 backdrop-blur-md bg-white/70 dark:bg-[#0d0d1a]/80 px-4 py-4 shadow-sm shadow-indigo-500/5">
       <div class="max-w-4xl mx-auto flex items-center justify-between pl-10 sm:pl-0">
         <div>
           <h1 class="text-xl font-bold text-slate-900 dark:text-white">Watchlist</h1>
@@ -372,10 +379,10 @@ onMounted(load)
             :key="tab.key"
             @click="activeStatus = tab.key"
             :class="[
-              'cursor-pointer px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
+              'cursor-pointer px-3 py-1.5 rounded-lg text-sm font-medium transition-all backdrop-blur-sm',
               activeStatus === tab.key
-                ? 'bg-indigo-600 text-white'
-                : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-300 dark:hover:bg-slate-700',
+                ? 'bg-indigo-600/90 text-white shadow-md shadow-indigo-600/30'
+                : 'bg-white/50 dark:bg-white/8 text-slate-600 dark:text-slate-400 border border-white/50 dark:border-white/10 hover:text-slate-900 dark:hover:text-white hover:bg-white/70 dark:hover:bg-white/15',
             ]"
           >
             {{ tab.label }}
@@ -390,10 +397,10 @@ onMounted(load)
               :key="tab.key"
               @click="activeType = tab.key"
               :class="[
-                'cursor-pointer px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
+                'cursor-pointer px-3 py-1.5 rounded-lg text-sm font-medium transition-all backdrop-blur-sm',
                 activeType === tab.key
-                  ? 'bg-slate-600 text-white'
-                  : 'bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-300 dark:hover:bg-slate-700',
+                  ? 'bg-slate-600/90 text-white shadow-sm'
+                  : 'bg-white/50 dark:bg-white/8 text-slate-500 border border-white/50 dark:border-white/10 hover:text-slate-900 dark:hover:text-white hover:bg-white/70 dark:hover:bg-white/15',
               ]"
             >
               {{ tab.label }}
@@ -407,22 +414,22 @@ onMounted(load)
           <!-- Sort icons + grid/size toggle -->
           <div class="flex items-center gap-1.5">
             <!-- Desktop: column layout -->
-            <div class="hidden sm:flex items-center bg-slate-200 dark:bg-slate-800 rounded-lg overflow-hidden">
-              <button @click="gridStyle = 'list'" :class="['cursor-pointer p-2 transition-colors', gridStyle === 'list' ? 'text-slate-900 dark:text-white bg-white dark:bg-slate-600 shadow-sm' : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-white']" title="List">
+            <div class="hidden sm:flex items-center bg-white/50 dark:bg-white/8 backdrop-blur-sm border border-white/50 dark:border-white/10 rounded-lg overflow-hidden">
+              <button @click="gridStyle = 'list'" :class="['cursor-pointer p-2 transition-colors', gridStyle === 'list' ? 'text-slate-900 dark:text-white bg-white/80 dark:bg-white/20 shadow-sm' : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-white']" title="List">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6h18M3 12h18M3 18h18" /></svg>
               </button>
-              <button @click="gridStyle = 'big'" :class="['cursor-pointer p-2 transition-colors', gridStyle === 'big' ? 'text-slate-900 dark:text-white bg-white dark:bg-slate-600 shadow-sm' : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-white']" title="2-column grid">
+              <button @click="gridStyle = 'big'" :class="['cursor-pointer p-2 transition-colors', gridStyle === 'big' ? 'text-slate-900 dark:text-white bg-white/80 dark:bg-white/20 shadow-sm' : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-white']" title="2-column grid">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 4.5h7.5v15H3v-15zm10.5 0H21v15h-7.5v-15z" /></svg>
               </button>
-              <button @click="gridStyle = 'small'" :class="['cursor-pointer p-2 transition-colors', gridStyle === 'small' ? 'text-slate-900 dark:text-white bg-white dark:bg-slate-600 shadow-sm' : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-white']" title="3-column grid">
+              <button @click="gridStyle = 'small'" :class="['cursor-pointer p-2 transition-colors', gridStyle === 'small' ? 'text-slate-900 dark:text-white bg-white/80 dark:bg-white/20 shadow-sm' : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-white']" title="3-column grid">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 4.5h4.5v15H3v-15zm6.75 0h4.5v15h-4.5v-15zm6.75 0H21v15h-4.5v-15z" /></svg>
               </button>
             </div>
             <!-- Mobile: card size -->
-            <div class="flex sm:hidden items-center bg-slate-200 dark:bg-slate-800 rounded-lg overflow-hidden">
-              <button @click="gridStyle = 'list'"  :class="['cursor-pointer px-2.5 py-2 text-xs font-medium transition-colors', gridStyle === 'list'  ? 'text-slate-900 dark:text-white bg-white dark:bg-slate-600 shadow-sm' : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-white']">S</button>
-              <button @click="gridStyle = 'small'" :class="['cursor-pointer px-2.5 py-2 text-xs font-medium transition-colors', gridStyle === 'small' ? 'text-slate-900 dark:text-white bg-white dark:bg-slate-600 shadow-sm' : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-white']">M</button>
-              <button @click="gridStyle = 'big'"   :class="['cursor-pointer px-2.5 py-2 text-xs font-medium transition-colors', gridStyle === 'big'   ? 'text-slate-900 dark:text-white bg-white dark:bg-slate-600 shadow-sm' : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-white']">L</button>
+            <div class="flex sm:hidden items-center bg-white/50 dark:bg-white/8 backdrop-blur-sm border border-white/50 dark:border-white/10 rounded-lg overflow-hidden">
+              <button @click="gridStyle = 'list'"  :class="['cursor-pointer px-2.5 py-2 text-xs font-medium transition-colors', gridStyle === 'list'  ? 'text-slate-900 dark:text-white bg-white/80 dark:bg-white/20 shadow-sm' : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-white']">S</button>
+              <button @click="gridStyle = 'small'" :class="['cursor-pointer px-2.5 py-2 text-xs font-medium transition-colors', gridStyle === 'small' ? 'text-slate-900 dark:text-white bg-white/80 dark:bg-white/20 shadow-sm' : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-white']">M</button>
+              <button @click="gridStyle = 'big'"   :class="['cursor-pointer px-2.5 py-2 text-xs font-medium transition-colors', gridStyle === 'big'   ? 'text-slate-900 dark:text-white bg-white/80 dark:bg-white/20 shadow-sm' : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-white']">L</button>
             </div>
           <div class="flex items-center gap-0.5">
             <!-- Runtime: film -->
@@ -569,8 +576,8 @@ onMounted(load)
     <Teleport to="body">
       <Transition name="fade">
         <div v-if="refreshing" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-          <div class="relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-sm p-6 flex flex-col gap-5">
+          <div class="absolute inset-0 bg-black/20 backdrop-blur-xl" />
+          <div class="relative bg-white/25 dark:bg-white/8 border border-white/50 dark:border-white/10 rounded-2xl shadow-2xl w-full max-w-sm p-6 flex flex-col gap-5">
             <div>
               <h2 class="text-base font-semibold text-slate-900 dark:text-white">
                 {{ refreshDone ? (refreshCancelled ? 'Cancelled' : 'Done!') : 'Refreshing from TMDb…' }}
@@ -614,6 +621,7 @@ onMounted(load)
         </div>
       </Transition>
     </Teleport>
+  </div>
   </div>
 </template>
 

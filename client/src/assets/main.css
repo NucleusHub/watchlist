@@ -3,4 +3,4 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 html { background-color: #f1f5f9; }
-html.dark { background-color: #0f172a; }
+html.dark { background-color: #0d0d1a; }
