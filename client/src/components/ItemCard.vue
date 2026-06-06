@@ -3,7 +3,7 @@ import { ref, computed } from 'vue'
 import confetti from 'canvas-confetti'
 import { updateItem, deleteItem } from '@/api/watchlist.js'
 import { logoUrl } from '@/api/tmdb.js'
-import ConfirmModal from '@/components/ConfirmModal.vue'
+import ConfirmModal from '@core/ConfirmModal.vue'
 
 const props = defineProps({
   item: { type: Object, required: true },

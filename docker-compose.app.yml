@@ -31,6 +31,7 @@ services:
       - ./client/src:/app/src
       - ./client/index.html:/app/index.html
       - ./client/vite.config.js:/app/vite.config.js
+      - ../../core:/app/core:ro
     depends_on:
       watchlist-server:
         condition: service_healthy
