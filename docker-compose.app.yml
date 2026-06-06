@@ -1,0 +1,40 @@
+services:
+  watchlist-server:
+    build:
+      context: ./server
+    restart: unless-stopped
+    environment:
+      MONGODB_URI: mongodb://mongo:27017/nucleus
+      PORT: 3000
+    volumes:
+      - ./server:/app
+      - watchlist_server_modules:/app/node_modules
+      - uploads_data:/app/uploads
+    depends_on:
+      mongo:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/api/watchlist',r=>process.exit(r.statusCode<500?0:1)).on('error',()=>process.exit(1))"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  watchlist-client:
+    build:
+      context: ./client
+    restart: unless-stopped
+    environment:
+      API_TARGET: http://watchlist-server:3000
+      VITE_TMDB_API_KEY: ${VITE_TMDB_API_KEY}
+    volumes:
+      - ./client/src:/app/src
+      - ./client/index.html:/app/index.html
+      - ./client/vite.config.js:/app/vite.config.js
+    depends_on:
+      watchlist-server:
+        condition: service_healthy
+
+volumes:
+  watchlist_server_modules:
+  uploads_data:
