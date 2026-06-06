@@ -48,10 +48,6 @@ export async function fetchWatchProviders(id, type) {
   }
 }
 
-export function posterUrl(path) {
-  return path ? `https://image.tmdb.org/t/p/w92${path}` : null
-}
-
 export function logoUrl(path) {
   return path ? `https://image.tmdb.org/t/p/w45${path}` : null
 }
