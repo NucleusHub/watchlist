@@ -30,6 +30,6 @@ export default defineConfig({
         changeOrigin: true,
       },
     },
-    allowedHosts: ['nucleus.home']
+    allowedHosts: 'all'
   },
 })
