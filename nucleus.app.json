@@ -15,5 +15,15 @@
       { "path": "/api", "upstream": "watchlist-server:3000" },
       { "path": "/uploads", "upstream": "watchlist-server:3000" }
     ]
+  },
+  "server": {
+    "service": "watchlist-server",
+    "port": 3000,
+    "env": {
+      "MONGODB_URI": "mongodb://mongo:27017/nucleus"
+    },
+    "depends": ["mongo"],
+    "namedVolumes": ["uploads_data:/app/uploads"],
+    "healthEndpoint": "/api/health"
   }
 }
