@@ -1,11 +1,12 @@
 <script setup>
-import { ref, computed, watch, onMounted, nextTick } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { getItems, createItem, updateItem } from '@/api/watchlist.js'
 import { searchMulti, fetchMovieDetail, fetchTvDetail, fetchWatchProviders } from '@/api/tmdb.js'
 import ItemCard from '@/components/ItemCard.vue'
 import ItemFormModal from '@/components/ItemFormModal.vue'
 import ConfirmModal from '@core/ConfirmModal.vue'
 import AppSidebar from '@core/AppSidebar.vue'
+import AppHeader from '@core/AppHeader.vue'
 import BackgroundBlobs from '@core/BackgroundBlobs.vue'
 import WatchlistStats from '@/components/WatchlistStats.vue'
 
@@ -32,8 +33,6 @@ const activeType = ref('all')
 const sortBy = ref('alphabetical')
 const sortDir = ref('asc')
 const searchQuery = ref('')
-const showSearch = ref(false)
-const searchInput = ref(null)
 
 // Refresh state
 const showRefreshWarning = ref(false)
@@ -58,19 +57,6 @@ const TYPE_TABS = [
 ]
 
 
-function toggleSearch() {
-  if (showSearch.value) {
-    closeSearch()
-  } else {
-    showSearch.value = true
-    nextTick(() => searchInput.value?.focus())
-  }
-}
-
-function closeSearch() {
-  searchQuery.value = ''
-  showSearch.value = false
-}
 
 const SORT_DEFAULTS = { dateAdded: 'desc', dateReleased: 'desc', rating: 'desc', alphabetical: 'asc', runtime: 'desc' }
 
@@ -283,87 +269,80 @@ onMounted(load)
   <div class="relative min-h-screen bg-slate-100 dark:bg-[#0d0d1a] text-slate-900 dark:text-white overflow-x-hidden">
     <BackgroundBlobs />
     <div class="relative z-10">
-    <!-- Hamburger — fixed to viewport left -->
-    <button
-      @click="sidebarOpen = !sidebarOpen"
-      class="cursor-pointer fixed left-4 top-[18px] z-40 flex flex-col justify-center gap-[5px] p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-white/10 backdrop-blur-sm transition-colors"
-      title="Menu"
-    >
-      <span class="block w-5 h-0.5 rounded-full bg-current transition-all duration-200"
-            :class="sidebarOpen ? 'rotate-45 translate-y-[7px]' : ''" />
-      <span class="block w-5 h-0.5 rounded-full bg-current transition-all duration-200"
-            :class="sidebarOpen ? 'opacity-0 scale-x-0' : ''" />
-      <span class="block w-5 h-0.5 rounded-full bg-current transition-all duration-200"
-            :class="sidebarOpen ? '-rotate-45 -translate-y-[7px]' : ''" />
-    </button>
-
-    <header class="sticky top-0 z-30 border-b border-white/50 dark:border-white/8 backdrop-blur-md bg-white/70 dark:bg-[#0d0d1a]/80 px-4 py-4 shadow-sm shadow-indigo-500/5">
-      <div class="max-w-4xl mx-auto flex items-center justify-between pl-10 sm:pl-0">
-        <div>
-          <h1 class="text-xl font-bold text-slate-900 dark:text-white">Watchlist</h1>
-          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            {{ stats.total }} items · {{ stats.watching }} watching · {{ stats.completed }} completed
-          </p>
-        </div>
-        <div class="flex items-center gap-2">
-          <!-- Search -->
-          <div class="flex items-center">
-            <input
-              ref="searchInput"
-              v-model="searchQuery"
-              @keydown.escape="closeSearch"
-              placeholder="Search…"
-              autocomplete="off"
-              :class="showSearch ? 'w-44 opacity-100' : 'w-0 opacity-0 pointer-events-none'"
-              class="bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white text-sm rounded-lg pl-3 pr-2 py-1.5 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200 ease-out"
-            />
-            <button
-              @click="toggleSearch"
-              :title="showSearch ? 'Close search' : 'Search'"
-              :class="['cursor-pointer p-2 rounded-lg transition-colors', showSearch ? 'text-indigo-500 dark:text-indigo-400 hover:text-slate-900 dark:hover:text-white' : 'text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700']"
-            >
-              <svg v-if="!showSearch || !searchQuery" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 15.803a7.5 7.5 0 0010.607 0z" />
-              </svg>
-              <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-
+    <AppHeader>
+      <template #left>
+        <button
+          @click="sidebarOpen = !sidebarOpen"
+          class="cursor-pointer flex flex-col justify-center gap-[5px] p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+          title="Menu"
+        >
+          <span class="block w-5 h-0.5 rounded-full bg-current transition-all duration-200"
+                :class="sidebarOpen ? 'rotate-45 translate-y-[7px]' : ''" />
+          <span class="block w-5 h-0.5 rounded-full bg-current transition-all duration-200"
+                :class="sidebarOpen ? 'opacity-0 scale-x-0' : ''" />
+          <span class="block w-5 h-0.5 rounded-full bg-current transition-all duration-200"
+                :class="sidebarOpen ? '-rotate-45 -translate-y-[7px]' : ''" />
+        </button>
+        <p class="text-xs text-slate-500 dark:text-slate-400">
+          {{ stats.total }} items · {{ stats.watching }} watching · {{ stats.completed }} completed
+        </p>
+      </template>
+      <template #right>
+        <!-- Search -->
+        <div class="relative">
+          <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607z" />
+          </svg>
+          <input
+            v-model="searchQuery"
+            type="text"
+            placeholder="Search…"
+            autocomplete="off"
+            class="w-32 sm:w-48 pl-9 pr-3 py-1.5 text-sm bg-black/5 dark:bg-white/8 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-lg border border-transparent focus:border-indigo-500/50 focus:outline-none focus:bg-white dark:focus:bg-white/12 transition-all duration-200"
+          />
           <button
-            v-if="stats.total > 0"
-            @click="showStats = !showStats"
-            :title="showStats ? 'Back to list' : 'Statistics'"
-            :class="['cursor-pointer p-2 rounded-lg transition-colors', showStats ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-slate-700' : 'text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700']"
+            v-if="searchQuery"
+            @click="searchQuery = ''"
+            class="cursor-pointer absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
           >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
             </svg>
-          </button>
-          <button
-            v-if="stats.total > 0 && !showStats"
-            @click="requestRefresh"
-            :disabled="refreshing"
-            title="Refresh TMDb data for all items"
-            class="hidden sm:block cursor-pointer p-2 text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-default"
-          >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
-            </svg>
-          </button>
-          <button
-            @click="openAdd"
-            class="cursor-pointer flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium px-3 sm:px-4 py-2 rounded-lg transition-colors"
-          >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-            </svg>
-            <span class="hidden sm:inline">Add</span>
           </button>
         </div>
-      </div>
-    </header>
+
+        <button
+          v-if="stats.total > 0"
+          @click="showStats = !showStats"
+          :title="showStats ? 'Back to list' : 'Statistics'"
+          :class="['cursor-pointer p-2 rounded-lg transition-colors', showStats ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-slate-700' : 'text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700']"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+          </svg>
+        </button>
+        <button
+          v-if="stats.total > 0 && !showStats"
+          @click="requestRefresh"
+          :disabled="refreshing"
+          title="Refresh TMDb data for all items"
+          class="hidden sm:block cursor-pointer p-2 text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-default"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+          </svg>
+        </button>
+        <button
+          @click="openAdd"
+          class="cursor-pointer flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium px-3 sm:px-4 py-2 rounded-lg transition-colors"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+          </svg>
+          <span class="hidden sm:inline">Add</span>
+        </button>
+      </template>
+    </AppHeader>
 
     <main class="max-w-4xl mx-auto px-4 py-6 flex flex-col gap-6">
       <WatchlistStats v-if="showStats" :items="items" />
