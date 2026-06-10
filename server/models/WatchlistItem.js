@@ -2,6 +2,7 @@ import mongoose from 'mongoose'
 
 const watchlistItemSchema = new mongoose.Schema(
   {
+    profileId: { type: mongoose.Schema.Types.ObjectId, ref: 'Profile', index: true },
     title: { type: String, required: true, trim: true },
     type: { type: String, enum: ['movie', 'show'], required: true },
     status: {

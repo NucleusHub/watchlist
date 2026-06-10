@@ -283,7 +283,7 @@ onMounted(load)
           <span class="block w-5 h-0.5 rounded-full bg-current transition-all duration-200"
                 :class="sidebarOpen ? '-rotate-45 -translate-y-[7px]' : ''" />
         </button>
-        <p class="text-xs text-slate-500 dark:text-slate-400">
+        <p class="hidden sm:block text-xs text-slate-500 dark:text-slate-400">
           {{ stats.total }} items · {{ stats.watching }} watching · {{ stats.completed }} completed
         </p>
       </template>

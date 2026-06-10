@@ -13,6 +13,7 @@ export default defineConfig(({ mode }) => ({
     tailwindcss(),
   ].filter(Boolean),
   resolve: {
+    preserveSymlinks: true,
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
       '@core': fileURLToPath(new URL('./core', import.meta.url)),

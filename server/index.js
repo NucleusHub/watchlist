@@ -1,6 +1,7 @@
 import 'dotenv/config'
 import express from 'express'
 import cors from 'cors'
+import cookieParser from 'cookie-parser'
 import mongoose from 'mongoose'
 import multer from 'multer'
 import path from 'path'
@@ -14,8 +15,9 @@ const uploadsDir = path.resolve(__dirname, 'uploads')
 const app = express()
 const PORT = process.env.PORT || 3000
 
-app.use(cors())
+app.use(cors({ origin: true, credentials: true }))
 app.use(express.json())
+app.use(cookieParser())
 app.use('/uploads', express.static(uploadsDir))
 
 const storage = multer.diskStorage({
@@ -40,6 +42,7 @@ app.post('/api/upload', upload.single('image'), (req, res) => {
   res.json({ url: `/uploads/${req.file.filename}` })
 })
 
+app.get('/api/watchlist/health', (_, res) => res.json({ ok: true }))
 app.use('/api/watchlist', watchlistRoutes)
 
 async function backfillDateAdded() {
