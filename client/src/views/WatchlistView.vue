@@ -4,7 +4,7 @@ import { getItems, createItem, updateItem } from '@/api/watchlist.js'
 import { searchMulti, fetchMovieDetail, fetchTvDetail, fetchWatchProviders } from '@/api/tmdb.js'
 import ItemCard from '@/components/ItemCard.vue'
 import ItemFormModal from '@/components/ItemFormModal.vue'
-import ConfirmModal from '@core/ConfirmModal.vue'
+import TemplateModal from '@core/TemplateModal.vue'
 import AppSidebar from '@core/AppSidebar.vue'
 import AppHeader from '@core/AppHeader.vue'
 import BackgroundBlobs from '@core/BackgroundBlobs.vue'
@@ -538,7 +538,7 @@ onMounted(load)
     />
 
     <!-- Refresh warning -->
-    <ConfirmModal
+    <TemplateModal
       :show="showRefreshWarning"
       title="Refresh all items from TMDb?"
       :message="refreshWarningMessage"

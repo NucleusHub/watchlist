@@ -3,7 +3,7 @@ import { ref, computed } from 'vue'
 import confetti from 'canvas-confetti'
 import { updateItem, deleteItem } from '@/api/watchlist.js'
 import { logoUrl } from '@/api/tmdb.js'
-import ConfirmModal from '@core/ConfirmModal.vue'
+import TemplateModal from '@core/TemplateModal.vue'
 
 const props = defineProps({
   item: { type: Object, required: true },
@@ -220,7 +220,7 @@ async function confirmDelete() {
     </div>
   </div>
 
-  <ConfirmModal
+  <TemplateModal
     :show="showConfirm"
     title="Remove from watchlist?"
     :message="`'${item.title}' will be permanently removed.`"
