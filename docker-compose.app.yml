@@ -3,6 +3,11 @@ services:
     build:
       context: ./server
     restart: unless-stopped
+    labels:
+      nucleus.managed: "true"
+      nucleus.stack: "nucleus"
+      nucleus.role: "app-server"
+      nucleus.app: "watchlist"
     environment:
       MONGODB_URI: mongodb://mongo:27017/nucleus
       PORT: 3000
@@ -24,6 +29,11 @@ services:
     build:
       context: ./client
     restart: unless-stopped
+    labels:
+      nucleus.managed: "true"
+      nucleus.stack: "nucleus"
+      nucleus.role: "app-client"
+      nucleus.app: "watchlist"
     environment:
       API_TARGET: http://watchlist-server:3000
       VITE_TMDB_API_KEY: ${VITE_TMDB_API_KEY}
