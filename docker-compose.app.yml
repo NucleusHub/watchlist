@@ -38,6 +38,7 @@ services:
     environment:
       API_TARGET: http://watchlist-server:3000
       VITE_TMDB_API_KEY: ${VITE_TMDB_API_KEY}
+      NUCLEUS_HOST: ${NUCLEUS_HOST:-nucleus.olm-altair.ts.net}
     volumes:
       - ./client/src:/app/src
       - ./client/index.html:/app/index.html
