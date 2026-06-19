@@ -1,9 +1,37 @@
 import { Router } from 'express'
+import path from 'path'
+import fs from 'node:fs'
+import { fileURLToPath } from 'url'
 import WatchlistItem from '../models/WatchlistItem.js'
 import { requireAuth } from '../middleware/auth.js'
 
 const router = Router()
 router.use(requireAuth)
+
+const uploadsDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../uploads')
+
+function requireAdmin(req, res, next) {
+  if (req.profile?.role !== 'admin') return res.status(403).json({ error: 'Admin required' })
+  next()
+}
+
+// Called by the admin panel when a user is deleted: remove their watchlist
+// items and any locally-uploaded poster images.
+//   POST /api/watchlist/users/:userId/teardown
+router.post('/users/:userId/teardown', requireAdmin, async (req, res) => {
+  try {
+    const items = await WatchlistItem.find({ profileId: req.params.userId }).select('posterUrl')
+    for (const it of items) {
+      if (it.posterUrl?.startsWith('/uploads/')) {
+        fs.unlink(path.join(uploadsDir, path.basename(it.posterUrl)), () => {})
+      }
+    }
+    const { deletedCount } = await WatchlistItem.deleteMany({ profileId: req.params.userId })
+    res.json({ ok: true, deleted: deletedCount })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
 
 router.get('/', async (req, res) => {
   try {
