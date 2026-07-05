@@ -2,5 +2,8 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+@source "../**/*.{vue,js}";
+@source "../../core/**/*.{vue,js}";
+
 html { background-color: #f1f5f9; }
 html.dark { background-color: #0d0d1a; }
