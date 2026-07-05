@@ -1,6 +1,6 @@
 <script setup>
 import { ref, watch, onUnmounted, nextTick } from 'vue'
-import { searchMulti, fetchMovieDetail, fetchTvDetail, fetchWatchProviders, logoUrl } from '@/api/tmdb.js'
+import { searchMulti, fetchMovieDetail, fetchTvDetail, fetchWatchProviders, logoUrl, buildSeasonProgress } from '@/api/tmdb.js'
 import { uploadImage } from '@/api/watchlist.js'
 
 const props = defineProps({
@@ -39,6 +39,7 @@ const EMPTY_FORM = () => ({
   streamingLogo: null,
   rating: '', year: '', runtime: '',
   seasons: '', episodes: '', showRuntime: '',
+  seasonProgress: null,
   notes: '',
 })
 
@@ -130,6 +131,9 @@ async function selectResult(r) {
       if (d.number_of_episodes && d.episode_run_time?.length) {
         form.value.showRuntime = d.number_of_episodes * d.episode_run_time[0]
       }
+      // Capture per-season episode counts for progress tracking, preserving any
+      // progress already recorded when re-selecting the same show.
+      form.value.seasonProgress = buildSeasonProgress(d, form.value.seasonProgress)
     }
 
     if (streaming) {
@@ -168,6 +172,7 @@ function handleSubmit(addAnother = false) {
     delete payload.seasons
     delete payload.episodes
     delete payload.showRuntime
+    delete payload.seasonProgress
   } else {
     delete payload.runtime
   }

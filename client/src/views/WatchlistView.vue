@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import { getItems, createItem, updateItem } from '@/api/watchlist.js'
-import { searchMulti, fetchMovieDetail, fetchTvDetail, fetchWatchProviders } from '@/api/tmdb.js'
+import { searchMulti, fetchMovieDetail, fetchTvDetail, fetchWatchProviders, buildSeasonProgress } from '@/api/tmdb.js'
 import ItemCard from '@/components/ItemCard.vue'
 import ItemFormModal from '@/components/ItemFormModal.vue'
 import TemplateModal from '@core/TemplateModal.vue'
@@ -229,6 +229,10 @@ async function runRefresh() {
         if (!item.showRuntime && detail.number_of_episodes && detail.episode_run_time?.length) {
           patch.showRuntime = detail.number_of_episodes * detail.episode_run_time[0]
         }
+        // Refresh the per-season structure (new seasons air over time) while
+        // preserving watched counts by season number.
+        const sp = buildSeasonProgress(detail, item.seasonProgress)
+        if (sp.length) patch.seasonProgress = sp
       }
 
       // Always refresh streaming (it changes)

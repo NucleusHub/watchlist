@@ -1,12 +1,11 @@
 <script setup>
 import { computed } from 'vue'
 import { logoUrl } from '@/api/tmdb.js'
+import { itemRuntime, watchedMinutes, remainingMinutes } from '@/utils/progress.js'
 
 const props = defineProps({ items: { type: Array, required: true } })
 
-function totalMinutes(list) {
-  return list.reduce((s, i) => s + (i.type === 'movie' ? (i.runtime || 0) : (i.showRuntime || 0)), 0)
-}
+const sum = (list, fn) => list.reduce((s, i) => s + fn(i), 0)
 
 function fmtTime(min) {
   if (!min) return '—'
@@ -24,10 +23,12 @@ const planned   = computed(() => props.items.filter(i => i.status === 'planned')
 const movies    = computed(() => props.items.filter(i => i.type === 'movie'))
 const shows     = computed(() => props.items.filter(i => i.type === 'show'))
 
-const completedTime = computed(() => fmtTime(totalMinutes(completed.value)))
-const watchingTime  = computed(() => fmtTime(totalMinutes(watching.value)))
-const plannedTime   = computed(() => fmtTime(totalMinutes(planned.value)))
-const totalTime     = computed(() => fmtTime(totalMinutes(props.items)))
+// Time watched counts partially-finished shows; in-progress and planned show
+// the runtime that is still left to watch.
+const completedTime = computed(() => fmtTime(sum(props.items, watchedMinutes)))
+const watchingTime  = computed(() => fmtTime(sum(watching.value, remainingMinutes)))
+const plannedTime   = computed(() => fmtTime(sum(planned.value, remainingMinutes)))
+const totalTime     = computed(() => fmtTime(sum(props.items, itemRuntime)))
 
 const ratedItems = computed(() => props.items.filter(i => i.rating))
 const avgRating  = computed(() => {
@@ -70,17 +71,17 @@ const topYears = computed(() => {
       <div class="bg-white dark:bg-slate-800 rounded-xl p-4 flex flex-col gap-1 shadow-sm dark:shadow-none">
         <p class="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide">Watched</p>
         <p class="text-2xl font-bold text-green-400">{{ completedTime }}</p>
-        <p class="text-xs text-slate-400 dark:text-slate-500">{{ completed.length }} titles</p>
+        <p class="text-xs text-slate-400 dark:text-slate-500">incl. partial shows</p>
       </div>
       <div class="bg-white dark:bg-slate-800 rounded-xl p-4 flex flex-col gap-1 shadow-sm dark:shadow-none">
         <p class="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide">In progress</p>
         <p class="text-2xl font-bold text-blue-400">{{ watchingTime }}</p>
-        <p class="text-xs text-slate-400 dark:text-slate-500">{{ watching.length }} titles</p>
+        <p class="text-xs text-slate-400 dark:text-slate-500">{{ watching.length }} titles · left</p>
       </div>
       <div class="bg-white dark:bg-slate-800 rounded-xl p-4 flex flex-col gap-1 shadow-sm dark:shadow-none">
         <p class="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide">Planned</p>
         <p class="text-2xl font-bold text-slate-500 dark:text-slate-300">{{ plannedTime }}</p>
-        <p class="text-xs text-slate-400 dark:text-slate-500">{{ planned.length }} titles</p>
+        <p class="text-xs text-slate-400 dark:text-slate-500">{{ planned.length }} titles · left</p>
       </div>
       <div class="bg-white dark:bg-slate-800 rounded-xl p-4 flex flex-col gap-1 shadow-sm dark:shadow-none">
         <p class="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide">Total</p>

@@ -1,5 +1,17 @@
 import mongoose from 'mongoose'
 
+// Per-season watch progress for shows. `episodeCount` is the season's total
+// (from TMDb); `watched` is how many of those the user has finished.
+const seasonProgressSchema = new mongoose.Schema(
+  {
+    seasonNumber: { type: Number, required: true },
+    name: { type: String, default: '' },
+    episodeCount: { type: Number, default: 0 },
+    watched: { type: Number, default: 0, min: 0 },
+  },
+  { _id: false }
+)
+
 const watchlistItemSchema = new mongoose.Schema(
   {
     profileId: { type: mongoose.Schema.Types.ObjectId, ref: 'Profile', index: true },
@@ -21,6 +33,7 @@ const watchlistItemSchema = new mongoose.Schema(
     seasons: { type: Number, default: null },
     episodes: { type: Number, default: null },
     showRuntime: { type: Number, default: null },
+    seasonProgress: { type: [seasonProgressSchema], default: undefined },
     dateAdded: { type: Date, default: Date.now },
     notes: { type: String, trim: true, default: '' },
   },

@@ -51,3 +51,20 @@ export async function fetchWatchProviders(id, type) {
 export function logoUrl(path) {
   return path ? `https://image.tmdb.org/t/p/w45${path}` : null
 }
+
+// Build a per-season progress list from a TMDb TV detail payload, excluding
+// specials (season 0) and empty seasons. Carries over any already-watched
+// counts from an existing list, keyed by season number, so refreshing a show
+// preserves the user's progress.
+export function buildSeasonProgress(detail, existing = []) {
+  const prev = new Map((existing || []).map((s) => [s.seasonNumber, s.watched || 0]))
+  return (detail.seasons || [])
+    .filter((s) => s.season_number > 0 && s.episode_count > 0)
+    .sort((a, b) => a.season_number - b.season_number)
+    .map((s) => ({
+      seasonNumber: s.season_number,
+      name: s.name || `Season ${s.season_number}`,
+      episodeCount: s.episode_count,
+      watched: Math.min(prev.get(s.season_number) ?? 0, s.episode_count),
+    }))
+}

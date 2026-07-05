@@ -3,7 +3,9 @@ import { ref, computed } from 'vue'
 import confetti from 'canvas-confetti'
 import { updateItem, deleteItem } from '@/api/watchlist.js'
 import { logoUrl } from '@/api/tmdb.js'
+import { showTotals, watchedFraction, remainingMinutes } from '@/utils/progress.js'
 import TemplateModal from '@core/TemplateModal.vue'
+import SeasonProgressModal from '@/components/SeasonProgressModal.vue'
 
 const props = defineProps({
   item: { type: Object, required: true },
@@ -35,6 +37,26 @@ const cardRef = ref(null)
 const deleting = ref(false)
 const showConfirm = ref(false)
 const marking = ref(false)
+const showProgress = ref(false)
+
+// Show progress: episode totals, percentage and remaining runtime.
+const totals = computed(() => showTotals(props.item))
+const progressPct = computed(() => {
+  if (props.item.status === 'completed') return 100
+  return totals.value.totalEp ? Math.round((totals.value.watchedEp / totals.value.totalEp) * 100) : 0
+})
+const isShow = computed(() => props.item.type === 'show')
+const isPartial = computed(
+  () => props.item.status !== 'completed' && totals.value.watchedEp > 0 && totals.value.watchedEp < totals.value.totalEp
+)
+const remainingLabel = computed(() => {
+  if (!isPartial.value) return null
+  return formatRuntime(remainingMinutes(props.item)) + ' left'
+})
+
+function handleProgressUpdated(updated) {
+  emit('updated', updated)
+}
 
 function formatRuntime(minutes) {
   if (!minutes) return null
@@ -70,7 +92,12 @@ async function markWatched() {
   if (marking.value) return
   marking.value = true
   try {
-    const updated = await updateItem(props.item._id, { status: 'completed' })
+    const patch = { status: 'completed' }
+    // Fill season progress so the bar and progress modal stay consistent.
+    if (props.item.type === 'show' && props.item.seasonProgress?.length) {
+      patch.seasonProgress = props.item.seasonProgress.map((s) => ({ ...s, watched: s.episodeCount }))
+    }
+    const updated = await updateItem(props.item._id, patch)
     emit('updated', updated)
     fireConfetti()
   } finally {
@@ -149,6 +176,18 @@ async function confirmDelete() {
         </svg>
       </div>
 
+      <!-- Progress button — opens the season/episode modal (shows only) -->
+      <button
+        v-if="isShow"
+        @click.stop="showProgress = true"
+        title="Track episode progress"
+        class="cursor-pointer watched-btn absolute top-10 left-2 w-7 h-7 rounded-full border-2 border-white/60 bg-black/40 backdrop-blur-sm flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 hover:border-white hover:bg-black/60 hover:scale-110"
+      >
+        <svg class="w-3.5 h-3.5 text-white/80" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.008v.008H3.75V6.75zm0 5.25h.008v.008H3.75V12zm0 5.25h.008v.008H3.75v-.008z" />
+        </svg>
+      </button>
+
       <!-- Streaming logo -->
       <a
         v-if="item.streamingLogo"
@@ -200,6 +239,38 @@ async function confirmDelete() {
         </div>
       </div>
 
+      <!-- Season progress (shows) -->
+      <template v-if="isShow">
+        <button
+          v-if="totals.totalEp > 0"
+          @click.stop="showProgress = true"
+          :title="`Track progress · ${totals.watchedEp}/${totals.totalEp} episodes`"
+          class="cursor-pointer group/prog flex flex-col gap-1 w-full text-left"
+        >
+          <div v-if="!isList" class="flex items-center justify-between gap-2 text-xs">
+            <span class="text-slate-500 dark:text-slate-400">{{ item.status === 'completed' ? totals.totalEp : totals.watchedEp }}/{{ totals.totalEp }} ep</span>
+            <span v-if="remainingLabel" class="text-slate-400 dark:text-slate-500">{{ remainingLabel }}</span>
+          </div>
+          <div class="h-1.5 bg-slate-200/80 dark:bg-slate-700/80 rounded-full overflow-hidden">
+            <div
+              class="h-full rounded-full transition-all duration-300"
+              :class="item.status === 'completed' ? 'bg-green-500' : 'bg-indigo-500 group-hover/prog:bg-indigo-400'"
+              :style="{ width: `${progressPct}%` }"
+            />
+          </div>
+        </button>
+        <button
+          v-else
+          @click.stop="showProgress = true"
+          class="cursor-pointer self-start flex items-center gap-1 text-xs text-slate-400 dark:text-slate-500 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors"
+        >
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Track progress
+        </button>
+      </template>
+
       <p v-if="item.notes && !isCompact" class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{{ item.notes }}</p>
 
       <div :class="['flex items-center gap-1.5 flex-wrap mt-auto', isCompact ? 'pt-1' : 'pt-1.5']">
@@ -227,6 +298,14 @@ async function confirmDelete() {
     confirm-label="Remove"
     @confirm="confirmDelete"
     @cancel="showConfirm = false"
+  />
+
+  <SeasonProgressModal
+    v-if="isShow"
+    :show="showProgress"
+    :item="item"
+    @close="showProgress = false"
+    @updated="handleProgressUpdated"
   />
 </template>
 
