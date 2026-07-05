@@ -2,6 +2,11 @@
   "id": "watchlist",
   "name": "Watchlist",
   "description": "Movies & shows",
+  "version": "0.1.0",
+  "manifestVersion": 1,
+  "compatibility": {
+    "nucleus": ">=0.1.0 <1.0.0"
+  },
   "route": "/watchlist",
   "icon": "icon.svg",
   "category": "media",
