@@ -8,6 +8,7 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import watchlistRoutes from './routes/watchlist.js'
 import WatchlistItem from './models/WatchlistItem.js'
+import { requireAppEnabled } from './core/server/appAccess.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const uploadsDir = path.resolve(__dirname, 'uploads')
@@ -43,6 +44,8 @@ app.post('/api/upload', upload.single('image'), (req, res) => {
 })
 
 app.get('/api/watchlist/health', (_, res) => res.json({ ok: true }))
+// Refuse all Watchlist API access for users who have Watchlist disabled (admin override).
+app.use('/api/watchlist', requireAppEnabled('watchlist'))
 app.use('/api/watchlist', watchlistRoutes)
 
 async function backfillDateAdded() {
