@@ -9,6 +9,9 @@ import AppSidebar from '@core/AppSidebar.vue'
 import AppHeader from '@core/AppHeader.vue'
 import BackgroundBlobs from '@core/BackgroundBlobs.vue'
 import WatchlistStats from '@/components/WatchlistStats.vue'
+import { useI18n } from '@core/useI18n.js'
+
+const { t } = useI18n()
 
 const WARN_THRESHOLD = 10
 const sidebarOpen = ref(false)
@@ -43,18 +46,18 @@ const refreshDone = ref(false)
 const refreshFailed = ref(0)
 const refreshCancelled = ref(false)
 
-const STATUS_TABS = [
-  { key: 'all', label: 'All' },
-  { key: 'planned', label: 'Planned' },
-  { key: 'watching', label: 'Watching' },
-  { key: 'completed', label: 'Completed' },
-]
+const STATUS_TABS = computed(() => [
+  { key: 'all', label: t('watchlist.status.all') },
+  { key: 'planned', label: t('watchlist.status.planned') },
+  { key: 'watching', label: t('watchlist.status.watching') },
+  { key: 'completed', label: t('watchlist.status.completed') },
+])
 
-const TYPE_TABS = [
-  { key: 'all', label: 'All' },
-  { key: 'movie', label: 'Movies' },
-  { key: 'show', label: 'Shows' },
-]
+const TYPE_TABS = computed(() => [
+  { key: 'all', label: t('watchlist.type.all') },
+  { key: 'movie', label: t('watchlist.type.movies') },
+  { key: 'show', label: t('watchlist.type.shows') },
+])
 
 
 
@@ -109,7 +112,7 @@ const refreshWarningMessage = computed(() => {
   const n = items.value.length
   const secs = Math.round(n * 0.8)
   const time = secs >= 60 ? `~${Math.round(secs / 60)} min` : `~${secs}s`
-  return `This will fetch updated ratings and streaming info for all ${n} items from TMDb. It may take ${time}.`
+  return t('watchlist.refresh.warningMessage', { count: n, time })
 })
 
 async function load() {
@@ -118,7 +121,7 @@ async function load() {
   try {
     items.value = await getItems()
   } catch {
-    error.value = 'Failed to load watchlist. Is the server running?'
+    error.value = t('watchlist.state.loadError')
   } finally {
     loading.value = false
   }
@@ -278,7 +281,7 @@ onMounted(load)
         <button
           @click="sidebarOpen = !sidebarOpen"
           class="cursor-pointer flex flex-col justify-center gap-[5px] p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
-          title="Menu"
+          :title="t('watchlist.header.menu')"
         >
           <span class="block w-5 h-0.5 rounded-full bg-current transition-all duration-200"
                 :class="sidebarOpen ? 'rotate-45 translate-y-[7px]' : ''" />
@@ -288,7 +291,7 @@ onMounted(load)
                 :class="sidebarOpen ? '-rotate-45 -translate-y-[7px]' : ''" />
         </button>
         <p class="hidden sm:block text-xs text-slate-500 dark:text-slate-400">
-          {{ stats.total }} items · {{ stats.watching }} watching · {{ stats.completed }} completed
+          {{ t('watchlist.header.stats', { total: stats.total, watching: stats.watching, completed: stats.completed }) }}
         </p>
       </template>
       <template #right>
@@ -300,7 +303,7 @@ onMounted(load)
           <input
             v-model="searchQuery"
             type="text"
-            placeholder="Search…"
+            :placeholder="t('watchlist.header.search')"
             autocomplete="off"
             class="w-32 sm:w-48 pl-9 pr-3 py-1.5 text-sm bg-black/5 dark:bg-white/8 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-lg border border-transparent focus:border-indigo-500/50 focus:outline-none focus:bg-white dark:focus:bg-white/12 transition-all duration-200"
           />
@@ -318,7 +321,7 @@ onMounted(load)
         <button
           v-if="stats.total > 0"
           @click="showStats = !showStats"
-          :title="showStats ? 'Back to list' : 'Statistics'"
+          :title="showStats ? t('watchlist.header.backToList') : t('watchlist.header.statistics')"
           :class="['cursor-pointer p-2 rounded-lg transition-colors', showStats ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-slate-700' : 'text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700']"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -329,7 +332,7 @@ onMounted(load)
           v-if="stats.total > 0 && !showStats"
           @click="requestRefresh"
           :disabled="refreshing"
-          title="Refresh TMDb data for all items"
+          :title="t('watchlist.header.refresh')"
           class="hidden sm:block cursor-pointer p-2 text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-default"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -343,7 +346,7 @@ onMounted(load)
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
           </svg>
-          <span class="hidden sm:inline">Add</span>
+          <span class="hidden sm:inline">{{ t('watchlist.header.add') }}</span>
         </button>
       </template>
     </AppHeader>
@@ -386,7 +389,7 @@ onMounted(load)
             </button>
           </div>
             <span class="text-xs text-slate-500">
-              showing {{ filtered.length }} of {{ stats.total }}
+              {{ t('watchlist.list.showing', { shown: filtered.length, total: stats.total }) }}
             </span>
           </div>
 
@@ -394,13 +397,13 @@ onMounted(load)
           <div class="flex items-center gap-1.5">
             <!-- Desktop: column layout -->
             <div class="hidden sm:flex items-center bg-white/50 dark:bg-white/8 backdrop-blur-sm border border-white/50 dark:border-white/10 rounded-lg overflow-hidden">
-              <button @click="gridStyle = 'list'" :class="['cursor-pointer p-2 transition-colors', gridStyle === 'list' ? 'text-slate-900 dark:text-white bg-white/80 dark:bg-white/20 shadow-sm' : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-white']" title="List">
+              <button @click="gridStyle = 'list'" :class="['cursor-pointer p-2 transition-colors', gridStyle === 'list' ? 'text-slate-900 dark:text-white bg-white/80 dark:bg-white/20 shadow-sm' : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-white']" :title="t('watchlist.list.viewList')">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6h18M3 12h18M3 18h18" /></svg>
               </button>
-              <button @click="gridStyle = 'big'" :class="['cursor-pointer p-2 transition-colors', gridStyle === 'big' ? 'text-slate-900 dark:text-white bg-white/80 dark:bg-white/20 shadow-sm' : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-white']" title="2-column grid">
+              <button @click="gridStyle = 'big'" :class="['cursor-pointer p-2 transition-colors', gridStyle === 'big' ? 'text-slate-900 dark:text-white bg-white/80 dark:bg-white/20 shadow-sm' : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-white']" :title="t('watchlist.list.viewGrid2')">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 4.5h7.5v15H3v-15zm10.5 0H21v15h-7.5v-15z" /></svg>
               </button>
-              <button @click="gridStyle = 'small'" :class="['cursor-pointer p-2 transition-colors', gridStyle === 'small' ? 'text-slate-900 dark:text-white bg-white/80 dark:bg-white/20 shadow-sm' : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-white']" title="3-column grid">
+              <button @click="gridStyle = 'small'" :class="['cursor-pointer p-2 transition-colors', gridStyle === 'small' ? 'text-slate-900 dark:text-white bg-white/80 dark:bg-white/20 shadow-sm' : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-white']" :title="t('watchlist.list.viewGrid3')">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 4.5h4.5v15H3v-15zm6.75 0h4.5v15h-4.5v-15zm6.75 0H21v15h-4.5v-15z" /></svg>
               </button>
             </div>
@@ -414,7 +417,7 @@ onMounted(load)
             <!-- Runtime: film -->
             <button
               @click="toggleSort('runtime')"
-              :title="'Runtime ' + (sortBy === 'runtime' ? (sortDir === 'asc' ? '↑' : '↓') : '')"
+              :title="t('watchlist.sort.runtime') + ' ' + (sortBy === 'runtime' ? (sortDir === 'asc' ? '↑' : '↓') : '')"
               :class="['cursor-pointer relative p-2 rounded-lg transition-colors flex flex-col items-center gap-px', sortBy === 'runtime' ? 'text-indigo-600 dark:text-indigo-400 bg-slate-200 dark:bg-slate-800' : 'text-slate-400 dark:text-slate-600 hover:text-slate-700 dark:hover:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800']"
             >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
@@ -429,7 +432,7 @@ onMounted(load)
             <!-- Date added: clock -->
             <button
               @click="toggleSort('dateAdded')"
-              :title="'Date added ' + (sortBy === 'dateAdded' ? (sortDir === 'asc' ? '↑' : '↓') : '')"
+              :title="t('watchlist.sort.dateAdded') + ' ' + (sortBy === 'dateAdded' ? (sortDir === 'asc' ? '↑' : '↓') : '')"
               :class="['cursor-pointer relative p-2 rounded-lg transition-colors flex flex-col items-center gap-px', sortBy === 'dateAdded' ? 'text-indigo-600 dark:text-indigo-400 bg-slate-200 dark:bg-slate-800' : 'text-slate-400 dark:text-slate-600 hover:text-slate-700 dark:hover:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800']"
             >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
@@ -444,7 +447,7 @@ onMounted(load)
             <!-- Date released: calendar -->
             <button
               @click="toggleSort('dateReleased')"
-              :title="'Release year ' + (sortBy === 'dateReleased' ? (sortDir === 'asc' ? '↑' : '↓') : '')"
+              :title="t('watchlist.sort.dateReleased') + ' ' + (sortBy === 'dateReleased' ? (sortDir === 'asc' ? '↑' : '↓') : '')"
               :class="['cursor-pointer relative p-2 rounded-lg transition-colors flex flex-col items-center gap-px', sortBy === 'dateReleased' ? 'text-indigo-600 dark:text-indigo-400 bg-slate-200 dark:bg-slate-800' : 'text-slate-400 dark:text-slate-600 hover:text-slate-700 dark:hover:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800']"
             >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
@@ -459,7 +462,7 @@ onMounted(load)
             <!-- Rating: star -->
             <button
               @click="toggleSort('rating')"
-              :title="'Rating ' + (sortBy === 'rating' ? (sortDir === 'asc' ? '↑' : '↓') : '')"
+              :title="t('watchlist.sort.rating') + ' ' + (sortBy === 'rating' ? (sortDir === 'asc' ? '↑' : '↓') : '')"
               :class="['cursor-pointer relative p-2 rounded-lg transition-colors flex flex-col items-center gap-px', sortBy === 'rating' ? 'text-indigo-600 dark:text-indigo-400 bg-slate-200 dark:bg-slate-800' : 'text-slate-400 dark:text-slate-600 hover:text-slate-700 dark:hover:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800']"
             >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
@@ -474,7 +477,7 @@ onMounted(load)
             <!-- Alphabetical: A↕Z bars -->
             <button
               @click="toggleSort('alphabetical')"
-              :title="'Alphabetical ' + (sortBy === 'alphabetical' ? (sortDir === 'asc' ? 'A→Z' : 'Z→A') : '')"
+              :title="t('watchlist.sort.alphabetical') + ' ' + (sortBy === 'alphabetical' ? (sortDir === 'asc' ? 'A→Z' : 'Z→A') : '')"
               :class="['cursor-pointer relative p-2 rounded-lg transition-colors flex flex-col items-center gap-px', sortBy === 'alphabetical' ? 'text-indigo-600 dark:text-indigo-400 bg-slate-200 dark:bg-slate-800' : 'text-slate-400 dark:text-slate-600 hover:text-slate-700 dark:hover:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800']"
             >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
@@ -491,11 +494,11 @@ onMounted(load)
         </div>
       </div>
 
-      <div v-if="loading" class="text-center py-16 text-slate-400 dark:text-slate-500">Loading...</div>
+      <div v-if="loading" class="text-center py-16 text-slate-400 dark:text-slate-500">{{ t('watchlist.state.loading') }}</div>
 
       <div v-else-if="error" class="text-center py-16">
         <p class="text-red-400 text-sm">{{ error }}</p>
-        <button @click="load" class="cursor-pointer mt-3 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white underline">Retry</button>
+        <button @click="load" class="cursor-pointer mt-3 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white underline">{{ t('watchlist.state.retry') }}</button>
       </div>
 
       <div v-else-if="filtered.length === 0" class="grid gap-3" :class="gridClass">
@@ -544,9 +547,9 @@ onMounted(load)
     <!-- Refresh warning -->
     <TemplateModal
       :show="showRefreshWarning"
-      title="Refresh all items from TMDb?"
+      :title="t('watchlist.refresh.warningTitle')"
       :message="refreshWarningMessage"
-      confirm-label="Refresh"
+      :confirm-label="t('watchlist.refresh.confirm')"
       @confirm="runRefresh"
       @cancel="showRefreshWarning = false"
     />
@@ -559,15 +562,15 @@ onMounted(load)
           <div class="relative bg-white/25 dark:bg-white/8 border border-white/50 dark:border-white/10 rounded-2xl shadow-2xl w-full max-w-sm p-6 flex flex-col gap-5">
             <div>
               <h2 class="text-base font-semibold text-slate-900 dark:text-white">
-                {{ refreshDone ? (refreshCancelled ? 'Cancelled' : 'Done!') : 'Refreshing from TMDb…' }}
+                {{ refreshDone ? (refreshCancelled ? t('watchlist.refresh.cancelled') : t('watchlist.refresh.done')) : t('watchlist.refresh.running') }}
               </h2>
               <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
                 <template v-if="refreshDone">
-                  Updated {{ refreshCurrent - refreshFailed }} of {{ refreshTotal }} items.
-                  <span v-if="refreshFailed > 0" class="text-slate-500"> ({{ refreshFailed }} not found on TMDb)</span>
+                  {{ t('watchlist.refresh.updated', { done: refreshCurrent - refreshFailed, total: refreshTotal }) }}
+                  <span v-if="refreshFailed > 0" class="text-slate-500">{{ t('watchlist.refresh.notFound', { count: refreshFailed }) }}</span>
                 </template>
                 <template v-else>
-                  {{ refreshCurrent }} / {{ refreshTotal }} items
+                  {{ t('watchlist.refresh.progress', { current: refreshCurrent, total: refreshTotal }) }}
                 </template>
               </p>
             </div>
@@ -586,14 +589,14 @@ onMounted(load)
                 @click="closeRefreshModal"
                 class="cursor-pointer px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-500 rounded-lg transition-colors"
               >
-                Close
+                {{ t('watchlist.refresh.close') }}
               </button>
               <button
                 v-else
                 @click="refreshCancelled = true"
                 class="cursor-pointer px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg transition-colors"
               >
-                Cancel
+                {{ t('watchlist.refresh.cancel') }}
               </button>
             </div>
           </div>

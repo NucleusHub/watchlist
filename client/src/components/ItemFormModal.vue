@@ -2,6 +2,9 @@
 import { ref, watch, onUnmounted, nextTick } from 'vue'
 import { searchMulti, fetchMovieDetail, fetchTvDetail, fetchWatchProviders, logoUrl, buildSeasonProgress } from '@/api/tmdb.js'
 import { uploadImage } from '@/api/watchlist.js'
+import { useI18n } from '@core/useI18n.js'
+
+const { t } = useI18n()
 
 const props = defineProps({
   show: { type: Boolean, default: false },
@@ -199,7 +202,7 @@ function resultYear(r) {
 
             <div class="flex items-center justify-between">
               <h2 class="text-lg font-semibold text-slate-900 dark:text-white">
-                {{ initial ? 'Edit item' : 'Add to watchlist' }}
+                {{ initial ? t('watchlist.form.editTitle') : t('watchlist.form.addTitle') }}
               </h2>
               <button @click="$emit('close')" class="cursor-pointer text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -212,7 +215,7 @@ function resultYear(r) {
 
               <!-- Left: Poster -->
               <div class="w-36 sm:w-40 shrink-0 mx-auto sm:mx-0 flex flex-col gap-3">
-                <label class="text-sm text-slate-500 dark:text-slate-400">Poster</label>
+                <label class="text-sm text-slate-500 dark:text-slate-400">{{ t('watchlist.form.poster') }}</label>
                 <div class="relative">
                   <div
                     class="aspect-[2/3] rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-700 border-2 border-dashed border-slate-300 dark:border-slate-600 flex items-center justify-center cursor-pointer hover:border-indigo-500 transition-colors"
@@ -223,7 +226,7 @@ function resultYear(r) {
                       <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3 3h18M3 21h18" />
                       </svg>
-                      <span class="text-xs text-center leading-tight">Click to upload</span>
+                      <span class="text-xs text-center leading-tight">{{ t('watchlist.form.clickToUpload') }}</span>
                     </div>
                   </div>
                   <div v-if="uploading" class="absolute inset-0 bg-black/60 rounded-lg flex items-center justify-center">
@@ -233,12 +236,12 @@ function resultYear(r) {
                     </svg>
                   </div>
                   <div v-if="form.posterUrl && !uploading" class="absolute top-1 right-1 flex flex-col gap-1">
-                    <button type="button" @click="triggerUpload" class="cursor-pointer bg-black/70 hover:bg-black/90 text-white rounded p-1 transition-colors" title="Replace">
+                    <button type="button" @click="triggerUpload" class="cursor-pointer bg-black/70 hover:bg-black/90 text-white rounded p-1 transition-colors" :title="t('watchlist.form.replace')">
                       <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
                       </svg>
                     </button>
-                    <button type="button" @click="form.posterUrl = null" class="cursor-pointer bg-black/70 hover:bg-red-600/90 text-white rounded p-1 transition-colors" title="Remove">
+                    <button type="button" @click="form.posterUrl = null" class="cursor-pointer bg-black/70 hover:bg-red-600/90 text-white rounded p-1 transition-colors" :title="t('watchlist.form.remove')">
                       <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                       </svg>
@@ -252,7 +255,7 @@ function resultYear(r) {
                     @click="openPosterMenu"
                     class="cursor-pointer w-full flex items-center justify-between gap-1.5 px-2.5 py-1.5 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg transition-colors"
                   >
-                    <span>Set poster</span>
+                    <span>{{ t('watchlist.form.setPoster') }}</span>
                     <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
                     </svg>
@@ -271,7 +274,7 @@ function resultYear(r) {
                       <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
                       </svg>
-                      Upload file
+                      {{ t('watchlist.form.uploadFile') }}
                     </button>
                     <button
                       type="button"
@@ -281,7 +284,7 @@ function resultYear(r) {
                       <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
                       </svg>
-                      Paste URL
+                      {{ t('watchlist.form.pasteUrl') }}
                     </button>
                   </div>
                 </div>
@@ -298,8 +301,8 @@ function resultYear(r) {
                     class="w-full bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white rounded-lg px-2.5 py-1.5 text-xs placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   />
                   <div class="flex gap-1.5">
-                    <button type="button" @click="applyPosterUrl" class="cursor-pointer flex-1 text-xs bg-indigo-600 hover:bg-indigo-500 text-white rounded-md py-1 transition-colors">Apply</button>
-                    <button type="button" @click="showUrlInput = false" class="cursor-pointer text-xs bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 rounded-md px-2 py-1 transition-colors">Cancel</button>
+                    <button type="button" @click="applyPosterUrl" class="cursor-pointer flex-1 text-xs bg-indigo-600 hover:bg-indigo-500 text-white rounded-md py-1 transition-colors">{{ t('watchlist.form.apply') }}</button>
+                    <button type="button" @click="showUrlInput = false" class="cursor-pointer text-xs bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 rounded-md px-2 py-1 transition-colors">{{ t('watchlist.form.cancel') }}</button>
                   </div>
                 </div>
                 <input ref="fileInput" type="file" accept="image/*" class="hidden" @change="handleFileUpload" />
@@ -310,7 +313,7 @@ function resultYear(r) {
 
                 <!-- Title with typeahead -->
                 <div class="flex flex-col gap-1.5">
-                  <label class="text-sm text-slate-500 dark:text-slate-400">Title</label>
+                  <label class="text-sm text-slate-500 dark:text-slate-400">{{ t('watchlist.form.title') }}</label>
                   <div class="relative">
                     <input
                       ref="titleInput"
@@ -319,7 +322,7 @@ function resultYear(r) {
                       @blur="closeDropdown"
                       required
                       autocomplete="off"
-                      placeholder="Search or type a title…"
+                      :placeholder="t('watchlist.form.titlePlaceholder')"
                       class="w-full bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white rounded-lg px-3 py-2 pr-8 text-sm placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     />
                     <svg v-if="searching" class="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -337,7 +340,7 @@ function resultYear(r) {
                         <div v-else class="w-8 h-11 bg-slate-200 dark:bg-slate-600 rounded shrink-0 flex items-center justify-center text-slate-400 dark:text-slate-500 text-xs">?</div>
                         <div class="flex-1 min-w-0">
                           <p class="text-sm text-slate-900 dark:text-white font-medium truncate">{{ r.media_type === 'movie' ? r.title : r.name }}</p>
-                          <p class="text-xs text-slate-500 dark:text-slate-400">{{ r.media_type === 'movie' ? 'Movie' : 'Show' }}<span v-if="resultYear(r)"> · {{ resultYear(r) }}</span></p>
+                          <p class="text-xs text-slate-500 dark:text-slate-400">{{ r.media_type === 'movie' ? t('watchlist.type.movie') : t('watchlist.type.show') }}<span v-if="resultYear(r)"> · {{ resultYear(r) }}</span></p>
                         </div>
                       </button>
                     </div>
@@ -347,23 +350,23 @@ function resultYear(r) {
                 <!-- Type + Status + Year in one row -->
                 <div class="grid grid-cols-3 gap-3">
                   <div class="flex flex-col gap-1.5">
-                    <label class="text-sm text-slate-500 dark:text-slate-400">Type</label>
+                    <label class="text-sm text-slate-500 dark:text-slate-400">{{ t('watchlist.form.type') }}</label>
                     <select v-model="form.type" class="cursor-pointer bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                      <option value="movie">Movie</option>
-                      <option value="show">Show</option>
+                      <option value="movie">{{ t('watchlist.type.movie') }}</option>
+                      <option value="show">{{ t('watchlist.type.show') }}</option>
                     </select>
                   </div>
                   <div class="flex flex-col gap-1.5">
-                    <label class="text-sm text-slate-500 dark:text-slate-400">Status</label>
+                    <label class="text-sm text-slate-500 dark:text-slate-400">{{ t('watchlist.form.status') }}</label>
                     <select v-model="form.status" class="cursor-pointer bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                      <option value="planned">Planned</option>
-                      <option value="watching">Watching</option>
-                      <option value="completed">Completed</option>
+                      <option value="planned">{{ t('watchlist.status.planned') }}</option>
+                      <option value="watching">{{ t('watchlist.status.watching') }}</option>
+                      <option value="completed">{{ t('watchlist.status.completed') }}</option>
                     </select>
                   </div>
                   <div class="flex flex-col gap-1.5">
-                    <label class="text-sm text-slate-500 dark:text-slate-400">Year</label>
-                    <input v-model="form.year" type="number" min="1888" max="2100" placeholder="e.g. 2010" class="bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white rounded-lg px-3 py-2 text-sm placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                    <label class="text-sm text-slate-500 dark:text-slate-400">{{ t('watchlist.form.year') }}</label>
+                    <input v-model="form.year" type="number" min="1888" max="2100" :placeholder="t('watchlist.form.yearPlaceholder')" class="bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white rounded-lg px-3 py-2 text-sm placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
                   </div>
                 </div>
 
@@ -377,23 +380,23 @@ function resultYear(r) {
                   </div>
                   <template v-if="form.type === 'movie'">
                     <div class="flex flex-col gap-1.5">
-                      <label class="text-sm text-slate-500 dark:text-slate-400">Runtime (min)</label>
-                      <input v-model="form.runtime" type="number" min="1" placeholder="e.g. 148" class="bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white rounded-lg px-3 py-2 text-sm placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                      <label class="text-sm text-slate-500 dark:text-slate-400">{{ t('watchlist.form.runtime') }}</label>
+                      <input v-model="form.runtime" type="number" min="1" :placeholder="t('watchlist.form.runtimePlaceholder')" class="bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white rounded-lg px-3 py-2 text-sm placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
                     </div>
                   </template>
                   <template v-else>
                     <div class="grid grid-cols-3 gap-3">
                       <div class="flex flex-col gap-1.5">
-                        <label class="text-sm text-slate-500 dark:text-slate-400">Seasons</label>
-                        <input v-model="form.seasons" type="number" min="1" placeholder="e.g. 4" class="bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white rounded-lg px-3 py-2 text-sm placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                        <label class="text-sm text-slate-500 dark:text-slate-400">{{ t('watchlist.form.seasons') }}</label>
+                        <input v-model="form.seasons" type="number" min="1" :placeholder="t('watchlist.form.seasonsPlaceholder')" class="bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white rounded-lg px-3 py-2 text-sm placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
                       </div>
                       <div class="flex flex-col gap-1.5">
-                        <label class="text-sm text-slate-500 dark:text-slate-400">Episodes</label>
-                        <input v-model="form.episodes" type="number" min="1" placeholder="e.g. 32" class="bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white rounded-lg px-3 py-2 text-sm placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                        <label class="text-sm text-slate-500 dark:text-slate-400">{{ t('watchlist.form.episodes') }}</label>
+                        <input v-model="form.episodes" type="number" min="1" :placeholder="t('watchlist.form.episodesPlaceholder')" class="bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white rounded-lg px-3 py-2 text-sm placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
                       </div>
                       <div class="flex flex-col gap-1.5">
-                        <label class="text-sm text-slate-500 dark:text-slate-400">Total runtime (min)</label>
-                        <input v-model="form.showRuntime" type="number" min="1" placeholder="e.g. 2790" class="bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white rounded-lg px-3 py-2 text-sm placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                        <label class="text-sm text-slate-500 dark:text-slate-400">{{ t('watchlist.form.totalRuntime') }}</label>
+                        <input v-model="form.showRuntime" type="number" min="1" :placeholder="t('watchlist.form.totalRuntimePlaceholder')" class="bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white rounded-lg px-3 py-2 text-sm placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
                       </div>
                     </div>
                   </template>
@@ -402,7 +405,7 @@ function resultYear(r) {
                 <!-- Watch link -->
                 <div class="flex flex-col gap-1.5">
                   <div class="flex items-center gap-2">
-                    <label class="text-sm text-slate-500 dark:text-slate-400">Where to watch</label>
+                    <label class="text-sm text-slate-500 dark:text-slate-400">{{ t('watchlist.form.whereToWatch') }}</label>
                     <img v-if="form.streamingLogo" :src="logoUrl(form.streamingLogo)" :alt="form.streamingProvider" class="w-5 h-5 rounded object-cover" />
                     <span v-else-if="form.streamingProvider" class="text-xs text-slate-400 dark:text-slate-500">{{ form.streamingProvider }}</span>
                   </div>
@@ -412,11 +415,11 @@ function resultYear(r) {
                 <!-- Rating + TMDb -->
                 <div class="grid grid-cols-2 gap-3">
                   <div class="flex flex-col gap-1.5">
-                    <label class="text-sm text-slate-500 dark:text-slate-400">Your rating (1–10)</label>
+                    <label class="text-sm text-slate-500 dark:text-slate-400">{{ t('watchlist.form.yourRating') }}</label>
                     <input v-model="form.rating" type="number" min="1" max="10" placeholder="—" class="bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white rounded-lg px-3 py-2 text-sm placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
                   </div>
                   <div class="flex flex-col gap-1.5">
-                    <label class="text-sm text-slate-500 dark:text-slate-400">TMDb rating</label>
+                    <label class="text-sm text-slate-500 dark:text-slate-400">{{ t('watchlist.form.tmdbRating') }}</label>
                     <div class="bg-slate-100 dark:bg-slate-700/50 rounded-lg px-3 py-2 text-sm text-slate-500 dark:text-slate-400 flex items-center gap-1.5 h-[38px]">
                       <template v-if="form.tmdbRating">
                         <svg class="w-3.5 h-3.5 text-amber-400 fill-current shrink-0" viewBox="0 0 24 24">
@@ -425,15 +428,15 @@ function resultYear(r) {
                         <span class="text-slate-900 dark:text-white">{{ form.tmdbRating }}</span>
                         <span class="text-slate-400 dark:text-slate-500">/10</span>
                       </template>
-                      <span v-else class="text-slate-400 dark:text-slate-600 text-xs">Auto-filled from TMDb</span>
+                      <span v-else class="text-slate-400 dark:text-slate-600 text-xs">{{ t('watchlist.form.tmdbAutofill') }}</span>
                     </div>
                   </div>
                 </div>
 
                 <!-- Notes -->
                 <div class="flex flex-col gap-1.5">
-                  <label class="text-sm text-slate-500 dark:text-slate-400">Notes</label>
-                  <textarea v-model="form.notes" rows="2" placeholder="Any thoughts..." class="bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white rounded-lg px-3 py-2 text-sm placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none" />
+                  <label class="text-sm text-slate-500 dark:text-slate-400">{{ t('watchlist.form.notes') }}</label>
+                  <textarea v-model="form.notes" rows="2" :placeholder="t('watchlist.form.notesPlaceholder')" class="bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white rounded-lg px-3 py-2 text-sm placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none" />
                 </div>
 
                 <div class="flex gap-2">
@@ -441,13 +444,13 @@ function resultYear(r) {
                     type="submit"
                     class="cursor-pointer flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg py-2 text-sm transition-colors"
                   >
-                    {{ initial ? 'Save changes' : 'Add to watchlist' }}
+                    {{ initial ? t('watchlist.form.saveChanges') : t('watchlist.form.addTitle') }}
                   </button>
                   <button
                     v-if="!initial"
                     type="button"
                     @click="handleSubmit(true)"
-                    title="Add and add another"
+                    :title="t('watchlist.form.addAnother')"
                     class="cursor-pointer shrink-0 flex items-center gap-1 px-3 py-2 bg-green-700 hover:bg-green-600 text-green-100 rounded-lg transition-colors"
                   >
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">

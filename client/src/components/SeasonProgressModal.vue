@@ -4,6 +4,9 @@ import { updateItem } from '@/api/watchlist.js'
 import { searchMulti, fetchTvDetail, buildSeasonProgress } from '@/api/tmdb.js'
 import { deriveStatus } from '@/utils/progress.js'
 import TemplateModal from '@core/TemplateModal.vue'
+import { useI18n } from '@core/useI18n.js'
+
+const { t } = useI18n()
 
 const props = defineProps({
   show: { type: Boolean, default: false },
@@ -20,7 +23,7 @@ const loadError = ref(false)
 function cloneProgress(sp) {
   return (sp || []).map((s) => ({
     seasonNumber: s.seasonNumber,
-    name: s.name || `Season ${s.seasonNumber}`,
+    name: s.name || t('watchlist.progress.season', { number: s.seasonNumber }),
     episodeCount: s.episodeCount || 0,
     watched: Math.min(s.watched || 0, s.episodeCount || 0),
   }))
@@ -56,7 +59,7 @@ async function loadSeasons() {
     throw new Error('no seasons')
   } catch {
     if (item.episodes) {
-      seasons.value = [{ seasonNumber: 1, name: 'All episodes', episodeCount: item.episodes, watched: 0 }]
+      seasons.value = [{ seasonNumber: 1, name: t('watchlist.progress.allEpisodes'), episodeCount: item.episodes, watched: 0 }]
     } else {
       seasons.value = []
       loadError.value = true
@@ -149,12 +152,12 @@ async function save() {
           <div class="px-5 pt-5 pb-4 border-b border-white/30 dark:border-white/8 shrink-0">
             <div class="flex items-start justify-between gap-3">
               <div class="min-w-0">
-                <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wide">Progress</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wide">{{ t('watchlist.progress.label') }}</p>
                 <h2 class="text-base font-semibold text-slate-900 dark:text-white truncate">{{ item?.title }}</h2>
               </div>
               <button
                 @click="$emit('close')"
-                aria-label="Close"
+                :aria-label="t('watchlist.progress.close')"
                 class="cursor-pointer shrink-0 p-1.5 -mr-1 text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 rounded-lg transition-colors"
               >
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
@@ -166,10 +169,10 @@ async function save() {
             <!-- Overall progress -->
             <div v-if="totalEp" class="mt-3">
               <div class="flex items-end justify-between mb-1.5">
-                <span class="text-sm font-medium text-slate-700 dark:text-slate-200">{{ watchedEp }} / {{ totalEp }} ep</span>
+                <span class="text-sm font-medium text-slate-700 dark:text-slate-200">{{ t('watchlist.progress.epCount', { watched: watchedEp, total: totalEp }) }}</span>
                 <span class="text-xs" :class="allWatched ? 'text-green-500' : 'text-slate-500 dark:text-slate-400'">
-                  <template v-if="allWatched">All watched 🎉</template>
-                  <template v-else-if="timeLeft">{{ timeLeft }} left</template>
+                  <template v-if="allWatched">{{ t('watchlist.progress.allWatched') }}</template>
+                  <template v-else-if="timeLeft">{{ t('watchlist.card.timeLeft', { time: timeLeft }) }}</template>
                 </span>
               </div>
               <div class="h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
@@ -189,12 +192,12 @@ async function save() {
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
               </svg>
-              <span class="text-sm">Loading seasons…</span>
+              <span class="text-sm">{{ t('watchlist.progress.loading') }}</span>
             </div>
 
             <div v-else-if="loadError" class="text-center py-12 px-4">
               <p class="text-sm text-slate-500 dark:text-slate-400">
-                No season data found. Add an episode count in the item's details to track progress.
+                {{ t('watchlist.progress.noData') }}
               </p>
             </div>
 
@@ -207,7 +210,7 @@ async function save() {
                 <!-- Toggle circle -->
                 <button
                   @click="toggleSeason(s)"
-                  :title="seasonState(s) === 'full' ? 'Mark season unwatched' : 'Mark season watched'"
+                  :title="seasonState(s) === 'full' ? t('watchlist.progress.markUnwatched') : t('watchlist.progress.markWatched')"
                   :class="[
                     'cursor-pointer shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-150 hover:scale-110',
                     seasonState(s) === 'full'
@@ -226,7 +229,7 @@ async function save() {
                 <!-- Name + count -->
                 <div class="flex-1 min-w-0">
                   <p class="text-sm font-medium text-slate-800 dark:text-slate-100 truncate">{{ s.name }}</p>
-                  <p class="text-xs text-slate-400 dark:text-slate-500">{{ s.watched }} / {{ s.episodeCount }} episodes</p>
+                  <p class="text-xs text-slate-400 dark:text-slate-500">{{ t('watchlist.progress.episodeCount', { watched: s.watched, total: s.episodeCount }) }}</p>
                 </div>
 
                 <!-- Stepper -->
@@ -235,7 +238,7 @@ async function save() {
                     @click="step(s, -1)"
                     :disabled="s.watched <= 0"
                     class="cursor-pointer w-7 h-7 flex items-center justify-center rounded-md text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-white/10 transition-colors disabled:opacity-30 disabled:cursor-default"
-                    aria-label="One fewer episode"
+                    :aria-label="t('watchlist.progress.oneFewer')"
                   >
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14" /></svg>
                   </button>
@@ -244,7 +247,7 @@ async function save() {
                     @click="step(s, 1)"
                     :disabled="s.watched >= s.episodeCount"
                     class="cursor-pointer w-7 h-7 flex items-center justify-center rounded-md text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-white/10 transition-colors disabled:opacity-30 disabled:cursor-default"
-                    aria-label="One more episode"
+                    :aria-label="t('watchlist.progress.oneMore')"
                   >
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14" /></svg>
                   </button>
@@ -259,14 +262,14 @@ async function save() {
               @click="allWatched ? resetAll() : markAll()"
               class="cursor-pointer text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
             >
-              {{ allWatched ? 'Reset all' : 'Mark all watched' }}
+              {{ allWatched ? t('watchlist.progress.resetAll') : t('watchlist.progress.markAll') }}
             </button>
             <button
               @click="save"
               :disabled="saving"
               class="cursor-pointer ml-auto px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-500 rounded-lg transition-colors disabled:opacity-60 disabled:cursor-wait"
             >
-              {{ saving ? 'Saving…' : 'Save' }}
+              {{ saving ? t('watchlist.progress.saving') : t('watchlist.progress.save') }}
             </button>
           </div>
     </div>

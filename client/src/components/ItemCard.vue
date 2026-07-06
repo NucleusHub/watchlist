@@ -6,6 +6,9 @@ import { logoUrl } from '@/api/tmdb.js'
 import { showTotals, watchedFraction, remainingMinutes } from '@/utils/progress.js'
 import TemplateModal from '@core/TemplateModal.vue'
 import SeasonProgressModal from '@/components/SeasonProgressModal.vue'
+import { useI18n } from '@core/useI18n.js'
+
+const { t } = useI18n()
 
 const props = defineProps({
   item: { type: Object, required: true },
@@ -15,12 +18,6 @@ const props = defineProps({
 const isList    = computed(() => props.gridStyle === 'list')
 const isCompact = computed(() => props.gridStyle === 'list' || props.gridStyle === 'small')
 const emit = defineEmits(['updated', 'deleted', 'edit'])
-
-const STATUS_LABELS = {
-  planned: 'Planned',
-  watching: 'Watching',
-  completed: 'Completed',
-}
 
 const STATUS_COLORS = {
   planned:   'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300',
@@ -51,7 +48,7 @@ const isPartial = computed(
 )
 const remainingLabel = computed(() => {
   if (!isPartial.value) return null
-  return formatRuntime(remainingMinutes(props.item)) + ' left'
+  return t('watchlist.card.timeLeft', { time: formatRuntime(remainingMinutes(props.item)) })
 })
 
 function handleProgressUpdated(updated) {
@@ -73,8 +70,8 @@ const meta = computed(() => {
     const rt = formatRuntime(props.item.runtime)
     if (rt) parts.push(rt)
   } else {
-    if (props.item.seasons) parts.push(`${props.item.seasons} season${props.item.seasons !== 1 ? 's' : ''}`)
-    if (props.item.episodes) parts.push(`${props.item.episodes} ep`)
+    if (props.item.seasons) parts.push(t(props.item.seasons === 1 ? 'watchlist.card.seasonOne' : 'watchlist.card.seasonMany', { count: props.item.seasons }))
+    if (props.item.episodes) parts.push(t('watchlist.card.episodesShort', { count: props.item.episodes }))
     const rt = formatRuntime(props.item.showRuntime)
     if (rt) parts.push(rt)
   }
@@ -142,7 +139,7 @@ async function confirmDelete() {
         v-if="item.status === 'planned'"
         @click.stop="markWatched"
         :disabled="marking"
-        title="Mark as watched"
+        :title="t('watchlist.card.markWatched')"
         class="cursor-pointer watched-btn absolute top-2 left-2 w-7 h-7 rounded-full border-2 border-white/60 bg-black/40 backdrop-blur-sm flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-200 hover:border-white hover:bg-black/60 hover:scale-110 disabled:cursor-wait"
       >
         <svg class="w-3.5 h-3.5 text-white/80" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
@@ -155,7 +152,7 @@ async function confirmDelete() {
         v-else-if="item.status === 'watching'"
         @click.stop="markWatched"
         :disabled="marking"
-        title="Mark as watched"
+        :title="t('watchlist.card.markWatched')"
         class="cursor-pointer watched-btn absolute top-2 left-2 w-7 h-7 rounded-full bg-blue-500 shadow-md flex items-center justify-center transition-all duration-200 hover:bg-green-500 hover:scale-110 disabled:cursor-wait group/clock"
       >
         <svg class="w-3.5 h-3.5 text-white group-hover/clock:hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -180,7 +177,7 @@ async function confirmDelete() {
       <button
         v-if="isShow"
         @click.stop="showProgress = true"
-        title="Track episode progress"
+        :title="t('watchlist.card.trackEpisodes')"
         class="cursor-pointer watched-btn absolute top-10 left-2 w-7 h-7 rounded-full border-2 border-white/60 bg-black/40 backdrop-blur-sm flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 hover:border-white hover:bg-black/60 hover:scale-110"
       >
         <svg class="w-3.5 h-3.5 text-white/80" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -210,7 +207,7 @@ async function confirmDelete() {
           <button
             @click="$emit('edit', item)"
             class="cursor-pointer text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors p-1 rounded"
-            title="Edit"
+            :title="t('watchlist.card.edit')"
           >
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -220,7 +217,7 @@ async function confirmDelete() {
             @click="showConfirm = true"
             :disabled="deleting"
             class="cursor-pointer text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 transition-colors p-1 rounded disabled:opacity-40 disabled:cursor-default"
-            title="Delete"
+            :title="t('watchlist.card.delete')"
           >
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -244,11 +241,11 @@ async function confirmDelete() {
         <button
           v-if="totals.totalEp > 0"
           @click.stop="showProgress = true"
-          :title="`Track progress · ${totals.watchedEp}/${totals.totalEp} episodes`"
+          :title="t('watchlist.card.trackProgressCount', { watched: totals.watchedEp, total: totals.totalEp })"
           class="cursor-pointer group/prog flex flex-col gap-1 w-full text-left"
         >
           <div v-if="!isList" class="flex items-center justify-between gap-2 text-xs">
-            <span class="text-slate-500 dark:text-slate-400">{{ item.status === 'completed' ? totals.totalEp : totals.watchedEp }}/{{ totals.totalEp }} ep</span>
+            <span class="text-slate-500 dark:text-slate-400">{{ t('watchlist.card.episodeProgress', { watched: item.status === 'completed' ? totals.totalEp : totals.watchedEp, total: totals.totalEp }) }}</span>
             <span v-if="remainingLabel" class="text-slate-400 dark:text-slate-500">{{ remainingLabel }}</span>
           </div>
           <div class="h-1.5 bg-slate-200/80 dark:bg-slate-700/80 rounded-full overflow-hidden">
@@ -267,7 +264,7 @@ async function confirmDelete() {
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          Track progress
+          {{ t('watchlist.card.trackProgress') }}
         </button>
       </template>
 
@@ -275,14 +272,14 @@ async function confirmDelete() {
 
       <div :class="['flex items-center gap-1.5 flex-wrap mt-auto', isCompact ? 'pt-1' : 'pt-1.5']">
         <span :class="['text-xs font-medium px-2 py-0.5 rounded-full', TYPE_COLORS[item.type]]">
-          {{ item.type === 'movie' ? 'Movie' : 'Show' }}
+          {{ item.type === 'movie' ? t('watchlist.type.movie') : t('watchlist.type.show') }}
         </span>
         <button
           @click="cycleStatus"
           :class="['cursor-pointer text-xs font-medium px-2 py-0.5 rounded-full transition-opacity hover:opacity-80', STATUS_COLORS[item.status]]"
-          title="Click to cycle status"
+          :title="t('watchlist.card.cycleStatus')"
         >
-          {{ STATUS_LABELS[item.status] }}
+          {{ t('watchlist.status.' + item.status) }}
         </button>
         <span v-if="item.rating" class="text-xs text-amber-400 font-medium ml-auto">
           ★ {{ item.rating }}/10
@@ -293,9 +290,9 @@ async function confirmDelete() {
 
   <TemplateModal
     :show="showConfirm"
-    title="Remove from watchlist?"
-    :message="`'${item.title}' will be permanently removed.`"
-    confirm-label="Remove"
+    :title="t('watchlist.card.removeTitle')"
+    :message="t('watchlist.card.removeMessage', { title: item.title })"
+    :confirm-label="t('watchlist.card.remove')"
     @confirm="confirmDelete"
     @cancel="showConfirm = false"
   />

@@ -2,6 +2,9 @@
 import { computed } from 'vue'
 import { logoUrl } from '@/api/tmdb.js'
 import { itemRuntime, watchedMinutes, remainingMinutes } from '@/utils/progress.js'
+import { useI18n } from '@core/useI18n.js'
+
+const { t } = useI18n()
 
 const props = defineProps({ items: { type: Array, required: true } })
 
@@ -69,39 +72,39 @@ const topYears = computed(() => {
     <!-- Watchtime -->
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
       <div class="bg-white dark:bg-slate-800 rounded-xl p-4 flex flex-col gap-1 shadow-sm dark:shadow-none">
-        <p class="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide">Watched</p>
+        <p class="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide">{{ t('watchlist.stats.watched') }}</p>
         <p class="text-2xl font-bold text-green-400">{{ completedTime }}</p>
-        <p class="text-xs text-slate-400 dark:text-slate-500">incl. partial shows</p>
+        <p class="text-xs text-slate-400 dark:text-slate-500">{{ t('watchlist.stats.watchedNote') }}</p>
       </div>
       <div class="bg-white dark:bg-slate-800 rounded-xl p-4 flex flex-col gap-1 shadow-sm dark:shadow-none">
-        <p class="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide">In progress</p>
+        <p class="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide">{{ t('watchlist.stats.inProgress') }}</p>
         <p class="text-2xl font-bold text-blue-400">{{ watchingTime }}</p>
-        <p class="text-xs text-slate-400 dark:text-slate-500">{{ watching.length }} titles · left</p>
+        <p class="text-xs text-slate-400 dark:text-slate-500">{{ t('watchlist.stats.titlesLeft', { count: watching.length }) }}</p>
       </div>
       <div class="bg-white dark:bg-slate-800 rounded-xl p-4 flex flex-col gap-1 shadow-sm dark:shadow-none">
-        <p class="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide">Planned</p>
+        <p class="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide">{{ t('watchlist.stats.planned') }}</p>
         <p class="text-2xl font-bold text-slate-500 dark:text-slate-300">{{ plannedTime }}</p>
-        <p class="text-xs text-slate-400 dark:text-slate-500">{{ planned.length }} titles · left</p>
+        <p class="text-xs text-slate-400 dark:text-slate-500">{{ t('watchlist.stats.titlesLeft', { count: planned.length }) }}</p>
       </div>
       <div class="bg-white dark:bg-slate-800 rounded-xl p-4 flex flex-col gap-1 shadow-sm dark:shadow-none">
-        <p class="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide">Total</p>
+        <p class="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide">{{ t('watchlist.stats.total') }}</p>
         <p class="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{{ totalTime }}</p>
-        <p class="text-xs text-slate-400 dark:text-slate-500">{{ items.length }} titles</p>
+        <p class="text-xs text-slate-400 dark:text-slate-500">{{ t('watchlist.stats.titles', { count: items.length }) }}</p>
       </div>
     </div>
 
     <!-- Type breakdown + Ratings -->
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <div class="bg-white dark:bg-slate-800 rounded-xl p-4 flex flex-col gap-3 shadow-sm dark:shadow-none">
-        <p class="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide">Type breakdown</p>
+        <p class="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide">{{ t('watchlist.stats.typeBreakdown') }}</p>
         <div class="flex flex-col gap-3">
           <div>
             <div class="flex items-center justify-between mb-1.5">
               <div class="flex items-center gap-2">
-                <span class="text-xs px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300">Movies</span>
+                <span class="text-xs px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300">{{ t('watchlist.stats.movies') }}</span>
                 <span class="text-sm font-medium text-slate-900 dark:text-white">{{ movies.length }}</span>
               </div>
-              <span class="text-xs text-slate-400 dark:text-slate-500">{{ movies.filter(i => i.status === 'completed').length }} done</span>
+              <span class="text-xs text-slate-400 dark:text-slate-500">{{ t('watchlist.stats.done', { count: movies.filter(i => i.status === 'completed').length }) }}</span>
             </div>
             <div class="h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
               <div class="h-full bg-purple-500 rounded-full transition-all" :style="{ width: `${items.length ? movies.length / items.length * 100 : 0}%` }" />
@@ -110,10 +113,10 @@ const topYears = computed(() => {
           <div>
             <div class="flex items-center justify-between mb-1.5">
               <div class="flex items-center gap-2">
-                <span class="text-xs px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300">Shows</span>
+                <span class="text-xs px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300">{{ t('watchlist.stats.shows') }}</span>
                 <span class="text-sm font-medium text-slate-900 dark:text-white">{{ shows.length }}</span>
               </div>
-              <span class="text-xs text-slate-400 dark:text-slate-500">{{ shows.filter(i => i.status === 'completed').length }} done</span>
+              <span class="text-xs text-slate-400 dark:text-slate-500">{{ t('watchlist.stats.done', { count: shows.filter(i => i.status === 'completed').length }) }}</span>
             </div>
             <div class="h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
               <div class="h-full bg-amber-500 rounded-full transition-all" :style="{ width: `${items.length ? shows.length / items.length * 100 : 0}%` }" />
@@ -123,18 +126,18 @@ const topYears = computed(() => {
       </div>
 
       <div class="bg-white dark:bg-slate-800 rounded-xl p-4 flex flex-col gap-3 shadow-sm dark:shadow-none">
-        <p class="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide">Ratings</p>
+        <p class="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide">{{ t('watchlist.stats.ratings') }}</p>
         <div class="flex items-center justify-around flex-1 pt-1">
           <div class="flex flex-col items-center gap-1">
             <p class="text-3xl font-bold text-amber-400">{{ avgRating ?? '—' }}</p>
-            <p class="text-xs text-slate-400 dark:text-slate-500 text-center">your avg</p>
-            <p v-if="ratedItems.length" class="text-xs text-slate-400 dark:text-slate-600">{{ ratedItems.length }} rated</p>
+            <p class="text-xs text-slate-400 dark:text-slate-500 text-center">{{ t('watchlist.stats.yourAvg') }}</p>
+            <p v-if="ratedItems.length" class="text-xs text-slate-400 dark:text-slate-600">{{ t('watchlist.stats.rated', { count: ratedItems.length }) }}</p>
           </div>
           <div class="w-px h-12 bg-slate-200 dark:bg-slate-700" />
           <div class="flex flex-col items-center gap-1">
             <p class="text-3xl font-bold text-slate-500 dark:text-slate-300">{{ avgTmdb ?? '—' }}</p>
-            <p class="text-xs text-slate-400 dark:text-slate-500 text-center">TMDb avg</p>
-            <p v-if="tmdbItems.length" class="text-xs text-slate-400 dark:text-slate-600">{{ tmdbItems.length }} rated</p>
+            <p class="text-xs text-slate-400 dark:text-slate-500 text-center">{{ t('watchlist.stats.tmdbAvg') }}</p>
+            <p v-if="tmdbItems.length" class="text-xs text-slate-400 dark:text-slate-600">{{ t('watchlist.stats.rated', { count: tmdbItems.length }) }}</p>
           </div>
         </div>
       </div>
@@ -143,7 +146,7 @@ const topYears = computed(() => {
     <!-- Streaming + Years -->
     <div v-if="topProviders.length || topYears.length" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <div v-if="topProviders.length" class="bg-white dark:bg-slate-800 rounded-xl p-4 flex flex-col gap-3 shadow-sm dark:shadow-none">
-        <p class="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide">Available on</p>
+        <p class="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide">{{ t('watchlist.stats.availableOn') }}</p>
         <div class="flex flex-col gap-2">
           <div v-for="p in topProviders" :key="p.name" class="flex items-center gap-2.5">
             <img v-if="p.logo" :src="logoUrl(p.logo)" :alt="p.name" class="w-5 h-5 rounded shrink-0 object-cover" />
@@ -155,7 +158,7 @@ const topYears = computed(() => {
       </div>
 
       <div v-if="topYears.length" class="bg-white dark:bg-slate-800 rounded-xl p-4 flex flex-col gap-3 shadow-sm dark:shadow-none">
-        <p class="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide">Top release years</p>
+        <p class="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide">{{ t('watchlist.stats.topYears') }}</p>
         <div class="flex flex-col gap-2">
           <div v-for="y in topYears" :key="y.year" class="flex items-center gap-2">
             <span class="text-sm text-slate-500 dark:text-slate-400 w-11 shrink-0">{{ y.year }}</span>
