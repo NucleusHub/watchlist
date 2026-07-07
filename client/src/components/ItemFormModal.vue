@@ -1,7 +1,9 @@
 <script setup>
-import { ref, watch, onUnmounted, nextTick } from 'vue'
+import { ref, watch, nextTick } from 'vue'
 import { searchMulti, fetchMovieDetail, fetchTvDetail, fetchWatchProviders, logoUrl, buildSeasonProgress } from '@/api/tmdb.js'
 import { uploadImage } from '@/api/watchlist.js'
+import { OPEN_OPTIONS, TITLE_FORMATS } from '@/utils/openTarget.js'
+import TemplateModal from '@core/TemplateModal.vue'
 import { useI18n } from '@core/useI18n.js'
 
 const { t } = useI18n()
@@ -12,12 +14,6 @@ const props = defineProps({
   resetKey: { type: Number, default: 0 },
 })
 const emit = defineEmits(['close', 'submit'])
-
-function onKeydown(e) { if (e.key === 'Escape') emit('close') }
-watch(() => props.show, (val) => {
-  val ? window.addEventListener('keydown', onKeydown) : window.removeEventListener('keydown', onKeydown)
-})
-onUnmounted(() => window.removeEventListener('keydown', onKeydown))
 
 const form = ref({})
 const results = ref([])
@@ -31,6 +27,10 @@ const urlInput = ref(null)
 const showPosterMenu = ref(false)
 const showUrlInput = ref(false)
 const posterUrlDraft = ref('')
+// Per-item poster-click override. '' = inherit the global default.
+const openType = ref('')
+const openCustomUrl = ref('')
+const openTitleFormat = ref('raw')
 let searchTimer = null
 
 const EMPTY_FORM = () => ({
@@ -48,6 +48,9 @@ const EMPTY_FORM = () => ({
 
 function resetForm() {
   form.value = props.initial ? { ...props.initial } : EMPTY_FORM()
+  openType.value = form.value.openTarget?.type || ''
+  openCustomUrl.value = form.value.openTarget?.customUrl || ''
+  openTitleFormat.value = form.value.openTarget?.titleFormat || 'raw'
   results.value = []
   showDropdown.value = false
   showPosterMenu.value = false
@@ -184,6 +187,14 @@ function handleSubmit(addAnother = false) {
     if (payload[f] === '' || payload[f] == null) payload[f] = null
     else payload[f] = Number(payload[f])
   }
+  // Poster-click override: null tells the item to inherit the global default.
+  payload.openTarget = openType.value
+    ? {
+        type: openType.value,
+        customUrl: openType.value === 'custom' ? openCustomUrl.value.trim() : '',
+        titleFormat: openType.value === 'custom' ? openTitleFormat.value : 'raw',
+      }
+    : null
   emit('submit', payload, addAnother)
 }
 
@@ -193,25 +204,15 @@ function resultYear(r) {
 </script>
 
 <template>
-  <Teleport to="body">
-    <Transition name="fade">
-      <div v-if="show" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-black/20 backdrop-blur-xl" @click="$emit('close')" />
-        <div class="relative bg-white/25 dark:bg-white/8 border border-white/50 dark:border-white/10 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-          <div class="p-4 sm:p-6 flex flex-col gap-5">
-
-            <div class="flex items-center justify-between">
-              <h2 class="text-lg font-semibold text-slate-900 dark:text-white">
-                {{ initial ? t('watchlist.form.editTitle') : t('watchlist.form.addTitle') }}
-              </h2>
-              <button @click="$emit('close')" class="cursor-pointer text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            <form @submit.prevent="handleSubmit()" class="flex flex-col gap-4 sm:flex-row sm:gap-6 items-start">
+  <TemplateModal
+    :show="show"
+    header
+    :title="initial ? t('watchlist.form.editTitle') : t('watchlist.form.addTitle')"
+    size="lg"
+    body-class="px-4 sm:px-6 pb-5 pt-2"
+    @cancel="$emit('close')"
+  >
+    <form @submit.prevent="handleSubmit()" class="flex flex-col gap-4 sm:flex-row sm:gap-6 items-start">
 
               <!-- Left: Poster -->
               <div class="w-36 sm:w-40 shrink-0 mx-auto sm:mx-0 flex flex-col gap-3">
@@ -412,6 +413,30 @@ function resultYear(r) {
                   <input v-model="form.watchLink" type="url" placeholder="https://…" class="bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white rounded-lg px-3 py-2 text-sm placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
                 </div>
 
+                <!-- Open on click (overrides the global default) -->
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-sm text-slate-500 dark:text-slate-400">{{ t('watchlist.form.openOnClick') }}</label>
+                  <select v-model="openType" class="cursor-pointer bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <option value="">{{ t('watchlist.form.openUseGlobal') }}</option>
+                    <option v-for="opt in OPEN_OPTIONS" :key="opt.type" :value="opt.type">{{ t(opt.i18n) }}</option>
+                  </select>
+                  <template v-if="openType === 'custom'">
+                    <input
+                      v-model="openCustomUrl"
+                      type="url"
+                      :placeholder="t('watchlist.open.customPlaceholder')"
+                      class="bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white rounded-lg px-3 py-2 text-sm placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                    <div class="flex items-center gap-2">
+                      <label class="text-xs text-slate-500 dark:text-slate-400 shrink-0">{{ t('watchlist.open.titleFormat') }}</label>
+                      <select v-model="openTitleFormat" class="cursor-pointer flex-1 bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option v-for="fmt in TITLE_FORMATS" :key="fmt.value" :value="fmt.value">{{ t(fmt.i18n) }} — {{ fmt.example }}</option>
+                      </select>
+                    </div>
+                    <p class="text-xs text-slate-400 dark:text-slate-500">{{ t('watchlist.open.customHint') }}</p>
+                  </template>
+                </div>
+
                 <!-- Rating + TMDb -->
                 <div class="grid grid-cols-2 gap-3">
                   <div class="flex flex-col gap-1.5">
@@ -462,15 +487,6 @@ function resultYear(r) {
                   </button>
                 </div>
               </div>
-            </form>
-          </div>
-        </div>
-      </div>
-    </Transition>
-  </Teleport>
+    </form>
+  </TemplateModal>
 </template>
-
-<style scoped>
-.fade-enter-active, .fade-leave-active { transition: opacity 0.15s ease; }
-.fade-enter-from, .fade-leave-to { opacity: 0; }
-</style>

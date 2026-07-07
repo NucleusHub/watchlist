@@ -7,8 +7,11 @@ import { showTotals, watchedFraction, remainingMinutes } from '@/utils/progress.
 import TemplateModal from '@core/TemplateModal.vue'
 import SeasonProgressModal from '@/components/SeasonProgressModal.vue'
 import { useI18n } from '@core/useI18n.js'
+import { useOpenSettings } from '@/composables/useOpenSettings.js'
+import { resolveTarget, buildOpenUrl } from '@/utils/openTarget.js'
 
 const { t } = useI18n()
+const { defaults } = useOpenSettings()
 
 const props = defineProps({
   item: { type: Object, required: true },
@@ -50,6 +53,13 @@ const remainingLabel = computed(() => {
   if (!isPartial.value) return null
   return t('watchlist.card.timeLeft', { time: formatRuntime(remainingMinutes(props.item)) })
 })
+
+// Poster click destination — item override, else the per-type global default.
+const openUrl = computed(() => buildOpenUrl(resolveTarget(props.item, defaults), props.item))
+
+function openPoster() {
+  if (openUrl.value) window.open(openUrl.value, '_blank', 'noopener,noreferrer')
+}
 
 function handleProgressUpdated(updated) {
   emit('updated', updated)
@@ -126,11 +136,25 @@ async function confirmDelete() {
 <template>
   <div ref="cardRef" :class="['group rounded-xl overflow-hidden flex flex-row transition-all backdrop-blur-sm shadow-sm', isList ? '' : isCompact ? 'min-h-28' : 'min-h-36', item.status === 'completed' ? 'bg-green-50/80 dark:bg-green-900/20 ring-1 ring-inset ring-green-500/50 dark:ring-green-500/25 shadow-green-500/10' : item.status === 'watching' ? 'bg-blue-50/80 dark:bg-blue-900/20 ring-1 ring-inset ring-blue-500/50 dark:ring-blue-500/25 shadow-blue-500/10' : 'bg-white/70 dark:bg-slate-800/70 border border-white/60 dark:border-white/8 hover:bg-white/85 dark:hover:bg-slate-800/85 hover:shadow-md']">
     <!-- Poster -->
-    <div :class="['relative shrink-0 self-stretch overflow-hidden bg-slate-100 dark:bg-slate-700/60', isList ? 'w-14' : isCompact ? 'w-20' : 'w-24']">
+    <div
+      :class="['relative shrink-0 self-stretch overflow-hidden bg-slate-100 dark:bg-slate-700/60', isList ? 'w-14' : isCompact ? 'w-20' : 'w-24', openUrl ? 'cursor-pointer group/poster' : '']"
+      @click="openPoster"
+      :title="openUrl ? t('watchlist.card.openExternal') : undefined"
+    >
       <img v-if="item.posterUrl" :src="item.posterUrl" :alt="item.title" class="w-full h-full object-cover" />
       <div v-else class="w-full h-full flex items-center justify-center">
         <svg class="w-8 h-8 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M3.375 19.5h17.25m-17.25 0a1.125 1.125 0 01-1.125-1.125M3.375 19.5h1.5C5.496 19.5 6 18.996 6 18.375m-3.75.125-.375-12a1.125 1.125 0 011.125-1.125h15.75A1.125 1.125 0 0120.625 6.5l-.375 12M6 18.375V7.875C6 7.254 6.504 6.75 7.125 6.75h9.75C17.496 6.75 18 7.254 18 7.875v10.5m0 0c0 .621-.504 1.125-1.125 1.125H7.125" />
+        </svg>
+      </div>
+
+      <!-- Open-on-click affordance — reveals on poster hover (desktop only) -->
+      <div
+        v-if="openUrl"
+        class="pointer-events-none absolute inset-0 hidden sm:flex items-center justify-center bg-black/0 group-hover/poster:bg-black/30 transition-colors"
+      >
+        <svg class="w-5 h-5 text-white opacity-0 group-hover/poster:opacity-100 transition-opacity drop-shadow" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
         </svg>
       </div>
 
@@ -202,7 +226,11 @@ async function confirmDelete() {
     <!-- Content -->
     <div :class="['flex-1 flex flex-col min-w-0', isList ? 'p-2 gap-0.5' : isCompact ? 'p-3 gap-1' : 'p-4 gap-1.5']">
       <div class="flex items-start justify-between gap-1.5">
-        <h3 class="font-semibold text-slate-900 dark:text-white text-sm leading-tight">{{ item.title }}</h3>
+        <h3
+          :class="['font-semibold text-slate-900 dark:text-white text-sm leading-tight', openUrl ? 'cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors' : '']"
+          :title="openUrl ? t('watchlist.card.openExternal') : undefined"
+          @click="openPoster"
+        >{{ item.title }}</h3>
         <div class="flex gap-0.5 shrink-0">
           <button
             @click="$emit('edit', item)"

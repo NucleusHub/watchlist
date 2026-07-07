@@ -12,6 +12,27 @@ const seasonProgressSchema = new mongoose.Schema(
   { _id: false }
 )
 
+// Where this item opens when its poster is clicked. When unset (null), the
+// app falls back to the per-type global default kept in the browser. `custom`
+// uses `customUrl` with {title}/{year} placeholders.
+const openTargetSchema = new mongoose.Schema(
+  {
+    type: {
+      type: String,
+      enum: ['tmdb', 'csfd', 'google', 'custom'],
+      required: true,
+    },
+    customUrl: { type: String, default: '' },
+    // Shape of the {title} placeholder inside customUrl.
+    titleFormat: {
+      type: String,
+      enum: ['raw', 'lower', 'kebab', 'snake', 'pascal', 'camel'],
+      default: 'raw',
+    },
+  },
+  { _id: false }
+)
+
 const watchlistItemSchema = new mongoose.Schema(
   {
     profileId: { type: mongoose.Schema.Types.ObjectId, ref: 'Profile', index: true },
@@ -34,6 +55,7 @@ const watchlistItemSchema = new mongoose.Schema(
     episodes: { type: Number, default: null },
     showRuntime: { type: Number, default: null },
     seasonProgress: { type: [seasonProgressSchema], default: undefined },
+    openTarget: { type: openTargetSchema, default: null },
     dateAdded: { type: Date, default: Date.now },
     notes: { type: String, trim: true, default: '' },
   },

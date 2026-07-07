@@ -145,7 +145,7 @@ async function save() {
 </script>
 
 <template>
-  <TemplateModal :show="show" panel-class="max-w-md" @cancel="$emit('close')">
+  <TemplateModal :show="show" size="md" @cancel="$emit('close')">
     <div class="flex flex-col max-h-[85vh]">
 
           <!-- Header -->
