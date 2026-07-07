@@ -34,11 +34,21 @@ export default defineConfig(({ mode }) => ({
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
       '@core': fileURLToPath(new URL('./core', import.meta.url)),
+      // Shared widget package (via the ./widgets symlink → repo /widgets), so
+      // this app can render Pulse widgets that opt in to showing here.
+      '@widgets-core': fileURLToPath(new URL('./widgets/core', import.meta.url)),
     },
   },
   server: {
     host: '0.0.0.0',
     proxy: {
+      // Pulse state (widgets opting in to show here). Must precede the '/api'
+      // catch-all so it routes to Pulse, not the watchlist server. Dev-only;
+      // prod nginx routes /api/pulse centrally.
+      '/api/pulse': {
+        target: process.env.PULSE_TARGET || 'http://localhost:3004',
+        changeOrigin: true,
+      },
       '/api': {
         target: process.env.API_TARGET || 'http://localhost:3000',
         changeOrigin: true,
