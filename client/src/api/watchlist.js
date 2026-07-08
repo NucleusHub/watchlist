@@ -7,6 +7,10 @@ export const createItem = (data) => api.post('/', data).then((r) => r.data)
 export const updateItem = (id, data) => api.patch(`/${id}`, data).then((r) => r.data)
 export const deleteItem = (id) => api.delete(`/${id}`).then((r) => r.data)
 
+// Per-user app preferences (the per-type "open in" defaults).
+export const getSettings = () => api.get('/settings').then((r) => r.data)
+export const saveSettings = (openDefaults) => api.put('/settings', openDefaults).then((r) => r.data)
+
 export async function uploadImage(file) {
   const form = new FormData()
   form.append('image', file)

@@ -3,6 +3,7 @@ import path from 'path'
 import fs from 'node:fs'
 import { fileURLToPath } from 'url'
 import WatchlistItem from '../models/WatchlistItem.js'
+import WatchlistSettings from '../models/WatchlistSettings.js'
 import { requireAuth } from '../middleware/auth.js'
 
 const router = Router()
@@ -30,6 +31,44 @@ router.post('/users/:userId/teardown', requireAdmin, async (req, res) => {
     res.json({ ok: true, deleted: deletedCount })
   } catch (err) {
     res.status(500).json({ error: err.message })
+  }
+})
+
+// ── Per-user app preferences ────────────────────────────────────────────────
+// The per-type "open in" defaults. These used to live only in the browser, so
+// they vanished each session; now persisted per profile. Defined before the
+// `/:id` item routes for readability (no method collision — those are PATCH/DELETE).
+
+// Coerce a client-supplied open target into the stored shape, dropping junk.
+const pickOpenTarget = (t) => ({
+  type: t?.type || 'tmdb',
+  customUrl: t?.customUrl || '',
+  titleFormat: t?.titleFormat || 'raw',
+})
+
+router.get('/settings', async (req, res) => {
+  try {
+    const doc = await WatchlistSettings.findOne({ profileId: req.profile.profileId }).lean()
+    res.json({ openDefaults: doc?.openDefaults ?? null })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+router.put('/settings', async (req, res) => {
+  try {
+    const openDefaults = {
+      movie: pickOpenTarget(req.body?.movie),
+      show: pickOpenTarget(req.body?.show),
+    }
+    const doc = await WatchlistSettings.findOneAndUpdate(
+      { profileId: req.profile.profileId },
+      { $set: { openDefaults } },
+      { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true }
+    ).lean()
+    res.json({ openDefaults: doc.openDefaults })
+  } catch (err) {
+    res.status(400).json({ error: err.message })
   }
 })
 
