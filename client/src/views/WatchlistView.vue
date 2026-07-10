@@ -354,7 +354,7 @@ onMounted(load)
         </button>
         <button
           @click="openAdd"
-          class="cursor-pointer flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium px-3 sm:px-4 py-2 rounded-lg transition-colors"
+          class="nuc-press cursor-pointer flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium px-3 sm:px-4 py-2 rounded-lg transition-colors"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
@@ -525,7 +525,7 @@ onMounted(load)
         </button>
       </div>
 
-      <div v-else class="grid gap-3" :class="gridClass">
+      <div v-else class="grid gap-3 nuc-stagger" :class="gridClass" style="--nuc-step: 32ms">
         <ItemCard
           v-for="item in filtered"
           :key="item._id"

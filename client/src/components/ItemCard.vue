@@ -134,7 +134,7 @@ async function confirmDelete() {
 </script>
 
 <template>
-  <div ref="cardRef" :class="['group rounded-xl overflow-hidden flex flex-row transition-all backdrop-blur-sm shadow-sm', isList ? '' : isCompact ? 'min-h-28' : 'min-h-36', item.status === 'completed' ? 'bg-green-50/80 dark:bg-green-900/20 ring-1 ring-inset ring-green-500/50 dark:ring-green-500/25 shadow-green-500/10' : item.status === 'watching' ? 'bg-blue-50/80 dark:bg-blue-900/20 ring-1 ring-inset ring-blue-500/50 dark:ring-blue-500/25 shadow-blue-500/10' : 'bg-white/70 dark:bg-slate-800/70 border border-white/60 dark:border-white/8 hover:bg-white/85 dark:hover:bg-slate-800/85 hover:shadow-md']">
+  <div ref="cardRef" :class="['group rounded-xl overflow-hidden flex flex-row transition-all duration-200 ease-out hover:-translate-y-0.5 backdrop-blur-sm shadow-sm', isList ? '' : isCompact ? 'min-h-28' : 'min-h-36', item.status === 'completed' ? 'bg-green-50/80 dark:bg-green-900/20 ring-1 ring-inset ring-green-500/50 dark:ring-green-500/25 shadow-green-500/10' : item.status === 'watching' ? 'bg-blue-50/80 dark:bg-blue-900/20 ring-1 ring-inset ring-blue-500/50 dark:ring-blue-500/25 shadow-blue-500/10' : 'bg-white/70 dark:bg-slate-800/70 border border-white/60 dark:border-white/8 hover:bg-white/85 dark:hover:bg-slate-800/85 hover:shadow-md']">
     <!-- Poster -->
     <div
       :class="['relative shrink-0 self-stretch overflow-hidden bg-slate-100 dark:bg-slate-700/60', isList ? 'w-14' : isCompact ? 'w-20' : 'w-24', openUrl ? 'cursor-pointer group/poster' : '']"
@@ -234,7 +234,7 @@ async function confirmDelete() {
         <div class="flex gap-0.5 shrink-0">
           <button
             @click="$emit('edit', item)"
-            class="cursor-pointer text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors p-1 rounded"
+            class="nuc-press cursor-pointer text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors p-1 rounded"
             :title="t('watchlist.card.edit')"
           >
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -244,7 +244,7 @@ async function confirmDelete() {
           <button
             @click="showConfirm = true"
             :disabled="deleting"
-            class="cursor-pointer text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 transition-colors p-1 rounded disabled:opacity-40 disabled:cursor-default"
+            class="nuc-press cursor-pointer text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 transition-colors p-1 rounded disabled:opacity-40 disabled:cursor-default"
             :title="t('watchlist.card.delete')"
           >
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
