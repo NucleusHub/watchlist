@@ -10,6 +10,7 @@ import AppHeader from '@core/AppHeader.vue'
 import BackgroundBlobs from '@core/BackgroundBlobs.vue'
 import WatchlistStats from '@/components/WatchlistStats.vue'
 import OpenSettingsModal from '@/components/OpenSettingsModal.vue'
+import FavoriteHeart from '@core/FavoriteHeart.vue'
 import { useI18n } from '@core/useI18n.js'
 import { useSettingsModal } from '@core/useSettingsModal.js'
 
@@ -36,6 +37,7 @@ const editingItem = ref(null)
 const modalResetKey = ref(0)
 const activeStatus = ref('planned')
 const activeType = ref('all')
+const onlyFavorite = ref(false)
 const sortBy = ref('alphabetical')
 const sortDir = ref('asc')
 const searchQuery = ref('')
@@ -80,8 +82,9 @@ const filtered = computed(() => {
   const base = items.value.filter((i) => {
     const statusOk = activeStatus.value === 'all' || i.status === activeStatus.value
     const typeOk = activeType.value === 'all' || i.type === activeType.value
+    const favOk = !onlyFavorite.value || i.favorite
     const searchOk = !q || i.title.toLowerCase().includes(q) || (i.notes && i.notes.toLowerCase().includes(q))
-    return statusOk && typeOk && searchOk
+    return statusOk && typeOk && favOk && searchOk
   })
   const dir = sortDir.value === 'asc' ? 1 : -1
   return [...base].sort((a, b) => {
@@ -367,142 +370,123 @@ onMounted(load)
     <main class="max-w-4xl mx-auto px-4 py-6 flex flex-col gap-6">
       <WatchlistStats v-if="showStats" :items="items" />
       <template v-else>
-      <div class="flex flex-col gap-3">
-        <div class="flex gap-1.5 flex-wrap">
-          <button
-            v-for="tab in STATUS_TABS"
-            :key="tab.key"
-            @click="activeStatus = tab.key"
-            :class="[
-              'cursor-pointer px-3 py-1.5 rounded-lg text-sm font-medium transition-all backdrop-blur-sm',
-              activeStatus === tab.key
-                ? 'bg-indigo-600/90 text-white shadow-md shadow-indigo-600/30'
-                : 'bg-white/50 dark:bg-white/8 text-slate-600 dark:text-slate-400 border border-white/50 dark:border-white/10 hover:text-slate-900 dark:hover:text-white hover:bg-white/70 dark:hover:bg-white/15',
-            ]"
-          >
-            {{ tab.label }}
-          </button>
+      <div class="glass rounded-2xl p-2 flex flex-col gap-2.5">
+        <!-- Status segmented control + result count -->
+        <div class="flex items-center gap-3">
+          <div class="min-w-0 flex-1 overflow-x-auto no-scrollbar">
+            <div class="inline-flex items-center gap-0.5 bg-black/[0.04] dark:bg-white/5 rounded-xl p-1">
+              <button
+                v-for="tab in STATUS_TABS"
+                :key="tab.key"
+                @click="activeStatus = tab.key"
+                :class="[
+                  'cursor-pointer whitespace-nowrap px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all',
+                  activeStatus === tab.key
+                    ? 'bg-white dark:bg-white/15 text-slate-900 dark:text-white shadow-sm'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white',
+                ]"
+              >
+                {{ tab.label }}
+              </button>
+            </div>
+          </div>
+          <span class="hidden sm:block shrink-0 text-xs text-slate-400 dark:text-slate-500 tabular-nums pr-1">
+            {{ t('watchlist.list.showing', { shown: filtered.length, total: stats.total }) }}
+          </span>
         </div>
 
-        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div class="flex items-center gap-2">
-            <div class="flex gap-1.5">
+        <div class="h-px bg-black/[0.06] dark:bg-white/8 -mx-2" />
+
+        <!-- Type segmented (left) · sort + grid size (right) -->
+        <div class="flex flex-col gap-2.5 lg:flex-row lg:items-center lg:justify-between">
+          <div class="flex items-center gap-2 self-start">
+            <div class="inline-flex items-center gap-0.5 bg-black/[0.04] dark:bg-white/5 rounded-xl p-1">
+              <button
+                v-for="tab in TYPE_TABS"
+                :key="tab.key"
+                @click="activeType = tab.key"
+                :class="[
+                  'cursor-pointer whitespace-nowrap px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all',
+                  activeType === tab.key
+                    ? 'bg-white dark:bg-white/15 text-slate-900 dark:text-white shadow-sm'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white',
+                ]"
+              >
+                {{ tab.label }}
+              </button>
+            </div>
             <button
-              v-for="tab in TYPE_TABS"
-              :key="tab.key"
-              @click="activeType = tab.key"
+              @click="onlyFavorite = !onlyFavorite"
+              :title="t('watchlist.filter.favorites')"
               :class="[
-                'cursor-pointer px-3 py-1.5 rounded-lg text-sm font-medium transition-all backdrop-blur-sm',
-                activeType === tab.key
-                  ? 'bg-slate-600/90 text-white shadow-sm'
-                  : 'bg-white/50 dark:bg-white/8 text-slate-500 border border-white/50 dark:border-white/10 hover:text-slate-900 dark:hover:text-white hover:bg-white/70 dark:hover:bg-white/15',
+                'nuc-fav nuc-press cursor-pointer inline-flex items-center gap-1.5 h-9 px-3 rounded-xl text-sm font-medium transition-colors',
+                onlyFavorite
+                  ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400'
+                  : 'bg-black/[0.04] dark:bg-white/5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white',
               ]"
             >
-              {{ tab.label }}
+              <FavoriteHeart :active="onlyFavorite" class="w-4 h-4" />
+              <span class="hidden sm:inline">{{ t('watchlist.filter.favorites') }}</span>
             </button>
           </div>
-            <span class="text-xs text-slate-500">
-              {{ t('watchlist.list.showing', { shown: filtered.length, total: stats.total }) }}
-            </span>
-          </div>
 
-          <!-- Sort icons + grid/size toggle -->
-          <div class="flex items-center gap-1.5">
-            <!-- Desktop: column layout -->
-            <div class="hidden sm:flex items-center bg-white/50 dark:bg-white/8 backdrop-blur-sm border border-white/50 dark:border-white/10 rounded-lg overflow-hidden">
-              <button @click="gridStyle = 'list'" :class="['cursor-pointer p-2 transition-colors', gridStyle === 'list' ? 'text-slate-900 dark:text-white bg-white/80 dark:bg-white/20 shadow-sm' : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-white']" :title="t('watchlist.list.viewList')">
+          <div class="flex items-center gap-1.5 shrink-0">
+            <!-- Sort icons; active shows the direction caret inline -->
+            <div class="flex items-center gap-0.5">
+              <button
+                @click="toggleSort('runtime')"
+                :title="t('watchlist.sort.runtime') + ' ' + (sortBy === 'runtime' ? (sortDir === 'asc' ? '↑' : '↓') : '')"
+                :class="['cursor-pointer h-9 px-2 rounded-lg transition-colors inline-flex items-center gap-0.5', sortBy === 'runtime' ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/15' : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/8']"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z" /></svg>
+                <svg v-if="sortBy === 'runtime'" class="w-2.5 h-2.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" :d="sortDir === 'asc' ? 'M4.5 15.75l7.5-7.5 7.5 7.5' : 'M19.5 8.25l-7.5 7.5-7.5-7.5'" /></svg>
+              </button>
+              <button
+                @click="toggleSort('dateAdded')"
+                :title="t('watchlist.sort.dateAdded') + ' ' + (sortBy === 'dateAdded' ? (sortDir === 'asc' ? '↑' : '↓') : '')"
+                :class="['cursor-pointer h-9 px-2 rounded-lg transition-colors inline-flex items-center gap-0.5', sortBy === 'dateAdded' ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/15' : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/8']"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <svg v-if="sortBy === 'dateAdded'" class="w-2.5 h-2.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" :d="sortDir === 'asc' ? 'M4.5 15.75l7.5-7.5 7.5 7.5' : 'M19.5 8.25l-7.5 7.5-7.5-7.5'" /></svg>
+              </button>
+              <button
+                @click="toggleSort('dateReleased')"
+                :title="t('watchlist.sort.dateReleased') + ' ' + (sortBy === 'dateReleased' ? (sortDir === 'asc' ? '↑' : '↓') : '')"
+                :class="['cursor-pointer h-9 px-2 rounded-lg transition-colors inline-flex items-center gap-0.5', sortBy === 'dateReleased' ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/15' : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/8']"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 9v7.5" /></svg>
+                <svg v-if="sortBy === 'dateReleased'" class="w-2.5 h-2.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" :d="sortDir === 'asc' ? 'M4.5 15.75l7.5-7.5 7.5 7.5' : 'M19.5 8.25l-7.5 7.5-7.5-7.5'" /></svg>
+              </button>
+              <button
+                @click="toggleSort('rating')"
+                :title="t('watchlist.sort.rating') + ' ' + (sortBy === 'rating' ? (sortDir === 'asc' ? '↑' : '↓') : '')"
+                :class="['cursor-pointer h-9 px-2 rounded-lg transition-colors inline-flex items-center gap-0.5', sortBy === 'rating' ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/15' : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/8']"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.562.562 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" /></svg>
+                <svg v-if="sortBy === 'rating'" class="w-2.5 h-2.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" :d="sortDir === 'asc' ? 'M4.5 15.75l7.5-7.5 7.5 7.5' : 'M19.5 8.25l-7.5 7.5-7.5-7.5'" /></svg>
+              </button>
+              <button
+                @click="toggleSort('alphabetical')"
+                :title="t('watchlist.sort.alphabetical') + ' ' + (sortBy === 'alphabetical' ? (sortDir === 'asc' ? 'A→Z' : 'Z→A') : '')"
+                :class="['cursor-pointer h-9 px-2 rounded-lg transition-colors inline-flex items-center gap-0.5', sortBy === 'alphabetical' ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/15' : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/8']"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h10.5m-10.5 5.25h6" /></svg>
+                <svg v-if="sortBy === 'alphabetical'" class="w-2.5 h-2.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" :d="sortDir === 'asc' ? 'M4.5 15.75l7.5-7.5 7.5 7.5' : 'M19.5 8.25l-7.5 7.5-7.5-7.5'" /></svg>
+              </button>
+            </div>
+
+            <!-- Grid size (segmented) -->
+            <div class="flex items-center h-9 bg-black/[0.05] dark:bg-white/5 rounded-lg p-1 gap-0.5">
+              <button @click="gridStyle = 'list'" :title="t('watchlist.list.viewList')" :class="['cursor-pointer h-full px-2.5 rounded-md inline-flex items-center transition-colors', gridStyle === 'list' ? 'text-indigo-600 dark:text-white bg-white dark:bg-white/15 shadow-sm' : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-white']">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6h18M3 12h18M3 18h18" /></svg>
               </button>
-              <button @click="gridStyle = 'big'" :class="['cursor-pointer p-2 transition-colors', gridStyle === 'big' ? 'text-slate-900 dark:text-white bg-white/80 dark:bg-white/20 shadow-sm' : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-white']" :title="t('watchlist.list.viewGrid2')">
+              <button @click="gridStyle = 'big'" :title="t('watchlist.list.viewGrid2')" :class="['cursor-pointer h-full px-2.5 rounded-md inline-flex items-center transition-colors', gridStyle === 'big' ? 'text-indigo-600 dark:text-white bg-white dark:bg-white/15 shadow-sm' : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-white']">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 4.5h7.5v15H3v-15zm10.5 0H21v15h-7.5v-15z" /></svg>
               </button>
-              <button @click="gridStyle = 'small'" :class="['cursor-pointer p-2 transition-colors', gridStyle === 'small' ? 'text-slate-900 dark:text-white bg-white/80 dark:bg-white/20 shadow-sm' : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-white']" :title="t('watchlist.list.viewGrid3')">
+              <button @click="gridStyle = 'small'" :title="t('watchlist.list.viewGrid3')" :class="['cursor-pointer h-full px-2.5 rounded-md inline-flex items-center transition-colors', gridStyle === 'small' ? 'text-indigo-600 dark:text-white bg-white dark:bg-white/15 shadow-sm' : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-white']">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 4.5h4.5v15H3v-15zm6.75 0h4.5v15h-4.5v-15zm6.75 0H21v15h-4.5v-15z" /></svg>
               </button>
             </div>
-            <!-- Mobile: card size -->
-            <div class="flex sm:hidden items-center bg-white/50 dark:bg-white/8 backdrop-blur-sm border border-white/50 dark:border-white/10 rounded-lg overflow-hidden">
-              <button @click="gridStyle = 'list'"  :class="['cursor-pointer px-2.5 py-2 text-xs font-medium transition-colors', gridStyle === 'list'  ? 'text-slate-900 dark:text-white bg-white/80 dark:bg-white/20 shadow-sm' : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-white']">S</button>
-              <button @click="gridStyle = 'small'" :class="['cursor-pointer px-2.5 py-2 text-xs font-medium transition-colors', gridStyle === 'small' ? 'text-slate-900 dark:text-white bg-white/80 dark:bg-white/20 shadow-sm' : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-white']">M</button>
-              <button @click="gridStyle = 'big'"   :class="['cursor-pointer px-2.5 py-2 text-xs font-medium transition-colors', gridStyle === 'big'   ? 'text-slate-900 dark:text-white bg-white/80 dark:bg-white/20 shadow-sm' : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-white']">L</button>
-            </div>
-          <div class="flex items-center gap-0.5">
-            <!-- Runtime: film -->
-            <button
-              @click="toggleSort('runtime')"
-              :title="t('watchlist.sort.runtime') + ' ' + (sortBy === 'runtime' ? (sortDir === 'asc' ? '↑' : '↓') : '')"
-              :class="['cursor-pointer relative p-2 rounded-lg transition-colors flex flex-col items-center gap-px', sortBy === 'runtime' ? 'text-indigo-600 dark:text-indigo-400 bg-slate-200 dark:bg-slate-800' : 'text-slate-400 dark:text-slate-600 hover:text-slate-700 dark:hover:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800']"
-            >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z" />
-              </svg>
-              <svg v-if="sortBy === 'runtime'" class="w-2.5 h-2.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" :d="sortDir === 'asc' ? 'M4.5 15.75l7.5-7.5 7.5 7.5' : 'M19.5 8.25l-7.5 7.5-7.5-7.5'" />
-              </svg>
-              <div v-else class="w-2.5 h-2.5" />
-            </button>
-
-            <!-- Date added: clock -->
-            <button
-              @click="toggleSort('dateAdded')"
-              :title="t('watchlist.sort.dateAdded') + ' ' + (sortBy === 'dateAdded' ? (sortDir === 'asc' ? '↑' : '↓') : '')"
-              :class="['cursor-pointer relative p-2 rounded-lg transition-colors flex flex-col items-center gap-px', sortBy === 'dateAdded' ? 'text-indigo-600 dark:text-indigo-400 bg-slate-200 dark:bg-slate-800' : 'text-slate-400 dark:text-slate-600 hover:text-slate-700 dark:hover:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800']"
-            >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <svg v-if="sortBy === 'dateAdded'" class="w-2.5 h-2.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" :d="sortDir === 'asc' ? 'M4.5 15.75l7.5-7.5 7.5 7.5' : 'M19.5 8.25l-7.5 7.5-7.5-7.5'" />
-              </svg>
-              <div v-else class="w-2.5 h-2.5" />
-            </button>
-
-            <!-- Date released: calendar -->
-            <button
-              @click="toggleSort('dateReleased')"
-              :title="t('watchlist.sort.dateReleased') + ' ' + (sortBy === 'dateReleased' ? (sortDir === 'asc' ? '↑' : '↓') : '')"
-              :class="['cursor-pointer relative p-2 rounded-lg transition-colors flex flex-col items-center gap-px', sortBy === 'dateReleased' ? 'text-indigo-600 dark:text-indigo-400 bg-slate-200 dark:bg-slate-800' : 'text-slate-400 dark:text-slate-600 hover:text-slate-700 dark:hover:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800']"
-            >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 9v7.5" />
-              </svg>
-              <svg v-if="sortBy === 'dateReleased'" class="w-2.5 h-2.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" :d="sortDir === 'asc' ? 'M4.5 15.75l7.5-7.5 7.5 7.5' : 'M19.5 8.25l-7.5 7.5-7.5-7.5'" />
-              </svg>
-              <div v-else class="w-2.5 h-2.5" />
-            </button>
-
-            <!-- Rating: star -->
-            <button
-              @click="toggleSort('rating')"
-              :title="t('watchlist.sort.rating') + ' ' + (sortBy === 'rating' ? (sortDir === 'asc' ? '↑' : '↓') : '')"
-              :class="['cursor-pointer relative p-2 rounded-lg transition-colors flex flex-col items-center gap-px', sortBy === 'rating' ? 'text-indigo-600 dark:text-indigo-400 bg-slate-200 dark:bg-slate-800' : 'text-slate-400 dark:text-slate-600 hover:text-slate-700 dark:hover:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800']"
-            >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.562.562 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
-              </svg>
-              <svg v-if="sortBy === 'rating'" class="w-2.5 h-2.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" :d="sortDir === 'asc' ? 'M4.5 15.75l7.5-7.5 7.5 7.5' : 'M19.5 8.25l-7.5 7.5-7.5-7.5'" />
-              </svg>
-              <div v-else class="w-2.5 h-2.5" />
-            </button>
-
-            <!-- Alphabetical: A↕Z bars -->
-            <button
-              @click="toggleSort('alphabetical')"
-              :title="t('watchlist.sort.alphabetical') + ' ' + (sortBy === 'alphabetical' ? (sortDir === 'asc' ? 'A→Z' : 'Z→A') : '')"
-              :class="['cursor-pointer relative p-2 rounded-lg transition-colors flex flex-col items-center gap-px', sortBy === 'alphabetical' ? 'text-indigo-600 dark:text-indigo-400 bg-slate-200 dark:bg-slate-800' : 'text-slate-400 dark:text-slate-600 hover:text-slate-700 dark:hover:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800']"
-            >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h10.5m-10.5 5.25h6" />
-              </svg>
-              <svg v-if="sortBy === 'alphabetical'" class="w-2.5 h-2.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" :d="sortDir === 'asc' ? 'M4.5 15.75l7.5-7.5 7.5 7.5' : 'M19.5 8.25l-7.5 7.5-7.5-7.5'" />
-              </svg>
-              <div v-else class="w-2.5 h-2.5" />
-            </button>
-
-          </div>
           </div>
         </div>
       </div>

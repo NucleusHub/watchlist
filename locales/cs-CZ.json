@@ -83,6 +83,9 @@
   "watchlist.card.removeMessage": "„{title}“ bude trvale odebráno.",
   "watchlist.card.remove": "Odebrat",
   "watchlist.card.openExternal": "Otevřít",
+  "watchlist.card.favorite": "Přidat mezi oblíbené",
+  "watchlist.card.unfavorite": "Odebrat z oblíbených",
+  "watchlist.filter.favorites": "Oblíbené",
 
   "watchlist.form.editTitle": "Upravit položku",
   "watchlist.form.addTitle": "Přidat do watchlistu",
@@ -115,6 +118,8 @@
   "watchlist.form.yourRating": "Vaše hodnocení (1–10)",
   "watchlist.form.tmdbRating": "Hodnocení TMDb",
   "watchlist.form.tmdbAutofill": "Doplní se z TMDb",
+  "watchlist.form.favorite": "Oblíbené",
+  "watchlist.form.clearRating": "Zrušit hodnocení",
   "watchlist.form.notes": "Poznámky",
   "watchlist.form.notesPlaceholder": "Nějaké postřehy…",
   "watchlist.form.saveChanges": "Uložit změny",

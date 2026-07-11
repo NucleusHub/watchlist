@@ -7,6 +7,8 @@ import { showTotals, watchedFraction, remainingMinutes } from '@/utils/progress.
 import TemplateModal from '@core/TemplateModal.vue'
 import TrashIcon from '@core/TrashIcon.vue'
 import SeasonProgressModal from '@/components/SeasonProgressModal.vue'
+import RatingControl from '@/components/RatingControl.vue'
+import FavoriteHeart from '@core/FavoriteHeart.vue'
 import { useI18n } from '@core/useI18n.js'
 import { useOpenSettings } from '@/composables/useOpenSettings.js'
 import { resolveTarget, buildOpenUrl } from '@/utils/openTarget.js'
@@ -88,6 +90,11 @@ const meta = computed(() => {
   }
   return parts.join(' · ')
 })
+
+async function toggleFavorite() {
+  const updated = await updateItem(props.item._id, { favorite: !props.item.favorite })
+  emit('updated', updated)
+}
 
 async function cycleStatus() {
   const order = ['planned', 'watching', 'completed']
@@ -222,6 +229,16 @@ async function confirmDelete() {
       >
         <img :src="logoUrl(item.streamingLogo)" :alt="item.streamingProvider" class="w-6 h-6 rounded-md object-cover shadow-md" />
       </a>
+
+      <!-- Favorite heart — always visible when favorited, reveals on hover otherwise -->
+      <button
+        @click.stop="toggleFavorite"
+        :title="item.favorite ? t('watchlist.card.unfavorite') : t('watchlist.card.favorite')"
+        class="nuc-fav nuc-press cursor-pointer absolute top-2 right-2 w-7 h-7 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-200 hover:bg-black/60 hover:scale-110"
+        :class="{ '!opacity-100': item.favorite }"
+      >
+        <FavoriteHeart :active="item.favorite" class="w-4 h-4 text-white/80" />
+      </button>
     </div>
 
     <!-- Content -->
@@ -308,7 +325,16 @@ async function confirmDelete() {
         >
           {{ t('watchlist.status.' + item.status) }}
         </button>
-        <span v-if="item.rating" class="text-xs text-amber-400 font-medium ml-auto">
+        <RatingControl
+          v-if="item.rating && !isCompact"
+          :model-value="item.rating"
+          :max="10"
+          readonly
+          size="sm"
+          :show-value="false"
+          class="ml-auto"
+        />
+        <span v-else-if="item.rating" class="text-xs text-amber-400 font-medium ml-auto">
           ★ {{ item.rating }}/10
         </span>
       </div>

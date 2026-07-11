@@ -4,6 +4,8 @@ import { searchMulti, fetchMovieDetail, fetchTvDetail, fetchWatchProviders, logo
 import { uploadImage } from '@/api/watchlist.js'
 import { OPEN_OPTIONS, TITLE_FORMATS } from '@/utils/openTarget.js'
 import TemplateModal from '@core/TemplateModal.vue'
+import RatingControl from './RatingControl.vue'
+import FavoriteHeart from '@core/FavoriteHeart.vue'
 import { useI18n } from '@core/useI18n.js'
 
 const { t } = useI18n()
@@ -40,9 +42,10 @@ const EMPTY_FORM = () => ({
   watchLink: '',
   streamingProvider: null,
   streamingLogo: null,
-  rating: '', year: '', runtime: '',
+  rating: null, year: '', runtime: '',
   seasons: '', episodes: '', showRuntime: '',
   seasonProgress: null,
+  favorite: false,
   notes: '',
 })
 
@@ -438,10 +441,22 @@ function resultYear(r) {
                 </div>
 
                 <!-- Rating + TMDb -->
-                <div class="grid grid-cols-2 gap-3">
+                <div class="flex flex-col gap-3">
                   <div class="flex flex-col gap-1.5">
-                    <label class="text-sm text-slate-500 dark:text-slate-400">{{ t('watchlist.form.yourRating') }}</label>
-                    <input v-model="form.rating" type="number" min="1" max="10" placeholder="—" class="bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white rounded-lg px-3 py-2 text-sm placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                    <div class="flex items-center justify-between">
+                      <label class="text-sm text-slate-500 dark:text-slate-400">{{ t('watchlist.form.yourRating') }}</label>
+                      <button
+                        type="button"
+                        @click="form.favorite = !form.favorite"
+                        :title="form.favorite ? t('watchlist.card.unfavorite') : t('watchlist.card.favorite')"
+                        class="nuc-fav nuc-press cursor-pointer inline-flex items-center gap-1.5 text-sm transition-colors"
+                        :class="form.favorite ? 'text-rose-500' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'"
+                      >
+                        <FavoriteHeart :active="form.favorite" class="w-5 h-5" />
+                        <span>{{ t('watchlist.form.favorite') }}</span>
+                      </button>
+                    </div>
+                    <RatingControl v-model="form.rating" :max="10" size="md" />
                   </div>
                   <div class="flex flex-col gap-1.5">
                     <label class="text-sm text-slate-500 dark:text-slate-400">{{ t('watchlist.form.tmdbRating') }}</label>

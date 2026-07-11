@@ -83,6 +83,9 @@
   "watchlist.card.removeMessage": "'{title}' will be permanently removed.",
   "watchlist.card.remove": "Remove",
   "watchlist.card.openExternal": "Open",
+  "watchlist.card.favorite": "Add to favorites",
+  "watchlist.card.unfavorite": "Remove from favorites",
+  "watchlist.filter.favorites": "Favorites",
 
   "watchlist.form.editTitle": "Edit item",
   "watchlist.form.addTitle": "Add to watchlist",
@@ -115,6 +118,8 @@
   "watchlist.form.yourRating": "Your rating (1–10)",
   "watchlist.form.tmdbRating": "TMDb rating",
   "watchlist.form.tmdbAutofill": "Auto-filled from TMDb",
+  "watchlist.form.favorite": "Favorite",
+  "watchlist.form.clearRating": "Clear rating",
   "watchlist.form.notes": "Notes",
   "watchlist.form.notesPlaceholder": "Any thoughts...",
   "watchlist.form.saveChanges": "Save changes",
