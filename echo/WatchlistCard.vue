@@ -6,26 +6,35 @@ import EchoAddButton from '@core/echo/EchoAddButton.vue'
 // Renderer for "watchlist.item" messages. Lives in Watchlist (next to its
 // manifest.echo.json) and is auto-registered into Echo via this app's
 // integration.echo.js.
-// payload = { itemId, title, type, status, posterUrl, year, rating, tmdbRating }.
+// payload = { itemId, title, type, status, posterUrl, year, rating, tmdbRating,
+//   runtime, seasons, episodes, showRuntime }.
 const props = defineProps({
   payload: { type: Object, required: true },
 })
 
 // "Add" → create the item in the caller's own watchlist (the Watchlist app's
-// API does the insert). Added as "planned" — it's new to your list.
+// API does the insert). Added as "planned" — it's new to your list. Carry the
+// runtime/season metadata across too, and let the type decide which of the
+// movie- vs show-only fields apply, so the added item isn't missing data the
+// sender's card showed.
 async function addToWatchlist() {
   const p = props.payload
+  const isShow = p.type === 'show'
   const res = await fetch('/api/watchlist', {
     method: 'POST',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       title: p.title,
-      type: p.type === 'show' ? 'show' : 'movie',
+      type: isShow ? 'show' : 'movie',
       status: 'planned',
       posterUrl: p.posterUrl || null,
       year: p.year || null,
       tmdbRating: p.tmdbRating || null,
+      runtime: isShow ? null : (p.runtime ?? null),
+      seasons: isShow ? (p.seasons ?? null) : null,
+      episodes: isShow ? (p.episodes ?? null) : null,
+      showRuntime: isShow ? (p.showRuntime ?? null) : null,
     }),
   })
   if (!res.ok) throw new Error('Failed to add')

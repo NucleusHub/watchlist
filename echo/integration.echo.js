@@ -22,7 +22,7 @@ export default {
           title: i.title,
           subtitle: [i.type === 'show' ? 'Show' : 'Movie', i.status].filter(Boolean).join(' · '),
           thumb: i.posterUrl,
-          message: { type: 'watchlist.item', payload: { itemId: i._id, title: i.title, type: i.type, status: i.status, posterUrl: i.posterUrl, year: i.year, rating: i.rating, tmdbRating: i.tmdbRating } },
+          message: { type: 'watchlist.item', payload: { itemId: i._id, title: i.title, type: i.type, status: i.status, posterUrl: i.posterUrl, year: i.year, rating: i.rating, tmdbRating: i.tmdbRating, runtime: i.runtime, seasons: i.seasons, episodes: i.episodes, showRuntime: i.showRuntime } },
         }),
       },
     },
