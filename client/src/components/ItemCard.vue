@@ -142,10 +142,10 @@ async function confirmDelete() {
 </script>
 
 <template>
-  <div ref="cardRef" :class="['group rounded-xl overflow-hidden flex flex-row transition-all duration-200 ease-out hover:-translate-y-0.5 backdrop-blur-sm shadow-sm', isList ? '' : isCompact ? 'min-h-28' : 'min-h-36', item.status === 'completed' ? 'bg-green-50/80 dark:bg-green-900/20 ring-1 ring-inset ring-green-500/50 dark:ring-green-500/25 shadow-green-500/10' : item.status === 'watching' ? 'bg-blue-50/80 dark:bg-blue-900/20 ring-1 ring-inset ring-blue-500/50 dark:ring-blue-500/25 shadow-blue-500/10' : 'bg-white/70 dark:bg-slate-800/70 border border-white/60 dark:border-white/8 hover:bg-white/85 dark:hover:bg-slate-800/85 hover:shadow-md']">
-    <!-- Poster -->
+  <div ref="cardRef" :class="['group rounded-xl overflow-hidden flex transition-all duration-200 ease-out hover:-translate-y-0.5 backdrop-blur-sm shadow-sm', isList ? 'flex-row' : 'flex-col', item.status === 'completed' ? 'bg-green-50/80 dark:bg-green-900/20 ring-1 ring-inset ring-green-500/50 dark:ring-green-500/25 shadow-green-500/10' : item.status === 'watching' ? 'bg-blue-50/80 dark:bg-blue-900/20 ring-1 ring-inset ring-blue-500/50 dark:ring-blue-500/25 shadow-blue-500/10' : 'bg-white/70 dark:bg-slate-800/70 border border-white/60 dark:border-white/8 hover:bg-white/85 dark:hover:bg-slate-800/85 hover:shadow-md']">
+    <!-- Poster — fixed 2:3 box in grid views (like Shelf), stretches to row height in list view -->
     <div
-      :class="['relative shrink-0 self-stretch overflow-hidden bg-slate-100 dark:bg-slate-700/60', isList ? 'w-14' : isCompact ? 'w-20' : 'w-24', openUrl ? 'cursor-pointer group/poster' : '']"
+      :class="['relative shrink-0 overflow-hidden bg-slate-100 dark:bg-slate-700/60', isList ? 'w-14 self-stretch' : 'w-full aspect-[2/3]', openUrl ? 'cursor-pointer group/poster' : '']"
       @click="openPoster"
       :title="openUrl ? t('watchlist.card.openExternal') : undefined"
     >

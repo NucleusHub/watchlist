@@ -25,8 +25,8 @@ watch(gridStyle, val => localStorage.setItem('watchlist-grid', val))
 
 const gridClass = computed(() => ({
   list:  'grid-cols-1',
-  big:   'grid-cols-1 sm:grid-cols-2',
-  small: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3',
+  big:   'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4',
+  small: 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5',
 }[gridStyle.value]))
 
 const items = ref([])
