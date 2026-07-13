@@ -10,6 +10,9 @@
   "route": "/watchlist",
   "icon": "icon.svg",
   "category": "media",
+  "localization": {
+    "defaultLanguage": "en-US"
+  },
   "hub": {
     "showInSidebar": true,
     "showOnDashboard": true
