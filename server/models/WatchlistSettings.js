@@ -35,6 +35,11 @@ const watchlistSettingsSchema = new mongoose.Schema(
       movie: { type: openDefaultSchema, default: () => ({}) },
       show: { type: openDefaultSchema, default: () => ({}) },
     },
+    // Metadata sources searched by the add/edit search box. 'tmdb' is built in
+    // and always searched; plugins (e.g. anime-source) contribute more, opt-in
+    // via a toggle in settings. Free strings, not an enum, so an uninstalled or
+    // renamed source degrades gracefully (the client ignores unknown ids).
+    searchSources: { type: [String], default: ['tmdb'] },
   },
   { timestamps: true }
 )

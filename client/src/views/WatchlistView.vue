@@ -25,8 +25,10 @@ watch(gridStyle, val => localStorage.setItem('watchlist-grid', val))
 
 const gridClass = computed(() => ({
   list:  'grid-cols-1',
+  // Keep the three view modes distinct on phones too: big starts at 2-up, small
+  // at 3-up (below sm both used to collapse to 2 columns, so "small" did nothing).
   big:   'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4',
-  small: 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5',
+  small: 'grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5',
 }[gridStyle.value]))
 
 const items = ref([])

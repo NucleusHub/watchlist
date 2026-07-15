@@ -1,15 +1,59 @@
 <script setup>
-import { reactive, watch } from 'vue'
+import { reactive, ref, computed, watch, onMounted } from 'vue'
 import TemplateModal from '@core/TemplateModal.vue'
 import { useI18n } from '@core/useI18n.js'
+import { useRegistry } from '@core/useRegistry.js'
+import { usePlugins } from '@core/usePlugins.js'
 import { useOpenSettings } from '@/composables/useOpenSettings.js'
+import { BUILTIN_SOURCES, PLUGIN_SOURCES } from '@/api/sources.js'
 import { OPEN_OPTIONS, TITLE_FORMATS, buildOpenUrl } from '@/utils/openTarget.js'
 
 const { t } = useI18n()
+const { isPluginEnabled } = useRegistry()
 const props = defineProps({ show: { type: Boolean, default: false } })
 const emit = defineEmits(['close'])
 
-const { defaults, setDefault } = useOpenSettings()
+const { defaults, setDefault, searchSources, setSearchSources } = useOpenSettings()
+
+// Plugin display names for the "Added by …" badge on plugin-contributed sources.
+const { plugins: installedPlugins, load: loadInstalledPlugins } = usePlugins()
+onMounted(loadInstalledPlugins)
+const pluginName = (id) => installedPlugins.value.find((p) => p.id === id)?.name || id
+
+// Built-in TMDb plus enabled plugin sources — the toggleable search sources.
+const availableSources = computed(() => [
+  ...BUILTIN_SOURCES,
+  ...PLUGIN_SOURCES.filter((s) => isPluginEnabled(s.pluginId)),
+])
+// Puzzle-piece glyph marking a plugin-contributed source (Heroicons).
+const PLUGIN_ICON = 'M14.25 6.087c0-.355.186-.676.401-.959.221-.29.349-.634.349-1.003 0-1.036-1.007-1.875-2.25-1.875s-2.25.84-2.25 1.875c0 .369.128.713.349 1.003.215.283.401.604.401.959v0a.64.64 0 0 1-.657.643 48.4 48.4 0 0 1-4.163-.3c.186 1.613.293 3.25.315 4.907a.656.656 0 0 1-.658.663v0c-.355 0-.676-.186-.959-.401a1.647 1.647 0 0 0-1.003-.349c-1.036 0-1.875 1.007-1.875 2.25s.84 2.25 1.875 2.25c.369 0 .713-.128 1.003-.349.283-.215.604-.401.959-.401v0c.31 0 .555.26.532.57a48.039 48.039 0 0 1-.642 5.056c1.518.19 3.058.309 4.616.354a.64.64 0 0 0 .657-.643v0c0-.355-.186-.676-.401-.959a1.647 1.647 0 0 1-.349-1.003c0-1.036 1.007-1.875 2.25-1.875s2.25.84 2.25 1.875c0 .369-.128.713-.349 1.003-.215.283-.4.604-.4.959v0c0 .333.277.599.61.58a48.1 48.1 0 0 0 5.427-.63 48.05 48.05 0 0 0 .582-4.717.532.532 0 0 0-.533-.57v0c-.355 0-.676.186-.959.401-.29.221-.634.349-1.003.349-1.035 0-1.875-1.007-1.875-2.25s.84-2.25 1.875-2.25c.37 0 .713.128 1.003.349.283.215.604.401.96.401v0a.656.656 0 0 0 .658-.663 48.422 48.422 0 0 0-.37-5.36c-1.676.32-3.4.475-5.157.475a.64.64 0 0 1-.657-.643Z'
+// Draft set of enabled source ids, so Cancel/close leaves saved settings
+// untouched. TMDb (the built-in) is always on and can't be turned off.
+const draftSources = ref(['tmdb'])
+const isSourceOn = (id) => id === 'tmdb' || draftSources.value.includes(id)
+function toggleSource(id) {
+  if (id === 'tmdb') return
+  const set = new Set(draftSources.value)
+  set.has(id) ? set.delete(id) : set.add(id)
+  draftSources.value = [...set]
+}
+
+// Tabs via the shared TemplateModal tab bar (same look as the rest of the app).
+// "Open in" is first, so it's the tab shown on open. The search-sources tab
+// appears only when there's a plugin source to toggle (TMDb alone needs none) —
+// with just TMDb the modal shows the open-in section with no tab bar.
+const showSourcesTab = computed(() => availableSources.value.length > 1)
+// Same tab icons as Shelf's settings modal (externalLink / search).
+const OPEN_TAB_ICON = 'M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5M15 3h6m0 0v6m0-6L10.5 13.5'
+const SOURCES_TAB_ICON = 'm21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607z'
+const tabs = computed(() =>
+  showSourcesTab.value
+    ? [
+        { key: 'open', label: t('watchlist.settings.tabOpen'), icon: OPEN_TAB_ICON },
+        { key: 'sources', label: t('watchlist.settings.tabSources'), icon: SOURCES_TAB_ICON },
+      ]
+    : []
+)
 
 const KINDS = [
   { key: 'movie', label: 'watchlist.open.movies' },
@@ -39,6 +83,7 @@ watch(
     for (const { key } of KINDS) {
       draft[key] = { type: defaults[key].type, customUrl: defaults[key].customUrl || '', titleFormat: defaults[key].titleFormat || 'raw' }
     }
+    draftSources.value = [...searchSources.value]
   },
   { immediate: true }
 )
@@ -49,6 +94,7 @@ const previewUrl = (kind) => buildOpenUrl(draft[kind], SAMPLE)
 
 function save() {
   for (const { key } of KINDS) setDefault(key, draft[key])
+  setSearchSources(draftSources.value)
   emit('close')
 }
 </script>
@@ -59,6 +105,7 @@ function save() {
     header
     footer
     :title="t('watchlist.open.settingsTitle')"
+    :tabs="tabs"
     :confirm-label="t('watchlist.open.save')"
     :cancel-label="t('watchlist.open.cancel')"
     size="lg"
@@ -66,69 +113,119 @@ function save() {
     @confirm="save"
     @cancel="emit('close')"
   >
+    <template #default="{ activeTab }">
     <div class="flex flex-col gap-4">
-      <p class="text-sm text-slate-500 dark:text-slate-400">{{ t('watchlist.open.settingsDesc') }}</p>
+      <!-- ── Open in ─────────────────────────────────────────────────────── -->
+      <section v-show="activeTab === 'open' || !tabs.length" class="flex flex-col gap-4">
+        <p class="text-sm text-slate-500 dark:text-slate-400">{{ t('watchlist.open.settingsDesc') }}</p>
 
-      <div
-        v-for="kind in KINDS"
-        :key="kind.key"
-        class="flex flex-col gap-3 rounded-xl border border-black/5 dark:border-white/10 bg-white/40 dark:bg-white/[0.03] p-4"
-      >
-        <!-- Section header -->
-        <div class="flex items-center gap-2.5">
-          <span class="grid place-items-center w-8 h-8 rounded-lg bg-indigo-600/10 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-400 shrink-0">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" :d="KIND_ICON[kind.key]" />
-            </svg>
-          </span>
-          <span class="text-sm font-semibold text-slate-900 dark:text-white">{{ t(kind.label) }}</span>
-        </div>
-
-        <!-- Destination chips -->
-        <div class="flex flex-wrap gap-1.5">
-          <button
-            v-for="opt in OPEN_OPTIONS"
-            :key="opt.type"
-            type="button"
-            @click="draft[kind.key].type = opt.type"
-            :class="[
-              'cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all border',
-              draft[kind.key].type === opt.type
-                ? 'bg-indigo-600 text-white border-transparent shadow-sm shadow-indigo-600/30'
-                : 'bg-white/60 dark:bg-white/8 text-slate-600 dark:text-slate-300 border-black/5 dark:border-white/10 hover:bg-white dark:hover:bg-white/15 hover:text-slate-900 dark:hover:text-white',
-            ]"
-          >
-            <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" :d="DEST_ICON[opt.type]" />
-            </svg>
-            {{ t(opt.i18n) }}
-          </button>
-        </div>
-
-        <!-- Custom URL config — nested panel so it reads as part of the section -->
         <div
-          v-if="draft[kind.key].type === 'custom'"
-          class="flex flex-col gap-2.5 rounded-lg bg-black/[0.03] dark:bg-black/20 border border-black/5 dark:border-white/10 p-3"
+          v-for="kind in KINDS"
+          :key="kind.key"
+          class="flex flex-col gap-3 rounded-xl border border-black/5 dark:border-white/10 bg-white/40 dark:bg-white/[0.03] p-4"
         >
-          <input
-            v-model="draft[kind.key].customUrl"
-            type="url"
-            :placeholder="t('watchlist.open.customPlaceholder')"
-            class="bg-white dark:bg-slate-700 text-slate-900 dark:text-white rounded-lg px-3 py-2 text-sm placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-          <div class="flex items-center gap-2">
-            <label class="text-xs text-slate-500 dark:text-slate-400 shrink-0">{{ t('watchlist.open.titleFormat') }}</label>
-            <select v-model="draft[kind.key].titleFormat" class="cursor-pointer flex-1 bg-white dark:bg-slate-700 text-slate-900 dark:text-white rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500">
-              <option v-for="fmt in TITLE_FORMATS" :key="fmt.value" :value="fmt.value">{{ t(fmt.i18n) }} — {{ fmt.example }}</option>
-            </select>
+          <!-- Section header -->
+          <div class="flex items-center gap-2.5">
+            <span class="grid place-items-center w-8 h-8 rounded-lg bg-indigo-600/10 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-400 shrink-0">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" :d="KIND_ICON[kind.key]" />
+              </svg>
+            </span>
+            <span class="text-sm font-semibold text-slate-900 dark:text-white">{{ t(kind.label) }}</span>
           </div>
-          <p class="text-xs text-slate-400 dark:text-slate-500">{{ t('watchlist.open.customHint') }}</p>
-          <p v-if="previewUrl(kind.key)" class="text-xs text-slate-500 dark:text-slate-400 truncate">
-            <span class="text-slate-400 dark:text-slate-500">{{ t('watchlist.open.preview') }}</span>
-            <span class="font-mono text-indigo-600 dark:text-indigo-400">{{ previewUrl(kind.key) }}</span>
-          </p>
+
+          <!-- Destination chips -->
+          <div class="flex flex-wrap gap-1.5">
+            <button
+              v-for="opt in OPEN_OPTIONS"
+              :key="opt.type"
+              type="button"
+              @click="draft[kind.key].type = opt.type"
+              :class="[
+                'cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all border',
+                draft[kind.key].type === opt.type
+                  ? 'bg-indigo-600 text-white border-transparent shadow-sm shadow-indigo-600/30'
+                  : 'bg-white/60 dark:bg-white/8 text-slate-600 dark:text-slate-300 border-black/5 dark:border-white/10 hover:bg-white dark:hover:bg-white/15 hover:text-slate-900 dark:hover:text-white',
+              ]"
+            >
+              <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" :d="DEST_ICON[opt.type]" />
+              </svg>
+              {{ t(opt.i18n) }}
+            </button>
+          </div>
+
+          <!-- Custom URL config — nested panel so it reads as part of the section -->
+          <div
+            v-if="draft[kind.key].type === 'custom'"
+            class="flex flex-col gap-2.5 rounded-lg bg-black/[0.03] dark:bg-black/20 border border-black/5 dark:border-white/10 p-3"
+          >
+            <input
+              v-model="draft[kind.key].customUrl"
+              type="url"
+              :placeholder="t('watchlist.open.customPlaceholder')"
+              class="bg-white dark:bg-slate-700 text-slate-900 dark:text-white rounded-lg px-3 py-2 text-sm placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+            <div class="flex items-center gap-2">
+              <label class="text-xs text-slate-500 dark:text-slate-400 shrink-0">{{ t('watchlist.open.titleFormat') }}</label>
+              <select v-model="draft[kind.key].titleFormat" class="cursor-pointer flex-1 bg-white dark:bg-slate-700 text-slate-900 dark:text-white rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <option v-for="fmt in TITLE_FORMATS" :key="fmt.value" :value="fmt.value">{{ t(fmt.i18n) }} — {{ fmt.example }}</option>
+              </select>
+            </div>
+            <p class="text-xs text-slate-400 dark:text-slate-500">{{ t('watchlist.open.customHint') }}</p>
+            <p v-if="previewUrl(kind.key)" class="text-xs text-slate-500 dark:text-slate-400 truncate">
+              <span class="text-slate-400 dark:text-slate-500">{{ t('watchlist.open.preview') }}</span>
+              <span class="font-mono text-indigo-600 dark:text-indigo-400">{{ previewUrl(kind.key) }}</span>
+            </p>
+          </div>
         </div>
-      </div>
+      </section>
+
+      <!-- ── Search sources ──────────────────────────────────────────────── -->
+      <section v-show="activeTab === 'sources'" class="flex flex-col gap-3">
+        <p class="text-sm text-slate-500 dark:text-slate-400">{{ t('watchlist.settings.searchSourceDesc') }}</p>
+        <div class="flex flex-col gap-1.5">
+          <div
+            v-for="s in availableSources"
+            :key="s.id"
+            class="flex items-center justify-between gap-3 rounded-lg bg-white/60 dark:bg-white/[0.04] border border-black/5 dark:border-white/10 px-3 py-2.5"
+          >
+            <span class="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200 min-w-0">
+              <span class="truncate">{{ s.label }}</span>
+              <svg
+                v-if="s.pluginId"
+                class="w-3.5 h-3.5 shrink-0 text-indigo-500 dark:text-indigo-400 opacity-80"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <title>{{ t('watchlist.settings.addedByPlugin', { name: pluginName(s.pluginId) }) }}</title>
+                <path :d="PLUGIN_ICON" />
+              </svg>
+              <span v-if="s.id === 'tmdb'" class="text-xs text-slate-400 dark:text-slate-500">{{ t('watchlist.settings.alwaysOn') }}</span>
+            </span>
+            <button
+              type="button"
+              role="switch"
+              :aria-checked="isSourceOn(s.id)"
+              :disabled="s.id === 'tmdb'"
+              @click="toggleSource(s.id)"
+              :class="[
+                'relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors',
+                isSourceOn(s.id) ? 'bg-indigo-600' : 'bg-slate-300 dark:bg-slate-600',
+                s.id === 'tmdb' ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer',
+              ]"
+            >
+              <span
+                :class="[
+                  'inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform',
+                  isSourceOn(s.id) ? 'translate-x-4' : 'translate-x-0.5',
+                ]"
+              />
+            </button>
+          </div>
+        </div>
+      </section>
     </div>
+    </template>
   </TemplateModal>
 </template>

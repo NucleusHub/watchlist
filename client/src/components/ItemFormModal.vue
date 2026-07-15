@@ -1,14 +1,30 @@
 <script setup>
-import { ref, watch, nextTick } from 'vue'
-import { searchMulti, fetchMovieDetail, fetchTvDetail, fetchWatchProviders, logoUrl, buildSeasonProgress } from '@/api/tmdb.js'
+import { ref, computed, watch, nextTick } from 'vue'
+import { logoUrl } from '@/api/tmdb.js'
+import { BUILTIN_SOURCES, PLUGIN_SOURCES } from '@/api/sources.js'
 import { uploadImage } from '@/api/watchlist.js'
 import { OPEN_OPTIONS, TITLE_FORMATS } from '@/utils/openTarget.js'
 import TemplateModal from '@core/TemplateModal.vue'
 import RatingControl from './RatingControl.vue'
 import FavoriteHeart from '@core/FavoriteHeart.vue'
 import { useI18n } from '@core/useI18n.js'
+import { useRegistry } from '@core/useRegistry.js'
+import { useOpenSettings } from '@/composables/useOpenSettings.js'
 
 const { t } = useI18n()
+const { isPluginEnabled } = useRegistry()
+const { searchSources } = useOpenSettings()
+
+// Sources actually searched: enabled in settings AND — for plugin sources —
+// their plugin is enabled. TMDb is always searched; a plugin source (e.g. anime)
+// joins in when toggled on in settings. Falls back to TMDb if empty.
+const enabledSources = computed(() => {
+  const avail = [...BUILTIN_SOURCES, ...PLUGIN_SOURCES.filter((s) => isPluginEnabled(s.pluginId))]
+  const on = avail.filter((s) => searchSources.value.includes(s.id))
+  return on.length ? on : BUILTIN_SOURCES
+})
+// Tag each result row with its source only when more than one is searched.
+const multiSource = computed(() => enabledSources.value.length > 1)
 
 const props = defineProps({
   show: { type: Boolean, default: false },
@@ -99,7 +115,17 @@ function onTitleInput() {
   searchTimer = setTimeout(async () => {
     searching.value = true
     try {
-      results.value = (await searchMulti(q)).slice(0, 7)
+      // Search every enabled source together and merge — one source failing
+      // (e.g. an anime API hiccup) never blocks the others.
+      const sources = enabledSources.value
+      const settled = await Promise.allSettled(sources.map((s) => s.search(q)))
+      const merged = []
+      settled.forEach((res, i) => {
+        if (res.status === 'fulfilled' && Array.isArray(res.value)) {
+          for (const r of res.value) merged.push({ ...r, _source: sources[i], sourceLabel: sources[i].label })
+        }
+      })
+      results.value = merged.slice(0, 10)
       showDropdown.value = results.value.length > 0
     } catch {
       results.value = []
@@ -116,40 +142,15 @@ function closeDropdown() {
 
 async function selectResult(r) {
   showDropdown.value = false
-  const isMovie = r.media_type === 'movie'
-  form.value.title = isMovie ? r.title : r.name
-  form.value.type = isMovie ? 'movie' : 'show'
-  form.value.year = (isMovie ? r.release_date : r.first_air_date)?.slice(0, 4) ?? ''
-  if (r.poster_path) form.value.posterUrl = `https://image.tmdb.org/t/p/w500${r.poster_path}`
+  // Optimistic fill from the list row, then autofill the rest from its source.
+  form.value.title = r.title
+  form.value.type = r.type
+  if (r.poster) form.value.posterUrl = r.poster
 
   fetchingDetail.value = true
   try {
-    const mediaType = isMovie ? 'movie' : 'tv'
-    const [d, streaming] = await Promise.all([
-      isMovie ? fetchMovieDetail(r.id) : fetchTvDetail(r.id),
-      fetchWatchProviders(r.id, mediaType),
-    ])
-
-    if (d.vote_average) form.value.tmdbRating = Math.round(d.vote_average * 10) / 10
-
-    if (isMovie) {
-      if (d.runtime) form.value.runtime = d.runtime
-    } else {
-      if (d.number_of_seasons) form.value.seasons = d.number_of_seasons
-      if (d.number_of_episodes) form.value.episodes = d.number_of_episodes
-      if (d.number_of_episodes && d.episode_run_time?.length) {
-        form.value.showRuntime = d.number_of_episodes * d.episode_run_time[0]
-      }
-      // Capture per-season episode counts for progress tracking, preserving any
-      // progress already recorded when re-selecting the same show.
-      form.value.seasonProgress = buildSeasonProgress(d, form.value.seasonProgress)
-    }
-
-    if (streaming) {
-      form.value.watchLink = streaming.link ?? ''
-      form.value.streamingProvider = streaming.name
-      form.value.streamingLogo = streaming.logo
-    }
+    const patch = await r._source.toForm(r, { existing: form.value })
+    Object.assign(form.value, patch)
   } catch {
     // user can fill manually
   } finally {
@@ -199,10 +200,6 @@ function handleSubmit(addAnother = false) {
       }
     : null
   emit('submit', payload, addAnother)
-}
-
-function resultYear(r) {
-  return (r.media_type === 'movie' ? r.release_date : r.first_air_date)?.slice(0, 4)
 }
 </script>
 
@@ -335,17 +332,18 @@ function resultYear(r) {
                     </svg>
                     <div v-if="showDropdown" class="absolute z-10 top-full left-0 right-0 mt-1 bg-white dark:bg-slate-700 rounded-xl overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-600 max-h-72 overflow-y-auto">
                       <button
-                        v-for="r in results" :key="r.id"
+                        v-for="r in results" :key="r.key"
                         type="button"
                         @mousedown.prevent="selectResult(r)"
                         class="cursor-pointer w-full flex items-center gap-3 px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors text-left"
                       >
-                        <img v-if="r.poster_path" :src="`https://image.tmdb.org/t/p/w92${r.poster_path}`" class="w-8 h-11 object-cover rounded shrink-0" />
+                        <img v-if="r.poster" :src="r.poster" class="w-8 h-11 object-cover rounded shrink-0" />
                         <div v-else class="w-8 h-11 bg-slate-200 dark:bg-slate-600 rounded shrink-0 flex items-center justify-center text-slate-400 dark:text-slate-500 text-xs">?</div>
                         <div class="flex-1 min-w-0">
-                          <p class="text-sm text-slate-900 dark:text-white font-medium truncate">{{ r.media_type === 'movie' ? r.title : r.name }}</p>
-                          <p class="text-xs text-slate-500 dark:text-slate-400">{{ r.media_type === 'movie' ? t('watchlist.type.movie') : t('watchlist.type.show') }}<span v-if="resultYear(r)"> · {{ resultYear(r) }}</span></p>
+                          <p class="text-sm text-slate-900 dark:text-white font-medium truncate">{{ r.title }}</p>
+                          <p class="text-xs text-slate-500 dark:text-slate-400">{{ r.type === 'movie' ? t('watchlist.type.movie') : t('watchlist.type.show') }}<span v-if="r.subtitle"> · {{ r.subtitle }}</span></p>
                         </div>
+                        <span v-if="multiSource" class="shrink-0 text-[10px] font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-600/50 rounded px-1.5 py-0.5">{{ r.sourceLabel }}</span>
                       </button>
                     </div>
                   </div>

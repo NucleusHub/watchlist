@@ -41,6 +41,9 @@ const deleting = ref(false)
 const showConfirm = ref(false)
 const marking = ref(false)
 const showProgress = ref(false)
+// Grid (non-list) cards stay minimal — title + one metric — and reveal the full
+// metadata/actions in this on-demand detail modal (the ⓘ button on the poster).
+const showDetail = ref(false)
 
 // Show progress: episode totals, percentage and remaining runtime.
 const totals = computed(() => showTotals(props.item))
@@ -75,6 +78,9 @@ function formatRuntime(minutes) {
   const m = minutes % 60
   return m ? `${h}h ${m}m` : `${h}h`
 }
+
+// The single metric grid cards show for movies (shows use the progress bar).
+const runtimeLabel = computed(() => (isShow.value ? null : formatRuntime(props.item.runtime)))
 
 const meta = computed(() => {
   const parts = []
@@ -239,17 +245,34 @@ async function confirmDelete() {
       >
         <FavoriteHeart :active="item.favorite" class="w-4 h-4 text-white/80" />
       </button>
+
+      <!-- Details (ⓘ) — phone grid cards stay lean; this opens the full metadata
+           + actions. Phone-only: on desktop the card already shows everything. -->
+      <button
+        v-if="!isList"
+        type="button"
+        @click.stop="showDetail = true"
+        :title="t('watchlist.card.details')"
+        class="sm:hidden nuc-press cursor-pointer absolute bottom-1.5 right-1.5 w-7 h-7 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-white/80 transition-all duration-200 hover:bg-black/60 hover:scale-110"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+        </svg>
+      </button>
     </div>
 
-    <!-- Content -->
+    <!-- Content — full on desktop and in list view; on phone the grid cards
+         (non-list) collapse to title + one metric, with the rest behind the ⓘ
+         detail button. The `sm:` toggles below express "phone grid only". -->
     <div :class="['flex-1 flex flex-col min-w-0', isList ? 'p-2 gap-0.5' : isCompact ? 'p-3 gap-1' : 'p-4 gap-1.5']">
       <div class="flex items-start justify-between gap-1.5">
         <h3
-          :class="['font-semibold text-slate-900 dark:text-white text-sm leading-tight', openUrl ? 'cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors' : '']"
+          :class="['font-semibold text-slate-900 dark:text-white text-sm leading-tight', !isList ? 'line-clamp-2 sm:line-clamp-none' : '', openUrl ? 'cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors' : '']"
           :title="openUrl ? t('watchlist.card.openExternal') : undefined"
           @click="openPoster"
         >{{ item.title }}</h3>
-        <div class="flex gap-0.5 shrink-0">
+        <!-- Edit/delete — hidden on phone grid (use the ⓘ detail there). -->
+        <div :class="['gap-0.5 shrink-0', isList ? 'flex' : 'hidden sm:flex']">
           <button
             @click="$emit('edit', item)"
             class="nuc-press cursor-pointer text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors p-1 rounded"
@@ -270,7 +293,8 @@ async function confirmDelete() {
         </div>
       </div>
 
-      <div v-if="meta || item.tmdbRating" class="flex items-center gap-1.5">
+      <!-- Metadata line + TMDB rating — hidden on phone grid. -->
+      <div v-if="meta || item.tmdbRating" :class="['items-center gap-1.5', isList ? 'flex' : 'hidden sm:flex']">
         <p v-if="meta" class="text-xs text-slate-400 dark:text-slate-500">{{ meta }}</p>
         <div v-if="item.tmdbRating" class="flex items-center gap-0.5 text-xs text-amber-400 ml-auto">
           <svg class="w-3 h-3 fill-current" viewBox="0 0 24 24">
@@ -280,6 +304,9 @@ async function confirmDelete() {
         </div>
       </div>
 
+      <!-- Movie runtime — phone grid only (desktop shows it in the meta line). -->
+      <p v-if="!isList && runtimeLabel" class="sm:hidden text-xs text-slate-400 dark:text-slate-500">{{ runtimeLabel }}</p>
+
       <!-- Season progress (shows) -->
       <template v-if="isShow">
         <button
@@ -288,7 +315,8 @@ async function confirmDelete() {
           :title="t('watchlist.card.trackProgressCount', { watched: totals.watchedEp, total: totals.totalEp })"
           class="cursor-pointer group/prog flex flex-col gap-1 w-full text-left"
         >
-          <div v-if="!isList" class="flex items-center justify-between gap-2 text-xs">
+          <!-- Episode-count label — grid views, hidden on phone (bar stays). -->
+          <div v-if="!isList" :class="['items-center justify-between gap-2 text-xs', 'hidden sm:flex']">
             <span class="text-slate-500 dark:text-slate-400">{{ t('watchlist.card.episodeProgress', { watched: item.status === 'completed' ? totals.totalEp : totals.watchedEp, total: totals.totalEp }) }}</span>
             <span v-if="remainingLabel" class="text-slate-400 dark:text-slate-500">{{ remainingLabel }}</span>
           </div>
@@ -312,9 +340,11 @@ async function confirmDelete() {
         </button>
       </template>
 
-      <p v-if="item.notes && !isCompact" class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{{ item.notes }}</p>
+      <!-- Notes (big desktop cards only) — hidden on phone. -->
+      <p v-if="item.notes && !isCompact" class="hidden sm:block text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{{ item.notes }}</p>
 
-      <div :class="['flex items-center gap-1.5 flex-wrap mt-auto', isCompact ? 'pt-1' : 'pt-1.5']">
+      <!-- Type · status · rating — hidden on phone grid. -->
+      <div :class="['items-center gap-1.5 flex-wrap mt-auto', isCompact ? 'pt-1' : 'pt-1.5', isList ? 'flex' : 'hidden sm:flex']">
         <span :class="['text-xs font-medium px-2 py-0.5 rounded-full', TYPE_COLORS[item.type]]">
           {{ item.type === 'movie' ? t('watchlist.type.movie') : t('watchlist.type.show') }}
         </span>
@@ -340,6 +370,147 @@ async function confirmDelete() {
       </div>
     </div>
   </div>
+
+  <!-- Full details — the "on demand" view behind the ⓘ button on grid cards. -->
+  <TemplateModal
+    :show="showDetail"
+    header
+    size="md"
+    z="z-[150]"
+    :title="item.title"
+    :description="meta || ''"
+    body-class="px-5 sm:px-6 pb-6 pt-2"
+    @cancel="showDetail = false"
+  >
+    <div class="flex flex-col gap-5">
+      <div class="flex gap-4">
+        <!-- Poster -->
+        <div
+          :class="['relative w-28 shrink-0 overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-700/60 aspect-[2/3] ring-1 ring-black/5 dark:ring-white/10', openUrl ? 'cursor-pointer' : '']"
+          @click="openPoster"
+          :title="openUrl ? t('watchlist.card.openExternal') : undefined"
+        >
+          <img v-if="item.posterUrl" :src="item.posterUrl" :alt="item.title" class="w-full h-full object-cover" />
+          <div v-else class="w-full h-full flex items-center justify-center">
+            <svg class="w-8 h-8 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3.375 19.5h17.25m-17.25 0a1.125 1.125 0 01-1.125-1.125M3.375 19.5h1.5C5.496 19.5 6 18.996 6 18.375m-3.75.125-.375-12a1.125 1.125 0 011.125-1.125h15.75A1.125 1.125 0 0120.625 6.5l-.375 12M6 18.375V7.875C6 7.254 6.504 6.75 7.125 6.75h9.75C17.496 6.75 18 7.254 18 7.875v10.5m0 0c0 .621-.504 1.125-1.125 1.125H7.125" />
+            </svg>
+          </div>
+        </div>
+
+        <div class="flex-1 min-w-0 flex flex-col gap-3">
+          <!-- Actions -->
+          <div class="flex items-center gap-0.5 -mt-0.5">
+            <button
+              v-if="openUrl"
+              @click="openPoster"
+              :title="t('watchlist.card.openExternal')"
+              class="nuc-press cursor-pointer p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+              </svg>
+            </button>
+            <button
+              @click="toggleFavorite"
+              :title="item.favorite ? t('watchlist.card.unfavorite') : t('watchlist.card.favorite')"
+              class="nuc-fav nuc-press cursor-pointer p-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+              :class="item.favorite ? 'text-rose-500' : 'text-slate-400'"
+            >
+              <FavoriteHeart :active="item.favorite" class="w-5 h-5" />
+            </button>
+            <button
+              @click="$emit('edit', item); showDetail = false"
+              :title="t('watchlist.card.edit')"
+              class="nuc-press cursor-pointer p-1.5 rounded-lg text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            </button>
+            <button
+              @click="showConfirm = true"
+              :title="t('watchlist.card.delete')"
+              class="nuc-trash nuc-press cursor-pointer p-1.5 rounded-lg text-slate-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+            >
+              <TrashIcon class="w-5 h-5" stroke-width="1.75" />
+            </button>
+          </div>
+
+          <!-- Type · status · TMDb rating -->
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <span :class="['text-xs font-medium px-2 py-0.5 rounded-full', TYPE_COLORS[item.type]]">
+              {{ item.type === 'movie' ? t('watchlist.type.movie') : t('watchlist.type.show') }}
+            </span>
+            <button
+              @click="cycleStatus"
+              :class="['cursor-pointer text-xs font-medium px-2 py-0.5 rounded-full transition-opacity hover:opacity-80', STATUS_COLORS[item.status]]"
+              :title="t('watchlist.card.cycleStatus')"
+            >
+              {{ t('watchlist.status.' + item.status) }}
+            </button>
+            <span v-if="item.tmdbRating" class="inline-flex items-center gap-0.5 text-xs text-amber-400">
+              <svg class="w-3 h-3 fill-current" viewBox="0 0 24 24">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+              </svg>
+              {{ item.tmdbRating }}
+            </span>
+          </div>
+
+          <!-- Your rating -->
+          <RatingControl
+            v-if="item.rating"
+            :model-value="item.rating"
+            :max="10"
+            readonly
+            size="sm"
+            show-value
+          />
+        </div>
+      </div>
+
+      <!-- Season progress (shows) -->
+      <div v-if="isShow" class="flex flex-col gap-2.5 rounded-xl bg-white/60 dark:bg-slate-800/50 border border-white/60 dark:border-white/8 p-4">
+        <template v-if="totals.totalEp > 0">
+          <div class="flex items-center justify-between gap-2 text-sm">
+            <span class="text-slate-500 dark:text-slate-400">{{ t('watchlist.card.episodeProgress', { watched: item.status === 'completed' ? totals.totalEp : totals.watchedEp, total: totals.totalEp }) }}</span>
+            <span v-if="remainingLabel" class="text-slate-400 dark:text-slate-500">{{ remainingLabel }}</span>
+          </div>
+          <div class="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+            <div class="h-full rounded-full transition-all duration-500" :class="item.status === 'completed' ? 'bg-green-500' : 'bg-indigo-500'" :style="{ width: `${progressPct}%` }" />
+          </div>
+        </template>
+        <button
+          @click="showProgress = true"
+          class="nuc-press cursor-pointer self-start inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium px-3 py-1.5 rounded-lg transition-colors"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.008v.008H3.75V6.75zm0 5.25h.008v.008H3.75V12zm0 5.25h.008v.008H3.75v-.008z" />
+          </svg>
+          {{ t('watchlist.card.trackEpisodes') }}
+        </button>
+      </div>
+
+      <!-- Mark as watched -->
+      <button
+        v-if="item.status !== 'completed'"
+        @click="markWatched"
+        :disabled="marking"
+        class="nuc-press cursor-pointer self-start inline-flex items-center gap-1.5 bg-green-600/90 hover:bg-green-500 text-white text-sm font-medium px-3 py-1.5 rounded-lg transition-colors disabled:cursor-wait disabled:opacity-60"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+        </svg>
+        {{ t('watchlist.card.markWatched') }}
+      </button>
+
+      <!-- Notes -->
+      <div v-if="item.notes" class="flex flex-col gap-1">
+        <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/35">{{ t('watchlist.card.notes') }}</p>
+        <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line">{{ item.notes }}</p>
+      </div>
+    </div>
+  </TemplateModal>
 
   <TemplateModal
     :show="showConfirm"

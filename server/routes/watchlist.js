@@ -49,7 +49,7 @@ const pickOpenTarget = (t) => ({
 router.get('/settings', async (req, res) => {
   try {
     const doc = await WatchlistSettings.findOne({ profileId: req.profile.profileId }).lean()
-    res.json({ openDefaults: doc?.openDefaults ?? null })
+    res.json({ openDefaults: doc?.openDefaults ?? null, searchSources: doc?.searchSources ?? ['tmdb'] })
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
@@ -57,16 +57,26 @@ router.get('/settings', async (req, res) => {
 
 router.put('/settings', async (req, res) => {
   try {
-    const openDefaults = {
-      movie: pickOpenTarget(req.body?.movie),
-      show: pickOpenTarget(req.body?.show),
+    // Partial-safe: only touch the fields present in the body so a search-source
+    // save can't wipe the open defaults (and vice-versa).
+    const $set = {}
+    if (req.body?.movie !== undefined || req.body?.show !== undefined) {
+      $set.openDefaults = {
+        movie: pickOpenTarget(req.body?.movie),
+        show: pickOpenTarget(req.body?.show),
+      }
+    }
+    if (Array.isArray(req.body?.searchSources)) {
+      // Normalize: strings only, unique, and always keep TMDb (the built-in).
+      const ids = req.body.searchSources.filter((s) => typeof s === 'string' && s)
+      $set.searchSources = [...new Set(['tmdb', ...ids])]
     }
     const doc = await WatchlistSettings.findOneAndUpdate(
       { profileId: req.profile.profileId },
-      { $set: { openDefaults } },
+      { $set },
       { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true }
     ).lean()
-    res.json({ openDefaults: doc.openDefaults })
+    res.json({ openDefaults: doc.openDefaults, searchSources: doc.searchSources ?? ['tmdb'] })
   } catch (err) {
     res.status(400).json({ error: err.message })
   }
