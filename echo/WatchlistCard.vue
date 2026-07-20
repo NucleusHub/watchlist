@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import EchoEmbedContainer from '@core/echo/EchoEmbedContainer.vue'
 import EchoAddButton from '@core/echo/EchoAddButton.vue'
+import TableIcon from './icons/table.svg?component'
 
 // Renderer for "watchlist.item" messages. Lives in Watchlist (next to its
 // manifest.echo.json) and is auto-registered into Echo via this app's
@@ -63,7 +64,7 @@ const meta = computed(() =>
         v-else
         class="flex h-20 w-[3.5rem] shrink-0 items-center justify-center rounded-md bg-amber-400/15 text-amber-400"
       >
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3v18M17 3v18M3 7.5h4M3 12h18M3 16.5h4M17 7.5h4M17 16.5h4"/></svg>
+        <TableIcon width="20" height="20" />
       </span>
       <div class="min-w-0 flex-1">
         <p class="truncate font-medium text-slate-900 dark:text-white">{{ payload.title }}</p>

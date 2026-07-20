@@ -5,6 +5,7 @@ import { searchMulti, fetchTvDetail, buildSeasonProgress } from '@/api/tmdb.js'
 import { deriveStatus } from '@/utils/progress.js'
 import TemplateModal from '@core/TemplateModal.vue'
 import { useI18n } from '@core/useI18n.js'
+import { Icon, Spinner } from '@core/icons'
 
 const { t } = useI18n()
 
@@ -160,9 +161,7 @@ async function save() {
                 :aria-label="t('watchlist.progress.close')"
                 class="cursor-pointer shrink-0 p-1.5 -mr-1 text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 rounded-lg transition-colors"
               >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <Icon name="close" class="w-4 h-4" :sw="2.5" />
               </button>
             </div>
 
@@ -188,10 +187,7 @@ async function save() {
           <!-- Body -->
           <div class="flex-1 overflow-y-auto px-3 py-3">
             <div v-if="loading" class="flex items-center justify-center py-12 text-slate-400 dark:text-slate-500 gap-2">
-              <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-              </svg>
+              <Spinner class="w-5 h-5 animate-spin" />
               <span class="text-sm">{{ t('watchlist.progress.loading') }}</span>
             </div>
 
@@ -220,9 +216,7 @@ async function save() {
                         : 'border-slate-300 dark:border-slate-600 hover:border-indigo-400',
                   ]"
                 >
-                  <svg v-if="seasonState(s) === 'full'" class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
+                  <Icon name="checkBold" v-if="seasonState(s) === 'full'" class="w-3.5 h-3.5 text-white" :sw="3" />
                   <span v-else-if="seasonState(s) === 'partial'" class="w-2 h-2 rounded-full bg-indigo-500" />
                 </button>
 
@@ -240,7 +234,7 @@ async function save() {
                     class="cursor-pointer w-7 h-7 flex items-center justify-center rounded-md text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-white/10 transition-colors disabled:opacity-30 disabled:cursor-default"
                     :aria-label="t('watchlist.progress.oneFewer')"
                   >
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14" /></svg>
+                    <Icon name="minus" class="w-3.5 h-3.5" :sw="2.5" />
                   </button>
                   <span class="w-6 text-center text-sm tabular-nums font-medium text-slate-700 dark:text-slate-200">{{ s.watched }}</span>
                   <button
@@ -249,7 +243,7 @@ async function save() {
                     class="cursor-pointer w-7 h-7 flex items-center justify-center rounded-md text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-white/10 transition-colors disabled:opacity-30 disabled:cursor-default"
                     :aria-label="t('watchlist.progress.oneMore')"
                   >
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14" /></svg>
+                    <Icon name="plus" class="w-3.5 h-3.5" :sw="2.5" />
                   </button>
                 </div>
               </div>

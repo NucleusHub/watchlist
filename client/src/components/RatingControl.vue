@@ -7,6 +7,7 @@
 // star glyph so it needs no shared Icon util. Mirrors shelf's RatingControl.
 import { ref, computed } from 'vue'
 import { useI18n } from '@core/useI18n.js'
+import { Icon } from '@core/icons'
 
 const { t } = useI18n()
 
@@ -98,9 +99,7 @@ function set(v) {
       :title="clearLabel"
       @click="emit('update:modelValue', null)"
     >
-      <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M6 18 18 6M6 6l12 12" />
-      </svg>
+      <Icon name="close" class="w-4 h-4" />
     </button>
   </div>
 </template>

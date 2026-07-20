@@ -12,6 +12,13 @@ import FavoriteHeart from '@core/FavoriteHeart.vue'
 import { useI18n } from '@core/useI18n.js'
 import { useOpenSettings } from '@/composables/useOpenSettings.js'
 import { resolveTarget, buildOpenUrl } from '@/utils/openTarget.js'
+import { Icon } from '@core/icons'
+import ArchiveBoxIcon from '@/assets/icons/archive-box.svg?component'
+import ClockIcon from '@/assets/icons/clock.svg?component'
+import ListBulletIcon from '@/assets/icons/list-bullet.svg?component'
+import InfoCircleIcon from '@/assets/icons/info-circle.svg?component'
+import StarIcon from '@/assets/icons/star.svg?component'
+import CheckCircleIcon from '@/assets/icons/check-circle.svg?component'
 
 const { t } = useI18n()
 const { defaults } = useOpenSettings()
@@ -157,9 +164,7 @@ async function confirmDelete() {
     >
       <img v-if="item.posterUrl" :src="item.posterUrl" :alt="item.title" class="w-full h-full object-cover" />
       <div v-else class="w-full h-full flex items-center justify-center">
-        <svg class="w-8 h-8 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M3.375 19.5h17.25m-17.25 0a1.125 1.125 0 01-1.125-1.125M3.375 19.5h1.5C5.496 19.5 6 18.996 6 18.375m-3.75.125-.375-12a1.125 1.125 0 011.125-1.125h15.75A1.125 1.125 0 0120.625 6.5l-.375 12M6 18.375V7.875C6 7.254 6.504 6.75 7.125 6.75h9.75C17.496 6.75 18 7.254 18 7.875v10.5m0 0c0 .621-.504 1.125-1.125 1.125H7.125" />
-        </svg>
+        <ArchiveBoxIcon class="w-8 h-8 text-slate-300 dark:text-slate-600" />
       </div>
 
       <!-- Open-on-click affordance — reveals on poster hover (desktop only) -->
@@ -167,9 +172,7 @@ async function confirmDelete() {
         v-if="openUrl"
         class="pointer-events-none absolute inset-0 hidden sm:flex items-center justify-center bg-black/0 group-hover/poster:bg-black/30 transition-colors"
       >
-        <svg class="w-5 h-5 text-white opacity-0 group-hover/poster:opacity-100 transition-opacity drop-shadow" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
-        </svg>
+        <Icon name="externalLink" class="w-5 h-5 text-white opacity-0 group-hover/poster:opacity-100 transition-opacity drop-shadow" />
       </div>
 
       <!-- Watch checkbox — hover to reveal on planned -->
@@ -180,9 +183,7 @@ async function confirmDelete() {
         :title="t('watchlist.card.markWatched')"
         class="cursor-pointer watched-btn absolute top-2 left-2 w-7 h-7 rounded-full border-2 border-white/60 bg-black/40 backdrop-blur-sm flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-200 hover:border-white hover:bg-black/60 hover:scale-110 disabled:cursor-wait"
       >
-        <svg class="w-3.5 h-3.5 text-white/80" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-        </svg>
+        <Icon name="checkBold" class="w-3.5 h-3.5 text-white/80" :sw="3" />
       </button>
 
       <!-- Clock badge — always visible on watching, swaps to checkmark on hover -->
@@ -193,12 +194,8 @@ async function confirmDelete() {
         :title="t('watchlist.card.markWatched')"
         class="cursor-pointer watched-btn absolute top-2 left-2 w-7 h-7 rounded-full bg-blue-500 shadow-md flex items-center justify-center transition-all duration-200 hover:bg-green-500 hover:scale-110 disabled:cursor-wait group/clock"
       >
-        <svg class="w-3.5 h-3.5 text-white group-hover/clock:hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6l4 2m6-2a10 10 0 11-20 0 10 10 0 0120 0z" />
-        </svg>
-        <svg class="w-3.5 h-3.5 text-white hidden group-hover/clock:block" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-        </svg>
+        <ClockIcon class="w-3.5 h-3.5 text-white group-hover/clock:hidden" />
+        <Icon name="checkBold" class="w-3.5 h-3.5 text-white hidden group-hover/clock:block" :sw="3" />
       </button>
 
       <!-- Green checkmark — always visible on completed -->
@@ -206,9 +203,7 @@ async function confirmDelete() {
         v-else
         class="absolute top-2 left-2 w-7 h-7 rounded-full bg-green-500 flex items-center justify-center shadow-md"
       >
-        <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-        </svg>
+        <Icon name="checkBold" class="w-3.5 h-3.5 text-white" :sw="3" />
       </div>
 
       <!-- Progress button — opens the season/episode modal (shows only) -->
@@ -218,9 +213,7 @@ async function confirmDelete() {
         :title="t('watchlist.card.trackEpisodes')"
         class="cursor-pointer watched-btn absolute top-10 left-2 w-7 h-7 rounded-full border-2 border-white/60 bg-black/40 backdrop-blur-sm flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 hover:border-white hover:bg-black/60 hover:scale-110"
       >
-        <svg class="w-3.5 h-3.5 text-white/80" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.008v.008H3.75V6.75zm0 5.25h.008v.008H3.75V12zm0 5.25h.008v.008H3.75v-.008z" />
-        </svg>
+        <ListBulletIcon class="w-3.5 h-3.5 text-white/80" />
       </button>
 
       <!-- Streaming logo -->
@@ -255,9 +248,7 @@ async function confirmDelete() {
         :title="t('watchlist.card.details')"
         class="sm:hidden nuc-press cursor-pointer absolute bottom-1.5 right-1.5 w-7 h-7 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-white/80 transition-all duration-200 hover:bg-black/60 hover:scale-110"
       >
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
-        </svg>
+        <InfoCircleIcon class="w-4 h-4" />
       </button>
     </div>
 
@@ -278,9 +269,7 @@ async function confirmDelete() {
             class="nuc-press cursor-pointer text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors p-1 rounded"
             :title="t('watchlist.card.edit')"
           >
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-            </svg>
+            <Icon name="edit" class="w-3.5 h-3.5" />
           </button>
           <button
             @click="showConfirm = true"
@@ -297,9 +286,7 @@ async function confirmDelete() {
       <div v-if="meta || item.tmdbRating" :class="['items-center gap-1.5', isList ? 'flex' : 'hidden sm:flex']">
         <p v-if="meta" class="text-xs text-slate-400 dark:text-slate-500">{{ meta }}</p>
         <div v-if="item.tmdbRating" class="flex items-center gap-0.5 text-xs text-amber-400 ml-auto">
-          <svg class="w-3 h-3 fill-current" viewBox="0 0 24 24">
-            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-          </svg>
+          <StarIcon class="w-3 h-3 fill-current" />
           {{ item.tmdbRating }}
         </div>
       </div>
@@ -333,9 +320,7 @@ async function confirmDelete() {
           @click.stop="showProgress = true"
           class="cursor-pointer self-start flex items-center gap-1 text-xs text-slate-400 dark:text-slate-500 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors"
         >
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
+          <CheckCircleIcon class="w-3.5 h-3.5" />
           {{ t('watchlist.card.trackProgress') }}
         </button>
       </template>
@@ -392,9 +377,7 @@ async function confirmDelete() {
         >
           <img v-if="item.posterUrl" :src="item.posterUrl" :alt="item.title" class="w-full h-full object-cover" />
           <div v-else class="w-full h-full flex items-center justify-center">
-            <svg class="w-8 h-8 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M3.375 19.5h17.25m-17.25 0a1.125 1.125 0 01-1.125-1.125M3.375 19.5h1.5C5.496 19.5 6 18.996 6 18.375m-3.75.125-.375-12a1.125 1.125 0 011.125-1.125h15.75A1.125 1.125 0 0120.625 6.5l-.375 12M6 18.375V7.875C6 7.254 6.504 6.75 7.125 6.75h9.75C17.496 6.75 18 7.254 18 7.875v10.5m0 0c0 .621-.504 1.125-1.125 1.125H7.125" />
-            </svg>
+            <ArchiveBoxIcon class="w-8 h-8 text-slate-300 dark:text-slate-600" />
           </div>
         </div>
 
@@ -407,9 +390,7 @@ async function confirmDelete() {
               :title="t('watchlist.card.openExternal')"
               class="nuc-press cursor-pointer p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
             >
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
-              </svg>
+              <Icon name="externalLink" class="w-5 h-5" :sw="1.75" />
             </button>
             <button
               @click="toggleFavorite"
@@ -424,9 +405,7 @@ async function confirmDelete() {
               :title="t('watchlist.card.edit')"
               class="nuc-press cursor-pointer p-1.5 rounded-lg text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
             >
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              </svg>
+              <Icon name="edit" class="w-5 h-5" :sw="1.75" />
             </button>
             <button
               @click="showConfirm = true"
@@ -450,9 +429,7 @@ async function confirmDelete() {
               {{ t('watchlist.status.' + item.status) }}
             </button>
             <span v-if="item.tmdbRating" class="inline-flex items-center gap-0.5 text-xs text-amber-400">
-              <svg class="w-3 h-3 fill-current" viewBox="0 0 24 24">
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-              </svg>
+              <StarIcon class="w-3 h-3 fill-current" />
               {{ item.tmdbRating }}
             </span>
           </div>
@@ -484,9 +461,7 @@ async function confirmDelete() {
           @click="showProgress = true"
           class="nuc-press cursor-pointer self-start inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium px-3 py-1.5 rounded-lg transition-colors"
         >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.008v.008H3.75V6.75zm0 5.25h.008v.008H3.75V12zm0 5.25h.008v.008H3.75v-.008z" />
-          </svg>
+          <ListBulletIcon class="w-4 h-4" />
           {{ t('watchlist.card.trackEpisodes') }}
         </button>
       </div>
@@ -498,9 +473,7 @@ async function confirmDelete() {
         :disabled="marking"
         class="nuc-press cursor-pointer self-start inline-flex items-center gap-1.5 bg-green-600/90 hover:bg-green-500 text-white text-sm font-medium px-3 py-1.5 rounded-lg transition-colors disabled:cursor-wait disabled:opacity-60"
       >
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-        </svg>
+        <Icon name="check" class="w-4 h-4" :sw="2.5" />
         {{ t('watchlist.card.markWatched') }}
       </button>
 
