@@ -10,8 +10,10 @@ import SeasonProgressModal from '@/components/SeasonProgressModal.vue'
 import RatingControl from '@/components/RatingControl.vue'
 import FavoriteHeart from '@core/FavoriteHeart.vue'
 import { useI18n } from '@core/useI18n.js'
+import { useRegistry } from '@core/useRegistry.js'
 import { useOpenSettings } from '@/composables/useOpenSettings.js'
 import { resolveTarget, buildOpenUrl } from '@/utils/openTarget.js'
+import { watchlistIndicators } from '@/utils/pluginIndicators.js'
 import { Icon } from '@core/icons'
 import ArchiveBoxIcon from '@/assets/icons/archive-box.svg?component'
 import ClockIcon from '@/assets/icons/clock.svg?component'
@@ -21,7 +23,12 @@ import StarIcon from '@/assets/icons/star.svg?component'
 import CheckCircleIcon from '@/assets/icons/check-circle.svg?component'
 
 const { t } = useI18n()
+const { isPluginEnabled } = useRegistry()
 const { defaults } = useOpenSettings()
+
+// Plugin-contributed card badges (e.g. In Common's "others watching this"),
+// filtered to the ones enabled for this user. Empty badges render no DOM.
+const indicators = computed(() => watchlistIndicators.filter((i) => isPluginEnabled(i.pluginId)))
 
 const props = defineProps({
   item: { type: Object, required: true },
@@ -165,6 +172,20 @@ async function confirmDelete() {
       <img v-if="item.posterUrl" :src="item.posterUrl" :alt="item.title" class="w-full h-full object-cover" />
       <div v-else class="w-full h-full flex items-center justify-center">
         <ArchiveBoxIcon class="w-8 h-8 text-slate-300 dark:text-slate-600" />
+      </div>
+
+      <!-- Plugin card badges (e.g. In Common) — an absolute overlay so they never
+           add to the card's height. Bottom-right, hidden on phone where the
+           details (ⓘ) button lives there; the corner is free on desktop. Renders
+           no visible box without a match. -->
+      <div v-if="indicators.length" class="absolute bottom-1.5 right-1.5 z-20 hidden sm:flex">
+        <component
+          v-for="ind in indicators"
+          :key="ind.pluginId"
+          :is="ind.component"
+          :item="item"
+          variant="overlay"
+        />
       </div>
 
       <!-- Open-on-click affordance — reveals on poster hover (desktop only) -->
@@ -432,6 +453,12 @@ async function confirmDelete() {
               <StarIcon class="w-3 h-3 fill-current" />
               {{ item.tmdbRating }}
             </span>
+            <component
+              v-for="ind in indicators"
+              :key="ind.pluginId"
+              :is="ind.component"
+              :item="item"
+            />
           </div>
 
           <!-- Your rating -->

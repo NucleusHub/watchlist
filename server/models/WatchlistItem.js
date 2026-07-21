@@ -38,6 +38,11 @@ const watchlistItemSchema = new mongoose.Schema(
     profileId: { type: mongoose.Schema.Types.ObjectId, ref: 'Profile', index: true },
     title: { type: String, required: true, trim: true },
     type: { type: String, enum: ['movie', 'show'], required: true },
+    // TMDb id of the chosen search result, when the item was added via TMDb.
+    // Persisted so cross-user features (e.g. the In Common plugin) can match the
+    // exact same title precisely rather than by fuzzy title. Null for manually
+    // entered items or ones added from a non-TMDb source.
+    tmdbId: { type: Number, default: null, index: true },
     status: {
       type: String,
       enum: ['planned', 'watching', 'completed'],

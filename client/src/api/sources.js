@@ -45,6 +45,8 @@ const tmdbSource = {
       type: isMovie ? 'movie' : 'show',
       year: (isMovie ? r.release_date : r.first_air_date)?.slice(0, 4) ?? '',
       posterUrl: r.poster_path ? `https://image.tmdb.org/t/p/w500${r.poster_path}` : null,
+      // Persist the TMDb id so cross-user matching (In Common plugin) is exact.
+      tmdbId: r.id ?? null,
     }
     const mediaType = isMovie ? 'movie' : 'tv'
     const [d, streaming] = await Promise.all([
