@@ -6,6 +6,7 @@ import { uploadImage } from '@/api/watchlist.js'
 import { OPEN_OPTIONS, TITLE_FORMATS } from '@/utils/openTarget.js'
 import TemplateModal from '@core/TemplateModal.vue'
 import RatingControl from './RatingControl.vue'
+import CollectionSelect from '@/components/CollectionSelect.vue'
 import FavoriteHeart from '@core/FavoriteHeart.vue'
 import { useI18n } from '@core/useI18n.js'
 import { useRegistry } from '@core/useRegistry.js'
@@ -69,6 +70,7 @@ const EMPTY_FORM = () => ({
   seasons: '', episodes: '', showRuntime: '',
   seasonProgress: null,
   favorite: false,
+  collectionIds: [],
   notes: '',
 })
 
@@ -215,14 +217,14 @@ function handleSubmit(addAnother = false) {
     :show="show"
     header
     :title="initial ? t('watchlist.form.editTitle') : t('watchlist.form.addTitle')"
-    size="lg"
+    size="xl"
     body-class="px-4 sm:px-6 pb-5 pt-2"
     @cancel="$emit('close')"
   >
-    <form @submit.prevent="handleSubmit()" class="flex flex-col gap-4 sm:flex-row sm:gap-6 items-start">
+    <form @submit.prevent="handleSubmit()" class="flex flex-col gap-5 sm:flex-row sm:gap-6 items-start">
 
               <!-- Left: Poster -->
-              <div class="w-36 sm:w-40 shrink-0 mx-auto sm:mx-0 flex flex-col gap-3">
+              <div class="w-36 sm:w-44 shrink-0 mx-auto sm:mx-0 flex flex-col gap-3 sm:sticky sm:top-0">
                 <label class="text-sm text-slate-500 dark:text-slate-400">{{ t('watchlist.form.poster') }}</label>
                 <div class="relative">
                   <div
@@ -301,11 +303,11 @@ function handleSubmit(addAnother = false) {
                 <input ref="fileInput" type="file" accept="image/*" class="hidden" @change="handleFileUpload" />
               </div>
 
-              <!-- Right: Fields -->
-              <div class="flex-1 flex flex-col gap-4 min-w-0">
+              <!-- Right: Fields — two columns on desktop; wide groups span both. -->
+              <div class="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-4 min-w-0 self-stretch content-start">
 
                 <!-- Title with typeahead -->
-                <div class="flex flex-col gap-1.5">
+                <div class="flex flex-col gap-1.5 sm:col-span-2">
                   <label class="text-sm text-slate-500 dark:text-slate-400">{{ t('watchlist.form.title') }}</label>
                   <div class="relative">
                     <input
@@ -339,7 +341,7 @@ function handleSubmit(addAnother = false) {
                 </div>
 
                 <!-- Type + Status + Year in one row -->
-                <div class="grid grid-cols-3 gap-3">
+                <div class="grid grid-cols-3 gap-3 sm:col-span-2">
                   <div class="flex flex-col gap-1.5">
                     <label class="text-sm text-slate-500 dark:text-slate-400">{{ t('watchlist.form.type') }}</label>
                     <select v-model="form.type" class="cursor-pointer bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
@@ -362,7 +364,7 @@ function handleSubmit(addAnother = false) {
                 </div>
 
                 <!-- Type-specific fields -->
-                <div class="flex flex-col gap-3 relative">
+                <div class="flex flex-col gap-3 relative sm:col-span-2">
                   <div v-if="fetchingDetail" class="absolute inset-0 bg-slate-800/60 rounded-lg flex items-center justify-center z-10">
                     <Spinner class="w-5 h-5 text-indigo-400 animate-spin" />
                   </div>
@@ -424,44 +426,56 @@ function handleSubmit(addAnother = false) {
                   </template>
                 </div>
 
-                <!-- Rating + TMDb -->
-                <div class="flex flex-col gap-3">
-                  <div class="flex flex-col gap-1.5">
-                    <div class="flex items-center justify-between">
-                      <label class="text-sm text-slate-500 dark:text-slate-400">{{ t('watchlist.form.yourRating') }}</label>
-                      <button
-                        type="button"
-                        @click="form.favorite = !form.favorite"
-                        :title="form.favorite ? t('watchlist.card.unfavorite') : t('watchlist.card.favorite')"
-                        class="nuc-fav nuc-press cursor-pointer inline-flex items-center gap-1.5 text-sm transition-colors"
-                        :class="form.favorite ? 'text-rose-500' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'"
-                      >
-                        <FavoriteHeart :active="form.favorite" class="w-5 h-5" />
-                        <span>{{ t('watchlist.form.favorite') }}</span>
-                      </button>
-                    </div>
-                    <RatingControl v-model="form.rating" :max="10" size="md" />
+                <!-- Your rating (+ favorite) -->
+                <div class="flex flex-col gap-1.5">
+                  <div class="flex items-center justify-between">
+                    <label class="text-sm text-slate-500 dark:text-slate-400">{{ t('watchlist.form.yourRating') }}</label>
+                    <button
+                      type="button"
+                      @click="form.favorite = !form.favorite"
+                      :title="form.favorite ? t('watchlist.card.unfavorite') : t('watchlist.card.favorite')"
+                      class="nuc-fav nuc-press cursor-pointer inline-flex items-center gap-1.5 text-sm transition-colors"
+                      :class="form.favorite ? 'text-rose-500' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'"
+                    >
+                      <FavoriteHeart :active="form.favorite" class="w-5 h-5" />
+                      <span>{{ t('watchlist.form.favorite') }}</span>
+                    </button>
                   </div>
-                  <div class="flex flex-col gap-1.5">
-                    <label class="text-sm text-slate-500 dark:text-slate-400">{{ t('watchlist.form.tmdbRating') }}</label>
-                    <div class="bg-slate-100 dark:bg-slate-700/50 rounded-lg px-3 py-2 text-sm text-slate-500 dark:text-slate-400 flex items-center gap-1.5 h-[38px]">
-                      <template v-if="form.tmdbRating">
-                        <StarIcon class="w-3.5 h-3.5 text-amber-400 fill-current shrink-0" />
-                        <span class="text-slate-900 dark:text-white">{{ form.tmdbRating }}</span>
-                        <span class="text-slate-400 dark:text-slate-500">/10</span>
-                      </template>
-                      <span v-else class="text-slate-400 dark:text-slate-600 text-xs">{{ t('watchlist.form.tmdbAutofill') }}</span>
-                    </div>
+                  <RatingControl v-model="form.rating" :max="10" size="md" />
+                </div>
+
+                <!-- TMDb rating (auto-filled) -->
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-sm text-slate-500 dark:text-slate-400">{{ t('watchlist.form.tmdbRating') }}</label>
+                  <div class="bg-slate-100 dark:bg-slate-700/50 rounded-lg px-3 py-2 text-sm text-slate-500 dark:text-slate-400 flex items-center gap-1.5 h-[38px]">
+                    <template v-if="form.tmdbRating">
+                      <StarIcon class="w-3.5 h-3.5 text-amber-400 fill-current shrink-0" />
+                      <span class="text-slate-900 dark:text-white">{{ form.tmdbRating }}</span>
+                      <span class="text-slate-400 dark:text-slate-500">/10</span>
+                    </template>
+                    <span v-else class="text-slate-400 dark:text-slate-600 text-xs">{{ t('watchlist.form.tmdbAutofill') }}</span>
                   </div>
                 </div>
 
+                <!-- Divider before the grouping/notes section -->
+                <div class="sm:col-span-2 h-px bg-black/[0.06] dark:bg-white/8" />
+
+                <!-- Collections -->
+                <div class="flex flex-col gap-1.5 sm:col-span-2">
+                  <div class="flex items-center justify-between">
+                    <label class="text-sm text-slate-500 dark:text-slate-400">{{ t('watchlist.collections.label') }}</label>
+                    <span v-if="form.collectionIds?.length" class="text-xs text-indigo-600 dark:text-indigo-400">{{ t('watchlist.collections.selectedCount', { count: form.collectionIds.length }) }}</span>
+                  </div>
+                  <CollectionSelect v-model="form.collectionIds" list-class="max-h-40 overflow-y-auto" />
+                </div>
+
                 <!-- Notes -->
-                <div class="flex flex-col gap-1.5">
+                <div class="flex flex-col gap-1.5 sm:col-span-2">
                   <label class="text-sm text-slate-500 dark:text-slate-400">{{ t('watchlist.form.notes') }}</label>
                   <textarea v-model="form.notes" rows="2" :placeholder="t('watchlist.form.notesPlaceholder')" class="bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white rounded-lg px-3 py-2 text-sm placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none" />
                 </div>
 
-                <div class="flex gap-2">
+                <div class="flex gap-2 sm:col-span-2">
                   <button
                     type="submit"
                     class="cursor-pointer flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg py-2 text-sm transition-colors"

@@ -4,6 +4,8 @@ import { getItems, createItem, updateItem } from '@/api/watchlist.js'
 import { searchMulti, fetchMovieDetail, fetchTvDetail, fetchWatchProviders, buildSeasonProgress } from '@/api/tmdb.js'
 import ItemCard from '@/components/ItemCard.vue'
 import ItemFormModal from '@/components/ItemFormModal.vue'
+import ManageCollectionsModal from '@/components/ManageCollectionsModal.vue'
+import WatchlistNav from '@/components/WatchlistNav.vue'
 import TemplateModal from '@core/TemplateModal.vue'
 import AppSidebar from '@core/AppSidebar.vue'
 import AppHeader from '@core/AppHeader.vue'
@@ -13,6 +15,7 @@ import OpenSettingsModal from '@/components/OpenSettingsModal.vue'
 import FavoriteHeart from '@core/FavoriteHeart.vue'
 import { useI18n } from '@core/useI18n.js'
 import { useSettingsModal } from '@core/useSettingsModal.js'
+import { useCollections } from '@/composables/useCollections.js'
 import { Icon } from '@core/icons'
 import VideoCameraIcon from '@/assets/icons/video-camera.svg?component'
 import ClockAltIcon from '@/assets/icons/clock-alt.svg?component'
@@ -25,6 +28,7 @@ import ViewColumns3Icon from '@/assets/icons/view-columns-3.svg?component'
 
 const { t } = useI18n()
 const { open: settingsOpen, openSettings, closeSettings } = useSettingsModal()
+const { applyMembership } = useCollections()
 
 const WARN_THRESHOLD = 10
 const sidebarOpen = ref(false)
@@ -46,6 +50,8 @@ const error = ref(null)
 const showModal = ref(false)
 const editingItem = ref(null)
 const modalResetKey = ref(0)
+const showManage = ref(false)
+const managingItem = ref(null)
 const activeStatus = ref('planned')
 const activeType = ref('all')
 const onlyFavorite = ref(false)
@@ -146,11 +152,14 @@ async function load() {
 
 async function handleSubmit(data, addAnother = false) {
   if (editingItem.value) {
+    const prev = editingItem.value.collectionIds || []
     const updated = await updateItem(editingItem.value._id, data)
+    applyMembership(prev, updated.collectionIds || [])
     items.value = items.value.map((i) => (i._id === updated._id ? updated : i))
     closeModal()
   } else {
     const created = await createItem(data)
+    applyMembership([], created.collectionIds || [])
     items.value.unshift(created)
     if (addAnother) {
       modalResetKey.value++
@@ -177,6 +186,11 @@ function closeModal() {
 
 function handleUpdated(updated) {
   items.value = items.value.map((i) => (i._id === updated._id ? updated : i))
+}
+
+function openManage(item) {
+  managingItem.value = item
+  showManage.value = true
 }
 
 function handleDeleted(id) {
@@ -307,10 +321,13 @@ onMounted(load)
           <span class="block w-5 h-0.5 rounded-full bg-current transition-all duration-200"
                 :class="sidebarOpen ? '-rotate-45 -translate-y-[7px]' : ''" />
         </button>
-        <p class="hidden sm:block text-xs text-slate-500 dark:text-slate-400">
+        <p class="hidden md:block text-xs text-slate-500 dark:text-slate-400">
           {{ t('watchlist.header.stats', { total: stats.total, watching: stats.watching, completed: stats.completed }) }}
         </p>
       </template>
+
+      <WatchlistNav />
+
       <template #right>
         <!-- Search -->
         <div class="relative">
@@ -514,6 +531,7 @@ onMounted(load)
           @updated="handleUpdated"
           @deleted="handleDeleted"
           @edit="openEdit"
+          @manage-collections="openManage"
         />
         <button
           @click="openAdd"
@@ -536,6 +554,13 @@ onMounted(load)
     />
 
     <OpenSettingsModal :show="settingsOpen" @close="closeSettings" />
+
+    <ManageCollectionsModal
+      :show="showManage"
+      :item="managingItem"
+      @close="showManage = false"
+      @updated="handleUpdated"
+    />
 
     <!-- Refresh warning -->
     <TemplateModal

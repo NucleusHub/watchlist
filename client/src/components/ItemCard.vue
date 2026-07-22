@@ -6,15 +6,17 @@ import { logoUrl } from '@/api/tmdb.js'
 import { showTotals, watchedFraction, remainingMinutes } from '@/utils/progress.js'
 import TemplateModal from '@core/TemplateModal.vue'
 import TrashIcon from '@core/TrashIcon.vue'
+import ContextMenu from '@core/ContextMenu.vue'
 import SeasonProgressModal from '@/components/SeasonProgressModal.vue'
 import RatingControl from '@/components/RatingControl.vue'
 import FavoriteHeart from '@core/FavoriteHeart.vue'
 import { useI18n } from '@core/useI18n.js'
 import { useRegistry } from '@core/useRegistry.js'
 import { useOpenSettings } from '@/composables/useOpenSettings.js'
+import { useCollections } from '@/composables/useCollections.js'
 import { resolveTarget, buildOpenUrl } from '@/utils/openTarget.js'
 import { watchlistIndicators } from '@/utils/pluginIndicators.js'
-import { Icon } from '@core/icons'
+import { Icon, ICONS } from '@core/icons'
 import ArchiveBoxIcon from '@/assets/icons/archive-box.svg?component'
 import ClockIcon from '@/assets/icons/clock.svg?component'
 import ListBulletIcon from '@/assets/icons/list-bullet.svg?component'
@@ -25,6 +27,7 @@ import CheckCircleIcon from '@/assets/icons/check-circle.svg?component'
 const { t } = useI18n()
 const { isPluginEnabled } = useRegistry()
 const { defaults } = useOpenSettings()
+const { applyMembership } = useCollections()
 
 // Plugin-contributed card badges (e.g. In Common's "others watching this"),
 // filtered to the ones enabled for this user. Empty badges render no DOM.
@@ -33,11 +36,14 @@ const indicators = computed(() => watchlistIndicators.filter((i) => isPluginEnab
 const props = defineProps({
   item: { type: Object, required: true },
   gridStyle: { type: String, default: 'small' },
+  // When rendered inside a collection's detail view, enables the
+  // "remove from this collection" action (removal ≠ deletion).
+  collectionId: { type: String, default: null },
 })
 
 const isList    = computed(() => props.gridStyle === 'list')
 const isCompact = computed(() => props.gridStyle === 'list' || props.gridStyle === 'small')
-const emit = defineEmits(['updated', 'deleted', 'edit'])
+const emit = defineEmits(['updated', 'deleted', 'edit', 'manage-collections'])
 
 const STATUS_COLORS = {
   planned:   'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300',
@@ -157,12 +163,46 @@ async function confirmDelete() {
   showConfirm.value = false
   deleting.value = true
   await deleteItem(props.item._id)
+  // Deleting the item drops all its memberships; keep cached counts in step.
+  applyMembership(props.item.collectionIds || [], [])
   emit('deleted', props.item._id)
+}
+
+// Detach this item from the collection currently being browsed. Membership is a
+// field on the item, so this only rewrites collectionIds — the item is untouched.
+async function removeFromCollection() {
+  if (!props.collectionId) return
+  const prev = props.item.collectionIds || []
+  const next = prev.filter((id) => String(id) !== String(props.collectionId))
+  const updated = await updateItem(props.item._id, { collectionIds: next })
+  applyMembership(prev, updated.collectionIds || next)
+  emit('updated', updated)
+}
+
+// Right-click menu — the shared core ContextMenu, driven by plain item objects.
+const menu = ref({ show: false, x: 0, y: 0 })
+const menuItems = computed(() => {
+  const items = [
+    { label: t('watchlist.card.edit'), icon: ICONS.pencil, action: () => emit('edit', props.item) },
+    { label: t('watchlist.collections.manage'), icon: ICONS.folder, action: () => emit('manage-collections', props.item) },
+  ]
+  if (props.collectionId) {
+    items.push({ label: t('watchlist.collections.removeFromThis'), icon: ICONS.minus, action: removeFromCollection })
+  }
+  items.push(
+    { label: props.item.favorite ? t('watchlist.card.unfavorite') : t('watchlist.card.favorite'), iconHeart: true, iconActive: props.item.favorite, action: toggleFavorite },
+    { divider: true },
+    { label: t('watchlist.card.delete'), iconTrash: true, danger: true, action: () => (showConfirm.value = true) },
+  )
+  return items
+})
+function openMenu(e) {
+  menu.value = { show: true, x: e.clientX, y: e.clientY }
 }
 </script>
 
 <template>
-  <div ref="cardRef" :class="['group rounded-xl overflow-hidden flex transition-all duration-200 ease-out hover:-translate-y-0.5 backdrop-blur-sm shadow-sm', isList ? 'flex-row' : 'flex-col', item.status === 'completed' ? 'bg-green-50/80 dark:bg-green-900/20 ring-1 ring-inset ring-green-500/50 dark:ring-green-500/25 shadow-green-500/10' : item.status === 'watching' ? 'bg-blue-50/80 dark:bg-blue-900/20 ring-1 ring-inset ring-blue-500/50 dark:ring-blue-500/25 shadow-blue-500/10' : 'bg-white/70 dark:bg-slate-800/70 border border-white/60 dark:border-white/8 hover:bg-white/85 dark:hover:bg-slate-800/85 hover:shadow-md']">
+  <div ref="cardRef" @contextmenu.prevent="openMenu" :class="['group rounded-xl overflow-hidden flex transition-all duration-200 ease-out hover:-translate-y-0.5 backdrop-blur-sm shadow-sm', isList ? 'flex-row' : 'flex-col', item.status === 'completed' ? 'bg-green-50/80 dark:bg-green-900/20 ring-1 ring-inset ring-green-500/50 dark:ring-green-500/25 shadow-green-500/10' : item.status === 'watching' ? 'bg-blue-50/80 dark:bg-blue-900/20 ring-1 ring-inset ring-blue-500/50 dark:ring-blue-500/25 shadow-blue-500/10' : 'bg-white/70 dark:bg-slate-800/70 border border-white/60 dark:border-white/8 hover:bg-white/85 dark:hover:bg-slate-800/85 hover:shadow-md']">
     <!-- Poster — fixed 2:3 box in grid views (like Shelf), stretches to row height in list view -->
     <div
       :class="['relative shrink-0 overflow-hidden bg-slate-100 dark:bg-slate-700/60', isList ? 'w-14 self-stretch' : 'w-full aspect-[2/3]', openUrl ? 'cursor-pointer group/poster' : '']"
@@ -429,6 +469,13 @@ async function confirmDelete() {
               <Icon name="edit" class="w-5 h-5" :sw="1.75" />
             </button>
             <button
+              @click="$emit('manage-collections', item); showDetail = false"
+              :title="t('watchlist.collections.manage')"
+              class="nuc-press cursor-pointer p-1.5 rounded-lg text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+            >
+              <Icon name="folder" class="w-5 h-5" :sw="1.75" />
+            </button>
+            <button
               @click="showConfirm = true"
               :title="t('watchlist.card.delete')"
               class="nuc-trash nuc-press cursor-pointer p-1.5 rounded-lg text-slate-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
@@ -528,6 +575,8 @@ async function confirmDelete() {
     @close="showProgress = false"
     @updated="handleProgressUpdated"
   />
+
+  <ContextMenu :show="menu.show" :x="menu.x" :y="menu.y" :items="menuItems" @close="menu.show = false" />
 </template>
 
 <style scoped>
