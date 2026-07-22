@@ -127,6 +127,13 @@ function move(from, to) {
   next.splice(to, 0, row)
   draft.value = next
 }
+// Jump an item to a typed 1-based position; everything else shifts to fill in.
+function moveTo(i, value) {
+  const n = Math.round(Number(value))
+  if (!Number.isFinite(n)) return
+  const to = Math.max(0, Math.min(draft.value.length - 1, n - 1))
+  if (to !== i) move(i, to)
+}
 function onDragStart(i, e) {
   dragIndex.value = i
   if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move'
@@ -328,10 +335,13 @@ function onItemsAdded(added) {
           </button>
         </div>
 
-        <!-- Reorder mode: a draggable single-column list. -->
+        <!-- Reorder mode: drag, type a position, or use the arrows. -->
         <template v-else-if="reordering">
-          <p class="text-sm text-slate-400 dark:text-slate-500 -mt-2">{{ t('watchlist.collections.reorderHint') }}</p>
-          <ul class="flex flex-col gap-1.5">
+          <div class="flex items-center gap-2 -mt-2 text-sm text-slate-400 dark:text-slate-500">
+            <Icon name="menu" class="w-4 h-4 shrink-0" />
+            <span>{{ t('watchlist.collections.reorderHint') }}</span>
+          </div>
+          <ul class="flex flex-col gap-2">
             <li
               v-for="(item, i) in draft"
               :key="item._id"
@@ -340,29 +350,56 @@ function onItemsAdded(added) {
               @dragover.prevent="onDragOver(i)"
               @dragend="onDragEnd"
               :class="[
-                'flex items-center gap-3 p-2 rounded-xl bg-white/70 dark:bg-slate-800/70 border border-white/60 dark:border-white/8 backdrop-blur-sm transition-shadow cursor-grab active:cursor-grabbing',
-                dragIndex === i ? 'opacity-60 shadow-lg' : '',
+                'group flex items-center gap-2.5 sm:gap-3 p-2 rounded-xl border bg-white/80 dark:bg-slate-800/70 backdrop-blur-sm transition-all duration-150 select-none',
+                dragIndex === i
+                  ? 'border-indigo-400/70 ring-2 ring-indigo-400/40 shadow-lg shadow-indigo-500/10 opacity-95 scale-[1.01]'
+                  : 'border-white/60 dark:border-white/8 shadow-sm hover:border-indigo-300/70 dark:hover:border-indigo-400/25',
               ]"
             >
-              <span class="shrink-0 text-slate-300 dark:text-slate-600"><Icon name="menu" class="w-5 h-5" /></span>
-              <span class="w-6 text-center text-xs tabular-nums text-slate-400 dark:text-slate-500">{{ i + 1 }}</span>
-              <div class="w-8 h-11 shrink-0 rounded overflow-hidden bg-slate-100 dark:bg-slate-700 flex items-center justify-center">
+              <!-- Drag handle -->
+              <span
+                class="shrink-0 cursor-grab active:cursor-grabbing text-slate-300 dark:text-slate-600 group-hover:text-slate-400 dark:group-hover:text-slate-400 transition-colors"
+                :title="t('watchlist.collections.reorder')"
+              >
+                <Icon name="menu" class="w-4 h-4" />
+              </span>
+
+              <!-- Editable position — type a number to jump there. -->
+              <input
+                :value="i + 1"
+                type="number"
+                min="1"
+                :max="draft.length"
+                inputmode="numeric"
+                :title="t('watchlist.collections.positionHint')"
+                @change="moveTo(i, $event.target.value)"
+                @keydown.enter.prevent="$event.target.blur()"
+                @focus="$event.target.select()"
+                class="pos-input w-9 h-9 shrink-0 rounded-lg bg-black/[0.04] dark:bg-white/8 text-center text-sm font-semibold tabular-nums text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-slate-700 transition-colors"
+              />
+
+              <!-- Poster -->
+              <div class="w-9 h-12 shrink-0 rounded-md overflow-hidden bg-slate-100 dark:bg-slate-700 flex items-center justify-center ring-1 ring-black/5 dark:ring-white/10">
                 <img v-if="item.posterUrl" :src="item.posterUrl" :alt="item.title" class="w-full h-full object-cover" />
                 <ArchiveBoxIcon v-else class="w-4 h-4 text-slate-300 dark:text-slate-600" />
               </div>
+
+              <!-- Title -->
               <div class="flex-1 min-w-0">
                 <p class="text-sm font-medium text-slate-900 dark:text-white truncate">{{ item.title }}</p>
-                <p class="text-xs text-slate-400 dark:text-slate-500">
+                <p class="text-xs text-slate-400 dark:text-slate-500 truncate">
                   {{ item.type === 'movie' ? t('watchlist.type.movie') : t('watchlist.type.show') }}<span v-if="item.year"> · {{ item.year }}</span>
                 </p>
               </div>
-              <div class="flex items-center gap-0.5 shrink-0">
+
+              <!-- Up / down -->
+              <div class="flex items-center shrink-0 rounded-lg bg-black/[0.03] dark:bg-white/5 p-0.5 gap-0.5">
                 <button
                   type="button"
                   :disabled="i === 0"
                   @click="move(i, i - 1)"
                   :title="t('watchlist.collections.moveUp')"
-                  class="cursor-pointer p-1.5 rounded-lg text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-colors disabled:opacity-30 disabled:cursor-default"
+                  class="cursor-pointer w-7 h-7 rounded-md flex items-center justify-center text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-white/10 transition-colors disabled:opacity-25 disabled:cursor-default disabled:hover:bg-transparent"
                 >
                   <Icon name="chevronUp" class="w-4 h-4" :sw="2.5" />
                 </button>
@@ -371,7 +408,7 @@ function onItemsAdded(added) {
                   :disabled="i === draft.length - 1"
                   @click="move(i, i + 1)"
                   :title="t('watchlist.collections.moveDown')"
-                  class="cursor-pointer p-1.5 rounded-lg text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-colors disabled:opacity-30 disabled:cursor-default"
+                  class="cursor-pointer w-7 h-7 rounded-md flex items-center justify-center text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-white/10 transition-colors disabled:opacity-25 disabled:cursor-default disabled:hover:bg-transparent"
                 >
                   <Icon name="chevronDown" class="w-4 h-4" :sw="2.5" />
                 </button>
@@ -533,3 +570,17 @@ function onItemsAdded(added) {
     </div>
   </div>
 </template>
+
+<style scoped>
+/* The position field is a number input, but the up/down spinners are redundant
+   next to the move buttons — hide them for a clean pill. */
+.pos-input::-webkit-outer-spin-button,
+.pos-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.pos-input {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+</style>
