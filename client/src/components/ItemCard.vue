@@ -202,7 +202,7 @@ function openMenu(e) {
 </script>
 
 <template>
-  <div ref="cardRef" @contextmenu.prevent="openMenu" :class="['group rounded-xl overflow-hidden flex transition-all duration-200 ease-out hover:-translate-y-0.5 backdrop-blur-sm shadow-sm', isList ? 'flex-row' : 'flex-col', item.status === 'completed' ? 'bg-green-50/80 dark:bg-green-900/20 ring-1 ring-inset ring-green-500/50 dark:ring-green-500/25 shadow-green-500/10' : item.status === 'watching' ? 'bg-blue-50/80 dark:bg-blue-900/20 ring-1 ring-inset ring-blue-500/50 dark:ring-blue-500/25 shadow-blue-500/10' : 'bg-white/70 dark:bg-slate-800/70 border border-white/60 dark:border-white/8 hover:bg-white/85 dark:hover:bg-slate-800/85 hover:shadow-md']">
+  <div ref="cardRef" @contextmenu.prevent="openMenu" :class="['group h-full rounded-xl overflow-hidden flex transition-all duration-200 ease-out hover:-translate-y-0.5 backdrop-blur-sm shadow-sm', isList ? 'flex-row' : 'flex-col', item.status === 'completed' ? 'bg-green-50/80 dark:bg-green-900/20 ring-1 ring-inset ring-green-500/50 dark:ring-green-500/25 shadow-green-500/10' : item.status === 'watching' ? 'bg-blue-50/80 dark:bg-blue-900/20 ring-1 ring-inset ring-blue-500/50 dark:ring-blue-500/25 shadow-blue-500/10' : 'bg-white/70 dark:bg-slate-800/70 border border-white/60 dark:border-white/8 hover:bg-white/85 dark:hover:bg-slate-800/85 hover:shadow-md']">
     <!-- Poster — fixed 2:3 box in grid views (like Shelf), stretches to row height in list view -->
     <div
       :class="['relative shrink-0 overflow-hidden bg-slate-100 dark:bg-slate-700/60', isList ? 'w-14 self-stretch' : 'w-full aspect-[2/3]', openUrl ? 'cursor-pointer group/poster' : '']"
@@ -343,10 +343,12 @@ function openMenu(e) {
         </div>
       </div>
 
-      <!-- Metadata line + TMDB rating — hidden on phone grid. -->
-      <div v-if="meta || item.tmdbRating" :class="['items-center gap-1.5', isList ? 'flex' : 'hidden sm:flex']">
-        <p v-if="meta" class="text-xs text-slate-400 dark:text-slate-500">{{ meta }}</p>
-        <div v-if="item.tmdbRating" class="flex items-center gap-0.5 text-xs text-amber-400 ml-auto">
+      <!-- Metadata line + TMDB rating — hidden on phone grid. Meta may be long
+           (year · seasons · episodes · runtime); let it wrap to two lines and
+           keep the rating pinned top-right so it never gets squished. -->
+      <div v-if="meta || item.tmdbRating" :class="['items-start gap-1.5', isList ? 'flex' : 'hidden sm:flex']">
+        <p v-if="meta" class="min-w-0 flex-1 text-xs text-slate-400 dark:text-slate-500 leading-snug line-clamp-2">{{ meta }}</p>
+        <div v-if="item.tmdbRating" class="shrink-0 flex items-center gap-0.5 text-xs text-amber-400 mt-px">
           <StarIcon class="w-3 h-3 fill-current" />
           {{ item.tmdbRating }}
         </div>
@@ -355,64 +357,69 @@ function openMenu(e) {
       <!-- Movie runtime — phone grid only (desktop shows it in the meta line). -->
       <p v-if="!isList && runtimeLabel" class="sm:hidden text-xs text-slate-400 dark:text-slate-500">{{ runtimeLabel }}</p>
 
-      <!-- Season progress (shows) -->
-      <template v-if="isShow">
-        <button
-          v-if="totals.totalEp > 0"
-          @click.stop="showProgress = true"
-          :title="t('watchlist.card.trackProgressCount', { watched: totals.watchedEp, total: totals.totalEp })"
-          class="cursor-pointer group/prog flex flex-col gap-1 w-full text-left"
-        >
-          <!-- Episode-count label — grid views, hidden on phone (bar stays). -->
-          <div v-if="!isList" :class="['items-center justify-between gap-2 text-xs', 'hidden sm:flex']">
-            <span class="text-slate-500 dark:text-slate-400">{{ t('watchlist.card.episodeProgress', { watched: item.status === 'completed' ? totals.totalEp : totals.watchedEp, total: totals.totalEp }) }}</span>
-            <span v-if="remainingLabel" class="text-slate-400 dark:text-slate-500">{{ remainingLabel }}</span>
-          </div>
-          <div class="h-1.5 bg-slate-200/80 dark:bg-slate-700/80 rounded-full overflow-hidden">
-            <div
-              class="h-full rounded-full transition-all duration-300"
-              :class="item.status === 'completed' ? 'bg-green-500' : 'bg-indigo-500 group-hover/prog:bg-indigo-400'"
-              :style="{ width: `${progressPct}%` }"
-            />
-          </div>
-        </button>
-        <button
-          v-else
-          @click.stop="showProgress = true"
-          class="cursor-pointer self-start flex items-center gap-1 text-xs text-slate-400 dark:text-slate-500 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors"
-        >
-          <CheckCircleIcon class="w-3.5 h-3.5" />
-          {{ t('watchlist.card.trackProgress') }}
-        </button>
-      </template>
-
       <!-- Notes (big desktop cards only) — hidden on phone. -->
-      <p v-if="item.notes && !isCompact" class="hidden sm:block text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{{ item.notes }}</p>
+      <p v-if="item.notes && !isCompact" class="hidden sm:block text-xs text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-2">{{ item.notes }}</p>
 
-      <!-- Type · status · rating — hidden on phone grid. -->
-      <div :class="['items-center gap-1.5 flex-wrap mt-auto', isCompact ? 'pt-1' : 'pt-1.5', isList ? 'flex' : 'hidden sm:flex']">
-        <span :class="['text-xs font-medium px-2 py-0.5 rounded-full', TYPE_COLORS[item.type]]">
-          {{ item.type === 'movie' ? t('watchlist.type.movie') : t('watchlist.type.show') }}
-        </span>
-        <button
-          @click="cycleStatus"
-          :class="['cursor-pointer text-xs font-medium px-2 py-0.5 rounded-full transition-opacity hover:opacity-80', STATUS_COLORS[item.status]]"
-          :title="t('watchlist.card.cycleStatus')"
-        >
-          {{ t('watchlist.status.' + item.status) }}
-        </button>
-        <RatingControl
-          v-if="item.rating && !isCompact"
-          :model-value="item.rating"
-          :max="10"
-          readonly
-          size="sm"
-          :show-value="false"
-          class="ml-auto"
-        />
-        <span v-else-if="item.rating" class="text-xs text-amber-400 font-medium ml-auto">
-          ★ {{ item.rating }}/10
-        </span>
+      <!-- Pinned footer (mt-auto): the progress bar sits just above the tags,
+           and the type/status tags are the bottom-most row — neither shifts with
+           how much text is above. -->
+      <div :class="['mt-auto flex flex-col', isList ? 'gap-1 pt-1' : isCompact ? 'gap-1.5 pt-1.5' : 'gap-2 pt-2']">
+        <!-- Season progress (shows) — fixed just above the tags. -->
+        <template v-if="isShow">
+          <button
+            v-if="totals.totalEp > 0"
+            @click.stop="showProgress = true"
+            :title="t('watchlist.card.trackProgressCount', { watched: totals.watchedEp, total: totals.totalEp })"
+            class="cursor-pointer group/prog flex flex-col gap-1 w-full text-left"
+          >
+            <!-- Episode-count label — grid views, hidden on phone (bar stays). -->
+            <div v-if="!isList" :class="['items-center justify-between gap-2 text-xs min-w-0', 'hidden sm:flex']">
+              <span class="min-w-0 truncate text-slate-500 dark:text-slate-400">{{ t('watchlist.card.episodeProgress', { watched: item.status === 'completed' ? totals.totalEp : totals.watchedEp, total: totals.totalEp }) }}</span>
+              <span v-if="remainingLabel" class="shrink-0 text-slate-400 dark:text-slate-500">{{ remainingLabel }}</span>
+            </div>
+            <div class="h-1.5 bg-slate-200/80 dark:bg-slate-700/80 rounded-full overflow-hidden">
+              <div
+                class="h-full rounded-full transition-all duration-300"
+                :class="item.status === 'completed' ? 'bg-green-500' : 'bg-indigo-500 group-hover/prog:bg-indigo-400'"
+                :style="{ width: `${progressPct}%` }"
+              />
+            </div>
+          </button>
+          <button
+            v-else
+            @click.stop="showProgress = true"
+            class="cursor-pointer self-start flex items-center gap-1 text-xs text-slate-400 dark:text-slate-500 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors"
+          >
+            <CheckCircleIcon class="w-3.5 h-3.5" />
+            {{ t('watchlist.card.trackProgress') }}
+          </button>
+        </template>
+
+        <!-- Type · status · rating tags — the bottom-most row. Hidden on phone grid. -->
+        <div :class="['items-center gap-1.5 flex-wrap', isList ? 'flex' : 'hidden sm:flex']">
+          <span :class="['shrink-0 text-xs font-medium px-2 py-0.5 rounded-full', TYPE_COLORS[item.type]]">
+            {{ item.type === 'movie' ? t('watchlist.type.movie') : t('watchlist.type.show') }}
+          </span>
+          <button
+            @click="cycleStatus"
+            :class="['shrink-0 cursor-pointer text-xs font-medium px-2 py-0.5 rounded-full transition-opacity hover:opacity-80', STATUS_COLORS[item.status]]"
+            :title="t('watchlist.card.cycleStatus')"
+          >
+            {{ t('watchlist.status.' + item.status) }}
+          </button>
+          <RatingControl
+            v-if="item.rating && !isCompact"
+            :model-value="item.rating"
+            :max="10"
+            readonly
+            size="sm"
+            :show-value="false"
+            class="ml-auto"
+          />
+          <span v-else-if="item.rating" class="text-xs text-amber-400 font-medium ml-auto">
+            ★ {{ item.rating }}/10
+          </span>
+        </div>
       </div>
     </div>
   </div>
