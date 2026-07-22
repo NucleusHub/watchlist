@@ -2,7 +2,7 @@
   "id": "watchlist",
   "name": "Watchlist",
   "description": "Movies & shows",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "manifestVersion": 1,
   "compatibility": {
     "nucleus": ">=0.1.0 <1.0.0"
