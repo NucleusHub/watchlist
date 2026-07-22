@@ -326,8 +326,6 @@ onMounted(load)
         </p>
       </template>
 
-      <WatchlistNav />
-
       <template #right>
         <!-- Search -->
         <div class="relative">
@@ -383,6 +381,10 @@ onMounted(load)
     </AppHeader>
 
     <main class="max-w-4xl mx-auto px-4 py-6 flex flex-col gap-6">
+      <div class="flex justify-center">
+        <WatchlistNav />
+      </div>
+
       <WatchlistStats v-if="showStats" :items="items" />
       <template v-else>
       <div class="glass rounded-2xl p-2 flex flex-col gap-2.5">

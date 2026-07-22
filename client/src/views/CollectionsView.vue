@@ -75,8 +75,6 @@ async function confirmDelete() {
           </button>
         </template>
 
-        <WatchlistNav />
-
         <template #right>
           <button
             @click="openCreate"
@@ -89,6 +87,10 @@ async function confirmDelete() {
       </AppHeader>
 
       <main class="max-w-4xl mx-auto px-4 py-6 flex flex-col gap-6">
+        <div class="flex justify-center">
+          <WatchlistNav />
+        </div>
+
         <div v-if="loading && !collections.length" class="text-center py-16 text-slate-400 dark:text-slate-500">
           {{ t('watchlist.state.loading') }}
         </div>
