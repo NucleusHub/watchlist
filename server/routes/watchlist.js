@@ -4,6 +4,7 @@ import fs from 'node:fs'
 import { fileURLToPath } from 'url'
 import WatchlistItem from '../models/WatchlistItem.js'
 import WatchlistSettings from '../models/WatchlistSettings.js'
+import Collection from '../models/Collection.js'
 import { requireAuth } from '../middleware/auth.js'
 
 const router = Router()
@@ -28,6 +29,9 @@ router.post('/users/:userId/teardown', requireAdmin, async (req, res) => {
       }
     }
     const { deletedCount } = await WatchlistItem.deleteMany({ profileId: req.params.userId })
+    // Their collections are just groupings of those items — remove them too so a
+    // deleted user leaves nothing behind.
+    await Collection.deleteMany({ profileId: req.params.userId })
     res.json({ ok: true, deleted: deletedCount })
   } catch (err) {
     res.status(500).json({ error: err.message })
@@ -84,10 +88,12 @@ router.put('/settings', async (req, res) => {
 
 router.get('/', async (req, res) => {
   try {
-    const { status, type } = req.query
+    const { status, type, collection } = req.query
     const filter = { profileId: req.profile.profileId }
     if (status) filter.status = status
     if (type) filter.type = type
+    // Browse a single collection: only its members (see models/Collection.js).
+    if (collection) filter.collectionIds = collection
     const items = await WatchlistItem.find(filter).sort({ createdAt: -1 })
     res.json(items)
   } catch (err) {

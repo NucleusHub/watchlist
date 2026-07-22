@@ -62,6 +62,10 @@ const watchlistItemSchema = new mongoose.Schema(
     showRuntime: { type: Number, default: null },
     seasonProgress: { type: [seasonProgressSchema], default: undefined },
     openTarget: { type: openTargetSchema, default: null },
+    // Collections this item belongs to (many-to-many; see models/Collection.js).
+    // Membership lives here so assigning/removing reuses the normal item PATCH
+    // and deleting a collection only $pulls its id — it never removes the item.
+    collectionIds: { type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Collection' }], default: [], index: true },
     dateAdded: { type: Date, default: Date.now },
     notes: { type: String, trim: true, default: '' },
   },

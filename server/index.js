@@ -7,6 +7,7 @@ import multer from 'multer'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import watchlistRoutes from './routes/watchlist.js'
+import collectionsRoutes from './routes/collections.js'
 import WatchlistItem from './models/WatchlistItem.js'
 import { requireAppEnabled } from './core/server/appAccess.js'
 
@@ -46,6 +47,9 @@ app.post('/api/upload', upload.single('image'), (req, res) => {
 app.get('/api/watchlist/health', (_, res) => res.json({ ok: true }))
 // Refuse all Watchlist API access for users who have Watchlist disabled (admin override).
 app.use('/api/watchlist', requireAppEnabled('watchlist'))
+// Mounted before the item routes; the paths don't collide (item routes are
+// /:id single-segment) but keeping collections first makes the intent explicit.
+app.use('/api/watchlist/collections', collectionsRoutes)
 app.use('/api/watchlist', watchlistRoutes)
 
 async function backfillDateAdded() {
