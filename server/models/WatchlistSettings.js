@@ -40,6 +40,12 @@ const watchlistSettingsSchema = new mongoose.Schema(
     // via a toggle in settings. Free strings, not an enum, so an uninstalled or
     // renamed source degrades gracefully (the client ignores unknown ids).
     searchSources: { type: [String], default: ['tmdb'] },
+    // Where each plugin-contributed watchlist surface renders, keyed by plugin
+    // id: 'tab' (its own nav tab), 'panel' (a section above the item grid) or
+    // 'hidden'. A Map of free strings, not an enum keyed by known plugins, so
+    // uninstalling a plugin just leaves a stale key the client ignores —
+    // reinstalling it restores the user's choice.
+    pluginPlacements: { type: Map, of: String, default: () => ({}) },
   },
   { timestamps: true }
 )

@@ -6,6 +6,7 @@ import { useRegistry } from '@core/useRegistry.js'
 import { usePlugins } from '@core/usePlugins.js'
 import { useOpenSettings } from '@/composables/useOpenSettings.js'
 import { BUILTIN_SOURCES, PLUGIN_SOURCES } from '@/api/sources.js'
+import { watchlistSurfaces } from '@/utils/pluginSurfaces.js'
 import { OPEN_OPTIONS, TITLE_FORMATS, buildOpenUrl } from '@/utils/openTarget.js'
 
 const { t } = useI18n()
@@ -13,7 +14,7 @@ const { isPluginEnabled } = useRegistry()
 const props = defineProps({ show: { type: Boolean, default: false } })
 const emit = defineEmits(['close'])
 
-const { defaults, setDefault, searchSources, setSearchSources } = useOpenSettings()
+const { defaults, setDefault, searchSources, setSearchSources, placementOf, setPlacement } = useOpenSettings()
 
 // Plugin display names for the "Added by …" badge on plugin-contributed sources.
 const { plugins: installedPlugins, load: loadInstalledPlugins } = usePlugins()
@@ -43,17 +44,34 @@ function toggleSource(id) {
 // appears only when there's a plugin source to toggle (TMDb alone needs none) —
 // with just TMDb the modal shows the open-in section with no tab bar.
 const showSourcesTab = computed(() => availableSources.value.length > 1)
+
+// ── Plugin surfaces ──────────────────────────────────────────────────────────
+// Sections a plugin contributes to the app, each of which the user places as a
+// tab, as a panel on the watchlist, or turns off. The tab only exists when a
+// plugin actually ships one.
+const availableSurfaces = computed(() => watchlistSurfaces.filter((s) => isPluginEnabled(s.pluginId)))
+const showSurfacesTab = computed(() => availableSurfaces.value.length > 0)
+
+// Drafted like the other tabs, so closing the modal without saving changes
+// nothing: pluginId → 'tab' | 'panel' | 'hidden'.
+const draftPlacements = ref({})
+// 'hidden' is offered for every surface; a plugin only declares which of the
+// two *visible* placements its component can handle.
+const placementOptions = (surface) => [...surface.placements, 'hidden']
 // Same tab icons as Shelf's settings modal (externalLink / search).
 const OPEN_TAB_ICON = 'M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5M15 3h6m0 0v6m0-6L10.5 13.5'
 const SOURCES_TAB_ICON = 'm21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607z'
-const tabs = computed(() =>
-  showSourcesTab.value
-    ? [
-        { key: 'open', label: t('watchlist.settings.tabOpen'), icon: OPEN_TAB_ICON },
-        { key: 'sources', label: t('watchlist.settings.tabSources'), icon: SOURCES_TAB_ICON },
-      ]
-    : []
-)
+// Squares-2x2 — "where sections of the app sit".
+const EXTRAS_TAB_ICON = 'M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z'
+const tabs = computed(() => {
+  // With nothing but "Open in" there's no tab bar at all — that section just
+  // renders on its own (see the v-show below).
+  if (!showSourcesTab.value && !showSurfacesTab.value) return []
+  const list = [{ key: 'open', label: t('watchlist.settings.tabOpen'), icon: OPEN_TAB_ICON }]
+  if (showSourcesTab.value) list.push({ key: 'sources', label: t('watchlist.settings.tabSources'), icon: SOURCES_TAB_ICON })
+  if (showSurfacesTab.value) list.push({ key: 'surfaces', label: t('watchlist.settings.tabExtras'), icon: EXTRAS_TAB_ICON })
+  return list
+})
 
 const KINDS = [
   { key: 'movie', label: 'watchlist.open.movies' },
@@ -84,6 +102,9 @@ watch(
       draft[key] = { type: defaults[key].type, customUrl: defaults[key].customUrl || '', titleFormat: defaults[key].titleFormat || 'raw' }
     }
     draftSources.value = [...searchSources.value]
+    draftPlacements.value = Object.fromEntries(
+      availableSurfaces.value.map((s) => [s.pluginId, placementOf(s)])
+    )
   },
   { immediate: true }
 )
@@ -95,6 +116,7 @@ const previewUrl = (kind) => buildOpenUrl(draft[kind], SAMPLE)
 function save() {
   for (const { key } of KINDS) setDefault(key, draft[key])
   setSearchSources(draftSources.value)
+  for (const [pluginId, where] of Object.entries(draftPlacements.value)) setPlacement(pluginId, where)
   emit('close')
 }
 </script>
@@ -222,6 +244,42 @@ function save() {
                 ]"
               />
             </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Plugin surfaces (Extras) ────────────────────────────────────── -->
+      <section v-show="activeTab === 'surfaces'" class="flex flex-col gap-3">
+        <p class="text-sm text-slate-500 dark:text-slate-400">{{ t('watchlist.settings.surfaceDesc') }}</p>
+        <div class="flex flex-col gap-1.5">
+          <div
+            v-for="s in availableSurfaces"
+            :key="s.pluginId"
+            class="flex flex-col gap-2.5 rounded-lg bg-white/60 dark:bg-white/[0.04] border border-black/5 dark:border-white/10 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between"
+          >
+            <span class="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200 min-w-0">
+              <span class="truncate">{{ t(s.label) }}</span>
+              <svg class="w-3.5 h-3.5 shrink-0 text-indigo-500 dark:text-indigo-400 opacity-80" fill="currentColor" viewBox="0 0 24 24">
+                <title>{{ t('watchlist.settings.addedByPlugin', { name: pluginName(s.pluginId) }) }}</title>
+                <path :d="PLUGIN_ICON" />
+              </svg>
+            </span>
+            <div class="inline-flex items-center gap-0.5 bg-black/[0.04] dark:bg-white/5 rounded-xl p-1 shrink-0 self-start sm:self-auto">
+              <button
+                v-for="where in placementOptions(s)"
+                :key="where"
+                type="button"
+                @click="draftPlacements[s.pluginId] = where"
+                :class="[
+                  'cursor-pointer whitespace-nowrap px-3 py-1 rounded-lg text-xs font-medium transition-all',
+                  draftPlacements[s.pluginId] === where
+                    ? 'bg-white dark:bg-white/15 text-slate-900 dark:text-white shadow-sm'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white',
+                ]"
+              >
+                {{ t('watchlist.settings.placement.' + where) }}
+              </button>
+            </div>
           </div>
         </div>
       </section>

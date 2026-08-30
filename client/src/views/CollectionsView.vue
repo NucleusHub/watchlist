@@ -11,6 +11,7 @@ import { addItemsToCollection } from '@/api/watchlist.js'
 import WatchlistNav from '@/components/WatchlistNav.vue'
 import CollectionCard from '@/components/CollectionCard.vue'
 import CollectionFormModal from '@/components/CollectionFormModal.vue'
+import SettingsButton from '@/components/SettingsButton.vue'
 
 const { t } = useI18n()
 const { collections, loading, create, update, remove, reload } = useCollections()
@@ -76,6 +77,7 @@ async function confirmDelete() {
         </template>
 
         <template #right>
+          <SettingsButton />
           <button
             @click="openCreate"
             class="group nuc-press cursor-pointer flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium px-3 sm:px-4 py-2 rounded-lg transition-colors"

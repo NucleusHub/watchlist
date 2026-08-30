@@ -8,6 +8,10 @@
 //   search(q)     -> [{ key, title, subtitle, poster, type, _raw }]   (dropdown)
 //   toForm(r,ctx) -> partial form fields to merge (ctx.existing = current form)
 //
+// A source that knows its item's genres should return them from `toForm` as
+// `genres: string[]` (plain names — see utils/genres.js); the host normalizes,
+// renders and filters on them regardless of which source produced them.
+//
 // TMDb is the built-in source (wraps api/tmdb.js). Plugins add more by shipping
 // `client/watchlistSources.js` and declaring `extensions.watchlistSources` with
 // `target: "watchlist"` — mirroring Shelf's plugin import sources. `../../plugins`
@@ -15,6 +19,7 @@
 import {
   searchMulti, fetchMovieDetail, fetchTvDetail, fetchWatchProviders, buildSeasonProgress,
 } from './tmdb.js'
+import { genresFromTmdbDetail } from '@/utils/genres.js'
 
 // ── Built-in: TMDb ────────────────────────────────────────────────────────────
 const tmdbSource = {
@@ -54,6 +59,10 @@ const tmdbSource = {
       fetchWatchProviders(r.id, mediaType),
     ])
     if (d.vote_average) form.tmdbRating = Math.round(d.vote_average * 10) / 10
+    // Genre tags — only the detail payload carries names (search results carry
+    // bare `genre_ids`), which is why this waits for the detail fetch.
+    const genres = genresFromTmdbDetail(d)
+    if (genres.length) form.genres = genres
     if (isMovie) {
       if (d.runtime) form.runtime = d.runtime
     } else {

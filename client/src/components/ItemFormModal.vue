@@ -4,6 +4,7 @@ import { logoUrl } from '@/api/tmdb.js'
 import { BUILTIN_SOURCES, PLUGIN_SOURCES } from '@/api/sources.js'
 import { uploadImage } from '@/api/watchlist.js'
 import { OPEN_OPTIONS, TITLE_FORMATS } from '@/utils/openTarget.js'
+import { normalizeGenres, genrePillClass, MAX_GENRES } from '@/utils/genres.js'
 import TemplateModal from '@core/TemplateModal.vue'
 import RatingControl from './RatingControl.vue'
 import CollectionSelect from '@/components/CollectionSelect.vue'
@@ -53,6 +54,10 @@ const urlInput = ref(null)
 const showPosterMenu = ref(false)
 const showUrlInput = ref(false)
 const posterUrlDraft = ref('')
+// Free-text genre entry. Selecting a search result autofills `form.genres` from
+// the source; this lets you correct it — drop a genre TMDb insists on, add one
+// it doesn't have — without the fix being wiped on the next save.
+const genreDraft = ref('')
 // Per-item poster-click override. '' = inherit the global default.
 const openType = ref('')
 const openCustomUrl = ref('')
@@ -67,6 +72,7 @@ const EMPTY_FORM = () => ({
   streamingProvider: null,
   streamingLogo: null,
   rating: null, year: '', runtime: '',
+  genres: [],
   seasons: '', episodes: '', showRuntime: '',
   seasonProgress: null,
   favorite: false,
@@ -84,8 +90,33 @@ function resetForm() {
   showPosterMenu.value = false
   showUrlInput.value = false
   posterUrlDraft.value = ''
+  genreDraft.value = ''
+  form.value.genres = normalizeGenres(form.value.genres)
   nextTick(() => titleInput.value?.focus())
 }
+
+function addGenre() {
+  const name = genreDraft.value.trim()
+  if (!name) return
+  form.value.genres = normalizeGenres([...(form.value.genres ?? []), name])
+  genreDraft.value = ''
+}
+
+// Enter or comma commits the typed genre — comma because pasting "Action,
+// Thriller" is the natural way to type a couple at once. A key modifier can't
+// express `,` reliably, so both live in one handler.
+function onGenreKey(e) {
+  if (e.key !== 'Enter' && e.key !== ',') return
+  e.preventDefault()
+  addGenre()
+}
+
+function removeGenre(name) {
+  const key = name.toLowerCase()
+  form.value.genres = (form.value.genres ?? []).filter((g) => g.toLowerCase() !== key)
+}
+
+const genresFull = computed(() => (form.value.genres?.length ?? 0) >= MAX_GENRES)
 
 function openPosterMenu() {
   showPosterMenu.value = !showPosterMenu.value
@@ -200,6 +231,7 @@ function handleSubmit(addAnother = false) {
     if (payload[f] === '' || payload[f] == null) payload[f] = null
     else payload[f] = Number(payload[f])
   }
+  payload.genres = normalizeGenres(payload.genres)
   // Poster-click override: null tells the item to inherit the global default.
   payload.openTarget = openType.value
     ? {
@@ -454,6 +486,39 @@ function handleSubmit(addAnother = false) {
                       <span class="text-slate-400 dark:text-slate-500">/10</span>
                     </template>
                     <span v-else class="text-slate-400 dark:text-slate-600 text-xs">{{ t('watchlist.form.tmdbAutofill') }}</span>
+                  </div>
+                </div>
+
+                <!-- Genres -->
+                <div class="flex flex-col gap-1.5 sm:col-span-2">
+                  <div class="flex items-center justify-between">
+                    <label class="text-sm text-slate-500 dark:text-slate-400">{{ t('watchlist.form.genres') }}</label>
+                    <span v-if="genresFull" class="text-xs text-slate-400 dark:text-slate-500">{{ t('watchlist.form.genresFull', { max: MAX_GENRES }) }}</span>
+                  </div>
+                  <div class="flex flex-wrap items-center gap-1.5">
+                    <span
+                      v-for="g in form.genres"
+                      :key="g"
+                      :class="['inline-flex items-center gap-1 text-xs font-medium pl-2 pr-1 py-0.5 rounded-full', genrePillClass(g)]"
+                    >
+                      {{ g }}
+                      <button
+                        type="button"
+                        @click="removeGenre(g)"
+                        :title="t('watchlist.form.removeGenre', { genre: g })"
+                        class="cursor-pointer rounded-full p-0.5 hover:bg-black/10 dark:hover:bg-white/15 transition-colors"
+                      >
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                      </button>
+                    </span>
+                    <input
+                      v-model="genreDraft"
+                      :disabled="genresFull"
+                      @keydown="onGenreKey"
+                      @blur="addGenre"
+                      :placeholder="t('watchlist.form.genrePlaceholder')"
+                      class="min-w-28 flex-1 bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white rounded-lg px-3 py-1.5 text-sm placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+                    />
                   </div>
                 </div>
 

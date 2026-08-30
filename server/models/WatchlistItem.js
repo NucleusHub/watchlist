@@ -54,6 +54,13 @@ const watchlistItemSchema = new mongoose.Schema(
     streamingProvider: { type: String, default: null },
     streamingLogo: { type: String, default: null },
     rating: { type: Number, min: 0.5, max: 10, default: null },
+    // Genre names as reported by whichever source filled the item in (TMDb
+    // ships `genres[].name`; plugin sources map their own vocabulary onto the
+    // same shape). Free strings rather than an enum so a source that invents a
+    // genre — or renames one — degrades to "an unfamiliar tag" instead of a
+    // validation error. Normalized (trimmed, de-duped, capped) client-side by
+    // utils/genres.js before it ever reaches here.
+    genres: { type: [String], default: [] },
     favorite: { type: Boolean, default: false },
     year: { type: Number, default: null },
     runtime: { type: Number, default: null },
@@ -67,6 +74,13 @@ const watchlistItemSchema = new mongoose.Schema(
     // and deleting a collection only $pulls its id — it never removes the item.
     collectionIds: { type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Collection' }], default: [], index: true },
     dateAdded: { type: Date, default: Date.now },
+    // When this item last became `completed`. Set by the route on the
+    // planned/watching → completed transition and cleared when it moves back
+    // out, so "what did I watch recently" is answerable without inferring it
+    // from `updatedAt` (which any edit — a note, a poster — would bump).
+    // Null on items completed before this field existed; consumers fall back to
+    // `updatedAt` for those.
+    completedAt: { type: Date, default: null },
     notes: { type: String, trim: true, default: '' },
   },
   { timestamps: true }

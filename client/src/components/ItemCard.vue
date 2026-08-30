@@ -16,6 +16,7 @@ import { useOpenSettings } from '@/composables/useOpenSettings.js'
 import { useCollections } from '@/composables/useCollections.js'
 import { resolveTarget, buildOpenUrl } from '@/utils/openTarget.js'
 import { watchlistIndicators } from '@/utils/pluginIndicators.js'
+import { genrePillClass } from '@/utils/genres.js'
 import { Icon, ICONS } from '@core/icons'
 import ArchiveBoxIcon from '@/assets/icons/archive-box.svg?component'
 import ClockIcon from '@/assets/icons/clock.svg?component'
@@ -55,6 +56,13 @@ const TYPE_COLORS = {
   movie: 'bg-purple-900 text-purple-300',
   show: 'bg-amber-900 text-amber-300',
 }
+
+// Genre pills on the card. Capped at two on the card face — the footer is a
+// fixed-height row shared with the type/status tags, and a five-genre title
+// would push them out of alignment; the detail modal shows the full list.
+const CARD_GENRES = 2
+const cardGenres = computed(() => (props.item.genres ?? []).slice(0, CARD_GENRES))
+const extraGenres = computed(() => Math.max(0, (props.item.genres?.length ?? 0) - CARD_GENRES))
 
 const cardRef = ref(null)
 const deleting = ref(false)
@@ -407,6 +415,18 @@ function openMenu(e) {
           >
             {{ t('watchlist.status.' + item.status) }}
           </button>
+          <!-- Genres — skipped on the small grid, where the row has no room
+               left beside type/status. The detail modal always has them. -->
+          <template v-if="gridStyle !== 'small'">
+            <span
+              v-for="g in cardGenres"
+              :key="g"
+              :class="['shrink-0 text-xs font-medium px-2 py-0.5 rounded-full', genrePillClass(g)]"
+            >
+              {{ g }}
+            </span>
+            <span v-if="extraGenres" class="shrink-0 text-xs text-slate-400 dark:text-slate-500">+{{ extraGenres }}</span>
+          </template>
           <RatingControl
             v-if="item.rating && !isCompact"
             :model-value="item.rating"
@@ -489,6 +509,17 @@ function openMenu(e) {
             >
               <TrashIcon class="w-5 h-5" stroke-width="1.75" />
             </button>
+          </div>
+
+          <!-- Genres in full — the card face only has room for the first two. -->
+          <div v-if="item.genres?.length" class="flex items-center gap-1.5 flex-wrap">
+            <span
+              v-for="g in item.genres"
+              :key="g"
+              :class="['text-xs font-medium px-2 py-0.5 rounded-full', genrePillClass(g)]"
+            >
+              {{ g }}
+            </span>
           </div>
 
           <!-- Type · status · TMDb rating -->

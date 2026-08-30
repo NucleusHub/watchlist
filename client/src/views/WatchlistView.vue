@@ -2,6 +2,8 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { getItems, createItem, updateItem } from '@/api/watchlist.js'
 import { searchMulti, fetchMovieDetail, fetchTvDetail, fetchWatchProviders, buildSeasonProgress } from '@/api/tmdb.js'
+import { genreFacets, genresFromTmdbDetail, hasGenre, genrePillClass } from '@/utils/genres.js'
+import { watchlistSurfaces } from '@/utils/pluginSurfaces.js'
 import ItemCard from '@/components/ItemCard.vue'
 import ItemFormModal from '@/components/ItemFormModal.vue'
 import ManageCollectionsModal from '@/components/ManageCollectionsModal.vue'
@@ -11,11 +13,12 @@ import AppSidebar from '@core/AppSidebar.vue'
 import AppHeader from '@core/AppHeader.vue'
 import BackgroundBlobs from '@core/BackgroundBlobs.vue'
 import WatchlistStats from '@/components/WatchlistStats.vue'
-import OpenSettingsModal from '@/components/OpenSettingsModal.vue'
+import SettingsButton from '@/components/SettingsButton.vue'
 import FavoriteHeart from '@core/FavoriteHeart.vue'
 import { useI18n } from '@core/useI18n.js'
-import { useSettingsModal } from '@core/useSettingsModal.js'
 import { useCollections } from '@/composables/useCollections.js'
+import { useRegistry } from '@core/useRegistry.js'
+import { useOpenSettings } from '@/composables/useOpenSettings.js'
 import { Icon } from '@core/icons'
 import VideoCameraIcon from '@/assets/icons/video-camera.svg?component'
 import ClockAltIcon from '@/assets/icons/clock-alt.svg?component'
@@ -27,8 +30,16 @@ import ViewColumns2Icon from '@/assets/icons/view-columns-2.svg?component'
 import ViewColumns3Icon from '@/assets/icons/view-columns-3.svg?component'
 
 const { t } = useI18n()
-const { open: settingsOpen, openSettings, closeSettings } = useSettingsModal()
 const { applyMembership } = useCollections()
+const { isPluginEnabled } = useRegistry()
+const { placementOf } = useOpenSettings()
+
+// Plugin surfaces the user has placed as a section on this page rather than as
+// their own tab (see utils/pluginSurfaces.js). They render above the filter bar,
+// get the already-loaded items, and can ask for a reload when they change one.
+const panelSurfaces = computed(() =>
+  watchlistSurfaces.filter((s) => isPluginEnabled(s.pluginId) && placementOf(s) === 'panel')
+)
 
 const WARN_THRESHOLD = 10
 const sidebarOpen = ref(false)
@@ -58,6 +69,10 @@ const onlyFavorite = ref(false)
 const sortBy = ref('alphabetical')
 const sortDir = ref('asc')
 const searchQuery = ref('')
+// Genre filter — the selected genre names, matched as "any of" rather than
+// "all of": picking Action and Comedy widens the list instead of narrowing it
+// to the rare item tagged both, which is what browsing a library wants.
+const activeGenres = ref([])
 
 // Refresh state
 const showRefreshWarning = ref(false)
@@ -94,15 +109,46 @@ function toggleSort(key) {
   }
 }
 
-const filtered = computed(() => {
+// Everything the filter bar does EXCEPT the genre picker. Split out so the
+// genre chips can be faceted against it: each chip's count reflects the list
+// you're currently looking at, and picking one genre doesn't make the others
+// look empty.
+const preGenre = computed(() => {
   const q = searchQuery.value.trim().toLowerCase()
-  const base = items.value.filter((i) => {
+  return items.value.filter((i) => {
     const statusOk = activeStatus.value === 'all' || i.status === activeStatus.value
     const typeOk = activeType.value === 'all' || i.type === activeType.value
     const favOk = !onlyFavorite.value || i.favorite
     const searchOk = !q || i.title.toLowerCase().includes(q) || (i.notes && i.notes.toLowerCase().includes(q))
     return statusOk && typeOk && favOk && searchOk
   })
+})
+
+const genreOptions = computed(() => genreFacets(preGenre.value))
+
+function toggleGenre(name) {
+  const key = name.toLowerCase()
+  const next = activeGenres.value.filter((g) => g.toLowerCase() !== key)
+  if (next.length === activeGenres.value.length) next.push(name)
+  activeGenres.value = next
+}
+
+const isGenreOn = (name) => activeGenres.value.some((g) => g.toLowerCase() === name.toLowerCase())
+
+// Drop selections that no longer exist in the current facet set — otherwise
+// switching to Movies while "Talk" (a show-only genre) is picked leaves an
+// invisible filter showing zero results with no chip to un-click.
+watch(genreOptions, (opts) => {
+  if (!activeGenres.value.length) return
+  const available = new Set(opts.map((o) => o.name.toLowerCase()))
+  const kept = activeGenres.value.filter((g) => available.has(g.toLowerCase()))
+  if (kept.length !== activeGenres.value.length) activeGenres.value = kept
+})
+
+const filtered = computed(() => {
+  const base = activeGenres.value.length
+    ? preGenre.value.filter((i) => activeGenres.value.some((g) => hasGenre(i, g)))
+    : preGenre.value
   const dir = sortDir.value === 'asc' ? 1 : -1
   return [...base].sort((a, b) => {
     switch (sortBy.value) {
@@ -219,38 +265,59 @@ async function runRefresh() {
     if (refreshCancelled.value) break
 
     try {
-      const results = await searchMulti(item.title)
-      const mediaType = item.type === 'movie' ? 'movie' : 'tv'
-      const candidates = results.filter((r) => r.media_type === mediaType)
+      const isMovie = item.type === 'movie'
+      const mediaType = isMovie ? 'movie' : 'tv'
 
-      if (candidates.length === 0) {
-        refreshFailed.value++
-        refreshCurrent.value++
-        continue
+      // Prefer the stored TMDb id: an exact handle on the same title, where a
+      // title search can hand back a remake or a same-named show. Items added
+      // before ids were stored (or from a non-TMDb source) still search by
+      // name, and we write the resolved id back so the next pass is exact.
+      let tmdbId = item.tmdbId
+      let posterPath = null
+      if (!tmdbId) {
+        const results = await searchMulti(item.title)
+        const candidates = results.filter((r) => r.media_type === mediaType)
+
+        if (candidates.length === 0) {
+          refreshFailed.value++
+          refreshCurrent.value++
+          continue
+        }
+
+        // Prefer year match if available
+        let match = candidates[0]
+        if (item.year) {
+          const exact = candidates.find(
+            (r) => (r.release_date || r.first_air_date)?.slice(0, 4) === String(item.year)
+          )
+          if (exact) match = exact
+        }
+        tmdbId = match.id
+        posterPath = match.poster_path
       }
 
-      // Prefer year match if available
-      let match = candidates[0]
-      if (item.year) {
-        const exact = candidates.find(
-          (r) => (r.release_date || r.first_air_date)?.slice(0, 4) === String(item.year)
-        )
-        if (exact) match = exact
-      }
-
-      const isMovie = match.media_type === 'movie'
       const [detail, streaming] = await Promise.all([
-        isMovie ? fetchMovieDetail(match.id) : fetchTvDetail(match.id),
-        fetchWatchProviders(match.id, isMovie ? 'movie' : 'tv'),
+        isMovie ? fetchMovieDetail(tmdbId) : fetchTvDetail(tmdbId),
+        fetchWatchProviders(tmdbId, mediaType),
       ])
 
       const patch = {}
 
+      if (!item.tmdbId) patch.tmdbId = tmdbId
       if (detail.vote_average) patch.tmdbRating = Math.round(detail.vote_average * 10) / 10
 
       // Only set poster if unset or already from TMDb (don't overwrite uploads)
       if (!item.posterUrl || item.posterUrl.startsWith('https://image.tmdb.org')) {
-        if (match.poster_path) patch.posterUrl = `https://image.tmdb.org/t/p/w500${match.poster_path}`
+        const poster = posterPath ?? detail.poster_path
+        if (poster) patch.posterUrl = `https://image.tmdb.org/t/p/w500${poster}`
+      }
+
+      // Genres — the backfill path for every item added before genre tags
+      // existed. Treated as blank-fill, not an overwrite, so a genre you added
+      // or removed by hand in the edit form survives a refresh.
+      if (!item.genres?.length) {
+        const genres = genresFromTmdbDetail(detail)
+        if (genres.length) patch.genres = genres
       }
 
       // Only fill blank metadata fields
@@ -354,13 +421,7 @@ onMounted(load)
         >
           <Icon name="stats" class="w-4 h-4" />
         </button>
-        <button
-          @click="openSettings"
-          :title="t('watchlist.header.settings')"
-          class="group cursor-pointer p-2 text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
-        >
-          <Icon name="cog" class="w-4 h-4 nuc-cog" />
-        </button>
+        <SettingsButton />
         <button
           v-if="stats.total > 0 && !showStats"
           @click="requestRefresh"
@@ -387,6 +448,15 @@ onMounted(load)
 
       <WatchlistStats v-if="showStats" :items="items" />
       <template v-else>
+      <component
+        v-for="s in panelSurfaces"
+        :key="s.pluginId"
+        :is="s.component"
+        :items="items"
+        placement="panel"
+        @changed="load"
+      />
+
       <div class="glass rounded-2xl p-2 flex flex-col gap-2.5">
         <!-- Status segmented control + result count -->
         <div class="flex items-center gap-3">
@@ -506,6 +576,41 @@ onMounted(load)
             </div>
           </div>
         </div>
+
+        <!-- Genre filter — a scrollable chip strip rather than a dropdown, so
+             the genres you own are visible at a glance. Only rendered once
+             something in view actually carries genres (a library that predates
+             genre tags, or one refreshed to nothing, shows no empty control). -->
+        <template v-if="genreOptions.length">
+          <div class="h-px bg-black/[0.06] dark:bg-white/8 -mx-2" />
+          <div class="flex items-center gap-2">
+            <div class="min-w-0 flex-1 overflow-x-auto no-scrollbar">
+              <div class="inline-flex items-center gap-1.5 py-0.5">
+                <button
+                  v-for="g in genreOptions"
+                  :key="g.name"
+                  @click="toggleGenre(g.name)"
+                  :class="[
+                    'cursor-pointer whitespace-nowrap inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all',
+                    isGenreOn(g.name)
+                      ? 'ring-1 ring-inset ring-current ' + genrePillClass(g.name)
+                      : 'bg-black/[0.04] dark:bg-white/5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white',
+                  ]"
+                >
+                  {{ g.name }}
+                  <span class="tabular-nums opacity-60">{{ g.count }}</span>
+                </button>
+              </div>
+            </div>
+            <button
+              v-if="activeGenres.length"
+              @click="activeGenres = []"
+              class="cursor-pointer shrink-0 text-xs text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors pr-1"
+            >
+              {{ t('watchlist.filter.clearGenres') }}
+            </button>
+          </div>
+        </template>
       </div>
 
       <div v-if="loading" class="text-center py-16 text-slate-400 dark:text-slate-500">{{ t('watchlist.state.loading') }}</div>
@@ -555,7 +660,6 @@ onMounted(load)
       @submit="handleSubmit"
     />
 
-    <OpenSettingsModal :show="settingsOpen" @close="closeSettings" />
 
     <ManageCollectionsModal
       :show="showManage"

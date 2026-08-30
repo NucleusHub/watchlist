@@ -19,6 +19,7 @@ import ItemFormModal from '@/components/ItemFormModal.vue'
 import ManageCollectionsModal from '@/components/ManageCollectionsModal.vue'
 import CollectionFormModal from '@/components/CollectionFormModal.vue'
 import AddItemsModal from '@/components/AddItemsModal.vue'
+import SettingsButton from '@/components/SettingsButton.vue'
 
 const props = defineProps({ id: { type: String, required: true } })
 
@@ -263,6 +264,7 @@ function onItemsAdded(added) {
           </template>
 
           <template v-else>
+            <SettingsButton />
             <button
               v-if="collection"
               @click="showAdd = true"
