@@ -74,7 +74,7 @@ router.patch('/:id', async (req, res) => {
     const col = await Collection.findOneAndUpdate(
       { _id: req.params.id, profileId: req.profile.profileId },
       data,
-      { new: true, runValidators: true }
+      { returnDocument: 'after', runValidators: true }
     )
     if (!col) return res.status(404).json({ error: 'Not found' })
     res.json(await decorate(col, req.profile.profileId))
@@ -115,7 +115,7 @@ router.put('/:id/order', async (req, res) => {
     const col = await Collection.findOneAndUpdate(
       { _id: req.params.id, profileId: req.profile.profileId },
       { itemOrder: itemIds },
-      { new: true, runValidators: true }
+      { returnDocument: 'after', runValidators: true }
     )
     if (!col) return res.status(404).json({ error: 'Not found' })
     res.json(await decorate(col, req.profile.profileId))

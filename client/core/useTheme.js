@@ -12,7 +12,7 @@ function setCookie(name, value) {
 }
 
 const sysDark = ref(window.matchMedia('(prefers-color-scheme: dark)').matches)
-const theme = ref(getCookie(THEME_KEY) || 'system')
+const theme = ref(getCookie(THEME_KEY) || 'dark')
 
 const isDark = computed(() =>
   theme.value === 'dark' || (theme.value === 'system' && sysDark.value)

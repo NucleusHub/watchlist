@@ -2,7 +2,6 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import AppHeader from '@core/AppHeader.vue'
-import AppSidebar from '@core/AppSidebar.vue'
 import BackgroundBlobs from '@core/BackgroundBlobs.vue'
 import WatchlistNav from '@/components/WatchlistNav.vue'
 import SettingsButton from '@/components/SettingsButton.vue'
@@ -14,7 +13,7 @@ import { useOpenSettings } from '@/composables/useOpenSettings.js'
 
 // Host chrome for a plugin-contributed watchlist surface shown as its own tab
 // (see utils/pluginSurfaces.js). The plugin ships plain content — this view
-// owns the header, sidebar, nav and item loading, so a surface component is the
+// owns the header, nav and item loading, so a surface component is the
 // same component whether the user placed it in a tab or as a panel on the main
 // list.
 //
@@ -26,7 +25,6 @@ const { isPluginEnabled } = useRegistry()
 const { placementOf } = useOpenSettings()
 const route = useRoute()
 
-const sidebarOpen = ref(false)
 const items = ref([])
 const loading = ref(true)
 
@@ -57,18 +55,6 @@ onMounted(load)
     <BackgroundBlobs />
     <div class="relative z-10">
       <AppHeader>
-        <template #left>
-          <button
-            @click="sidebarOpen = !sidebarOpen"
-            class="cursor-pointer flex flex-col justify-center gap-[5px] p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
-            :title="t('watchlist.header.menu')"
-          >
-            <span class="block w-5 h-0.5 rounded-full bg-current transition-all duration-200" :class="sidebarOpen ? 'rotate-45 translate-y-[7px]' : ''" />
-            <span class="block w-5 h-0.5 rounded-full bg-current transition-all duration-200" :class="sidebarOpen ? 'opacity-0 scale-x-0' : ''" />
-            <span class="block w-5 h-0.5 rounded-full bg-current transition-all duration-200" :class="sidebarOpen ? '-rotate-45 -translate-y-[7px]' : ''" />
-          </button>
-        </template>
-
         <template #right>
           <SettingsButton />
         </template>
@@ -99,7 +85,5 @@ onMounted(load)
         />
       </main>
     </div>
-
-    <AppSidebar :open="sidebarOpen" @close="sidebarOpen = false" />
   </div>
 </template>

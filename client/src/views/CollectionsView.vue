@@ -1,7 +1,6 @@
 <script setup>
 import { ref } from 'vue'
 import AppHeader from '@core/AppHeader.vue'
-import AppSidebar from '@core/AppSidebar.vue'
 import BackgroundBlobs from '@core/BackgroundBlobs.vue'
 import TemplateModal from '@core/TemplateModal.vue'
 import { Icon } from '@core/icons'
@@ -15,8 +14,6 @@ import SettingsButton from '@/components/SettingsButton.vue'
 
 const { t } = useI18n()
 const { collections, loading, create, update, remove, reload } = useCollections()
-
-const sidebarOpen = ref(false)
 
 // Create / rename share one modal (null initial ⇒ create).
 const showForm = ref(false)
@@ -64,18 +61,6 @@ async function confirmDelete() {
     <BackgroundBlobs />
     <div class="relative z-10">
       <AppHeader>
-        <template #left>
-          <button
-            @click="sidebarOpen = !sidebarOpen"
-            class="cursor-pointer flex flex-col justify-center gap-[5px] p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
-            :title="t('watchlist.header.menu')"
-          >
-            <span class="block w-5 h-0.5 rounded-full bg-current transition-all duration-200" :class="sidebarOpen ? 'rotate-45 translate-y-[7px]' : ''" />
-            <span class="block w-5 h-0.5 rounded-full bg-current transition-all duration-200" :class="sidebarOpen ? 'opacity-0 scale-x-0' : ''" />
-            <span class="block w-5 h-0.5 rounded-full bg-current transition-all duration-200" :class="sidebarOpen ? '-rotate-45 -translate-y-[7px]' : ''" />
-          </button>
-        </template>
-
         <template #right>
           <SettingsButton />
           <button
@@ -144,8 +129,6 @@ async function confirmDelete() {
           </div>
         </template>
       </main>
-
-      <AppSidebar :open="sidebarOpen" @close="sidebarOpen = false" />
 
       <CollectionFormModal
         :show="showForm"

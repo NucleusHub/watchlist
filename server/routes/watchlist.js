@@ -92,7 +92,7 @@ router.put('/settings', async (req, res) => {
     const doc = await WatchlistSettings.findOneAndUpdate(
       { profileId: req.profile.profileId },
       { $set },
-      { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true }
+      { returnDocument: 'after', upsert: true, runValidators: true, setDefaultsOnInsert: true }
     ).lean()
     res.json({
       openDefaults: doc.openDefaults,
@@ -177,7 +177,7 @@ router.patch('/:id', async (req, res) => {
     const item = await WatchlistItem.findOneAndUpdate(
       { _id: req.params.id, profileId: req.profile.profileId },
       patch,
-      { new: true, runValidators: true }
+      { returnDocument: 'after', runValidators: true }
     )
     if (!item) return res.status(404).json({ error: 'Not found' })
     res.json(item)

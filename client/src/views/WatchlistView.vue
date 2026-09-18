@@ -9,7 +9,6 @@ import ItemFormModal from '@/components/ItemFormModal.vue'
 import ManageCollectionsModal from '@/components/ManageCollectionsModal.vue'
 import WatchlistNav from '@/components/WatchlistNav.vue'
 import TemplateModal from '@core/TemplateModal.vue'
-import AppSidebar from '@core/AppSidebar.vue'
 import AppHeader from '@core/AppHeader.vue'
 import BackgroundBlobs from '@core/BackgroundBlobs.vue'
 import WatchlistStats from '@/components/WatchlistStats.vue'
@@ -42,7 +41,6 @@ const panelSurfaces = computed(() =>
 )
 
 const WARN_THRESHOLD = 10
-const sidebarOpen = ref(false)
 const showStats = ref(false)
 const gridStyle = ref(localStorage.getItem('watchlist-grid') || 'small')
 watch(gridStyle, val => localStorage.setItem('watchlist-grid', val))
@@ -376,19 +374,7 @@ onMounted(load)
     <div class="relative z-10">
     <AppHeader>
       <template #left>
-        <button
-          @click="sidebarOpen = !sidebarOpen"
-          class="cursor-pointer flex flex-col justify-center gap-[5px] p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
-          :title="t('watchlist.header.menu')"
-        >
-          <span class="block w-5 h-0.5 rounded-full bg-current transition-all duration-200"
-                :class="sidebarOpen ? 'rotate-45 translate-y-[7px]' : ''" />
-          <span class="block w-5 h-0.5 rounded-full bg-current transition-all duration-200"
-                :class="sidebarOpen ? 'opacity-0 scale-x-0' : ''" />
-          <span class="block w-5 h-0.5 rounded-full bg-current transition-all duration-200"
-                :class="sidebarOpen ? '-rotate-45 -translate-y-[7px]' : ''" />
-        </button>
-        <p class="hidden md:block text-xs text-slate-500 dark:text-slate-400">
+        <p class="text-xs text-slate-500 dark:text-slate-400">
           {{ t('watchlist.header.stats', { total: stats.total, watching: stats.watching, completed: stats.completed }) }}
         </p>
       </template>
@@ -649,8 +635,6 @@ onMounted(load)
       </div>
       </template>
     </main>
-
-    <AppSidebar :open="sidebarOpen" @close="sidebarOpen = false" />
 
     <ItemFormModal
       :show="showModal"
