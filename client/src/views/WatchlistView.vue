@@ -374,12 +374,6 @@ onMounted(load)
     <div class="relative z-10">
     <AppHeader>
       <template #left>
-        <p class="text-xs text-slate-500 dark:text-slate-400">
-          {{ t('watchlist.header.stats', { total: stats.total, watching: stats.watching, completed: stats.completed }) }}
-        </p>
-      </template>
-
-      <template #right>
         <!-- Search -->
         <div class="relative">
           <Icon name="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500 pointer-events-none" />
@@ -398,7 +392,9 @@ onMounted(load)
             <Icon name="close" class="w-3.5 h-3.5" :sw="2.5" />
           </button>
         </div>
+      </template>
 
+      <template #right>
         <button
           v-if="stats.total > 0"
           @click="showStats = !showStats"
@@ -428,6 +424,10 @@ onMounted(load)
     </AppHeader>
 
     <main class="max-w-4xl mx-auto px-4 py-6 flex flex-col gap-6">
+      <p class="text-xs text-slate-500 dark:text-slate-400">
+        {{ t('watchlist.header.stats', { total: stats.total, watching: stats.watching, completed: stats.completed }) }}
+      </p>
+
       <div class="flex justify-center">
         <WatchlistNav />
       </div>

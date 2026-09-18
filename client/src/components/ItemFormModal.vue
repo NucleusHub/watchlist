@@ -46,6 +46,9 @@ const form = ref({})
 const results = ref([])
 const showDropdown = ref(false)
 const searching = ref(false)
+// Set when every enabled source rejected (e.g. a missing/invalid TMDb API key)
+// so the dropdown can say *something* instead of just looking empty/broken.
+const searchError = ref(null)
 const fetchingDetail = ref(false)
 const uploading = ref(false)
 const fileInput = ref(null)
@@ -149,11 +152,13 @@ function onTitleInput() {
   const q = form.value.title?.trim()
   if (!q || q.length < 2) {
     results.value = []
+    searchError.value = null
     showDropdown.value = false
     return
   }
   searchTimer = setTimeout(async () => {
     searching.value = true
+    searchError.value = null
     try {
       // Search every enabled source together and merge — one source failing
       // (e.g. an anime API hiccup) never blocks the others.
@@ -163,10 +168,17 @@ function onTitleInput() {
       settled.forEach((res, i) => {
         if (res.status === 'fulfilled' && Array.isArray(res.value)) {
           for (const r of res.value) merged.push({ ...r, _source: sources[i], sourceLabel: sources[i].label })
+        } else if (res.status === 'rejected') {
+          console.warn(`[watchlist] search source "${sources[i].label}" failed:`, res.reason)
         }
       })
       results.value = merged.slice(0, 10)
-      showDropdown.value = results.value.length > 0
+      // Every source failed and none returned anything — surface it instead of
+      // a dropdown that just silently never appears.
+      if (!results.value.length && settled.every((r) => r.status === 'rejected')) {
+        searchError.value = settled[0]?.reason?.message || 'Search failed'
+      }
+      showDropdown.value = results.value.length > 0 || !!searchError.value
     } catch {
       results.value = []
       showDropdown.value = false
@@ -354,6 +366,9 @@ function handleSubmit(addAnother = false) {
                     />
                     <Spinner v-if="searching" class="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 animate-spin" />
                     <div v-if="showDropdown" class="absolute z-10 top-full left-0 right-0 mt-1 bg-white dark:bg-slate-700 rounded-xl overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-600 max-h-72 overflow-y-auto">
+                      <p v-if="searchError" class="px-3 py-2.5 text-xs text-amber-600 dark:text-amber-400">
+                        {{ searchError }}
+                      </p>
                       <button
                         v-for="r in results" :key="r.key"
                         type="button"
