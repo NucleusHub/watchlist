@@ -21,7 +21,9 @@ const { isDark } = useTheme()
   position: sticky;
   top: 0;
   z-index: 30;
-  padding: 12px 16px 0;
+  /* Clears the iOS status bar / notch in the Capacitor WKWebView, which
+     renders edge-to-edge under it (viewport-fit=cover in index.html). */
+  padding: max(12px, env(safe-area-inset-top)) 16px 0;
   pointer-events: none;
 }
 
