@@ -1,0 +1,9 @@
+{
+  "appId": "com.nucleushub.watchlist",
+  "appName": "Watchlist",
+  "webDir": "dist",
+  "server": {
+    "url": "http://localhost:5173/watchlist/",
+    "cleartext": true
+  }
+}
