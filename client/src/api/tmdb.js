@@ -1,10 +1,24 @@
 const BASE = 'https://api.themoviedb.org/3'
-const KEY = import.meta.env.VITE_TMDB_API_KEY
+// User-supplied key (Settings → Search sources) takes priority over one baked
+// in at build time via VITE_TMDB_API_KEY. Read fresh per request — not cached
+// at module load — so saving a key in Settings works without a reload.
+export const KEY_STORAGE_KEY = 'watchlist-tmdb-api-key'
+
+function getKey() {
+  try {
+    const stored = localStorage.getItem(KEY_STORAGE_KEY)
+    if (stored) return stored
+  } catch {
+    // Storage unavailable — fall through to the build-time key.
+  }
+  return import.meta.env.VITE_TMDB_API_KEY || ''
+}
 
 async function get(path, params = {}) {
-  if (!KEY) throw new Error('VITE_TMDB_API_KEY not set')
+  const key = getKey()
+  if (!key) throw new Error('No TMDb API key set — add one in Settings.')
   const url = new URL(`${BASE}${path}`)
-  url.searchParams.set('api_key', KEY)
+  url.searchParams.set('api_key', key)
   for (const [k, v] of Object.entries(params)) url.searchParams.set(k, String(v))
   const res = await fetch(url)
   if (!res.ok) throw new Error(`TMDb ${res.status}`)

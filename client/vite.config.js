@@ -49,6 +49,12 @@ export default defineConfig(({ mode }) => ({
   },
   server: {
     host: '0.0.0.0',
+    watch: {
+      // Xcode constantly rewrites its own scratch/state files under ios/ while
+      // the project is open — without this, every one triggers a full page
+      // reload in whatever's connected to the dev server.
+      ignored: ['**/ios/**'],
+    },
     proxy: {
       // Pulse state (widgets opting in to show here). Must precede the '/api'
       // catch-all so it routes to Pulse, not the watchlist server. Dev-only;

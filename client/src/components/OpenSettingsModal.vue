@@ -5,6 +5,7 @@ import { useI18n } from '@core/useI18n.js'
 import { useRegistry } from '@core/useRegistry.js'
 import { usePlugins } from '@core/usePlugins.js'
 import { useOpenSettings } from '@/composables/useOpenSettings.js'
+import { useTmdbKey } from '@/composables/useTmdbKey.js'
 import { BUILTIN_SOURCES, PLUGIN_SOURCES } from '@/api/sources.js'
 import { watchlistSurfaces } from '@/utils/pluginSurfaces.js'
 import { OPEN_OPTIONS, TITLE_FORMATS, buildOpenUrl } from '@/utils/openTarget.js'
@@ -40,10 +41,21 @@ function toggleSource(id) {
 }
 
 // Tabs via the shared TemplateModal tab bar (same look as the rest of the app).
-// "Open in" is first, so it's the tab shown on open. The search-sources tab
-// appears only when there's a plugin source to toggle (TMDb alone needs none) —
-// with just TMDb the modal shows the open-in section with no tab bar.
-const showSourcesTab = computed(() => availableSources.value.length > 1)
+// "Open in" is first, so it's the tab shown on open. Search sources always has
+// the TMDb key field to show, so unlike Extras it's never hidden.
+const showSourcesTab = computed(() => true)
+
+// ── TMDb API key ─────────────────────────────────────────────────────────────
+// Device-local, not part of the server-synced draft/save flow below — it has
+// its own inline save so it's clear it takes effect immediately.
+const { apiKey: tmdbKey } = useTmdbKey()
+const tmdbKeyDraft = ref(tmdbKey.value)
+const tmdbKeySaved = ref(false)
+function saveTmdbKey() {
+  tmdbKey.value = tmdbKeyDraft.value.trim()
+  tmdbKeySaved.value = true
+  setTimeout(() => { tmdbKeySaved.value = false }, 2000)
+}
 
 // ── Plugin surfaces ──────────────────────────────────────────────────────────
 // Sections a plugin contributes to the app, each of which the user places as a
@@ -105,6 +117,8 @@ watch(
     draftPlacements.value = Object.fromEntries(
       availableSurfaces.value.map((s) => [s.pluginId, placementOf(s)])
     )
+    tmdbKeyDraft.value = tmdbKey.value
+    tmdbKeySaved.value = false
   },
   { immediate: true }
 )
@@ -205,6 +219,36 @@ function save() {
 
       <!-- ── Search sources ──────────────────────────────────────────────── -->
       <section v-show="activeTab === 'sources'" class="flex flex-col gap-3">
+        <!-- TMDb API key — device-local, saves immediately on its own button. -->
+        <div class="flex flex-col gap-2 rounded-xl border border-black/5 dark:border-white/10 bg-white/40 dark:bg-white/[0.03] p-3">
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-sm font-semibold text-slate-900 dark:text-white">{{ t('watchlist.settings.tmdbKeyLabel') }}</span>
+            <a
+              href="https://www.themoviedb.org/settings/api"
+              target="_blank"
+              rel="noopener"
+              class="shrink-0 text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:underline"
+            >{{ t('watchlist.settings.tmdbKeyGuide') }}</a>
+          </div>
+          <p class="text-xs text-slate-400 dark:text-slate-500">{{ t('watchlist.settings.tmdbKeyHint') }}</p>
+          <div class="flex items-center gap-2">
+            <input
+              v-model="tmdbKeyDraft"
+              type="text"
+              autocomplete="off"
+              spellcheck="false"
+              :placeholder="t('watchlist.settings.tmdbKeyPlaceholder')"
+              class="flex-1 min-w-0 bg-white dark:bg-slate-700 text-slate-900 dark:text-white rounded-lg px-3 py-1.5 text-sm placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+            <button
+              type="button"
+              @click="saveTmdbKey"
+              class="cursor-pointer shrink-0 px-3 py-1.5 rounded-lg text-sm font-medium bg-indigo-600 hover:bg-indigo-500 text-white transition-colors"
+            >{{ t('watchlist.settings.tmdbKeySave') }}</button>
+          </div>
+          <p v-if="tmdbKeySaved" class="text-xs text-emerald-600 dark:text-emerald-400">{{ t('watchlist.settings.tmdbKeySavedMsg') }}</p>
+        </div>
+
         <p class="text-sm text-slate-500 dark:text-slate-400">{{ t('watchlist.settings.searchSourceDesc') }}</p>
         <div class="flex flex-col gap-1.5">
           <div

@@ -423,8 +423,8 @@ onMounted(load)
       </template>
     </AppHeader>
 
-    <main class="max-w-4xl mx-auto px-4 py-6 flex flex-col gap-6">
-      <p class="text-xs text-slate-500 dark:text-slate-400">
+    <main class="max-w-4xl mx-auto px-4 pb-6 flex flex-col gap-6">
+      <p class="text-xs text-slate-500 dark:text-slate-400 pt-1.5">
         {{ t('watchlist.header.stats', { total: stats.total, watching: stats.watching, completed: stats.completed }) }}
       </p>
 
