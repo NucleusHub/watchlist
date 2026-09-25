@@ -38,6 +38,9 @@ services:
       nucleus.role: "app-client"
       nucleus.app: "watchlist"
     environment:
+      # Host edits over the Docker VM file share (virtiofs) emit no inotify
+      # events, so Vite would keep serving stale modules — poll instead.
+      CHOKIDAR_USEPOLLING: "true"
       API_TARGET: http://watchlist-server:3000
       VITE_TMDB_API_KEY: ${VITE_TMDB_API_KEY}
       NUCLEUS_HOST: ${NUCLEUS_HOST:-nucleus.olm-altair.ts.net}
