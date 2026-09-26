@@ -6,15 +6,12 @@ import { useI18n } from '@core/useI18n.js'
 import { useCollections } from '@/composables/useCollections.js'
 import { addItemsToCollection } from '@/api/watchlist.js'
 
-// Add existing watchlist items to a collection. The picker excludes current
-// members; adding is one bulk request ($addToSet server-side).
 const { t } = useI18n()
 const { bumpCount } = useCollections()
 
 const props = defineProps({
   show: { type: Boolean, default: false },
   collectionId: { type: String, required: true },
-  // Ids already in the collection, hidden from the picker.
   memberIds: { type: Array, default: () => [] },
 })
 const emit = defineEmits(['close', 'added'])

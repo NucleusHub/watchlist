@@ -34,9 +34,6 @@ const { applyMembership } = useCollections()
 const { isPluginEnabled } = useRegistry()
 const { placementOf } = useOpenSettings()
 
-// Plugin surfaces the user has placed as a section on this page rather than as
-// their own tab (see utils/pluginSurfaces.js). They render above the filter bar,
-// get the already-loaded items, and can ask for a reload when they change one.
 const panelSurfaces = computed(() =>
   watchlistSurfaces.filter((s) => isPluginEnabled(s.pluginId) && placementOf(s) === 'panel')
 )
@@ -49,8 +46,6 @@ watch(gridStyle, val => localStorage.setItem('watchlist-grid', val))
 
 const gridClass = computed(() => ({
   list:  'grid-cols-1',
-  // Keep the three view modes distinct on phones too: big starts at 2-up, small
-  // at 3-up (below sm both used to collapse to 2 columns, so "small" did nothing).
   big:   'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4',
   small: 'grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5',
 }[gridStyle.value]))
@@ -69,12 +64,8 @@ const onlyFavorite = ref(false)
 const sortBy = ref('alphabetical')
 const sortDir = ref('asc')
 const searchQuery = ref('')
-// Genre filter — the selected genre names, matched as "any of" rather than
-// "all of": picking Action and Comedy widens the list instead of narrowing it
-// to the rare item tagged both, which is what browsing a library wants.
 const activeGenres = ref([])
 
-// Refresh state
 const showRefreshWarning = ref(false)
 const refreshing = ref(false)
 const refreshCurrent = ref(0)
@@ -109,10 +100,6 @@ function toggleSort(key) {
   }
 }
 
-// Everything the filter bar does EXCEPT the genre picker. Split out so the
-// genre chips can be faceted against it: each chip's count reflects the list
-// you're currently looking at, and picking one genre doesn't make the others
-// look empty.
 const preGenre = computed(() => {
   const q = searchQuery.value.trim().toLowerCase()
   return items.value.filter((i) => {
@@ -135,9 +122,7 @@ function toggleGenre(name) {
 
 const isGenreOn = (name) => activeGenres.value.some((g) => g.toLowerCase() === name.toLowerCase())
 
-// Drop selections that no longer exist in the current facet set — otherwise
-// switching to Movies while "Talk" (a show-only genre) is picked leaves an
-// invisible filter showing zero results with no chip to un-click.
+// Drop selections missing from the current facets, or they would filter invisibly.
 watch(genreOptions, (opts) => {
   if (!activeGenres.value.length) return
   const available = new Set(opts.map((o) => o.name.toLowerCase()))
@@ -268,10 +253,6 @@ async function runRefresh() {
       const isMovie = item.type === 'movie'
       const mediaType = isMovie ? 'movie' : 'tv'
 
-      // Prefer the stored TMDb id: an exact handle on the same title, where a
-      // title search can hand back a remake or a same-named show. Items added
-      // before ids were stored (or from a non-TMDb source) still search by
-      // name, and we write the resolved id back so the next pass is exact.
       let tmdbId = item.tmdbId
       let posterPath = null
       if (!tmdbId) {
@@ -284,7 +265,6 @@ async function runRefresh() {
           continue
         }
 
-        // Prefer year match if available
         let match = candidates[0]
         if (item.year) {
           const exact = candidates.find(
@@ -306,21 +286,18 @@ async function runRefresh() {
       if (!item.tmdbId) patch.tmdbId = tmdbId
       if (detail.vote_average) patch.tmdbRating = Math.round(detail.vote_average * 10) / 10
 
-      // Only set poster if unset or already from TMDb (don't overwrite uploads)
+      // Don't overwrite uploaded posters.
       if (!item.posterUrl || item.posterUrl.startsWith('https://image.tmdb.org')) {
         const poster = posterPath ?? detail.poster_path
         if (poster) patch.posterUrl = `https://image.tmdb.org/t/p/w500${poster}`
       }
 
-      // Genres — the backfill path for every item added before genre tags
-      // existed. Treated as blank-fill, not an overwrite, so a genre you added
-      // or removed by hand in the edit form survives a refresh.
+      // Blank-fill only, so hand-edited genres survive a refresh.
       if (!item.genres?.length) {
         const genres = genresFromTmdbDetail(detail)
         if (genres.length) patch.genres = genres
       }
 
-      // Only fill blank metadata fields
       if (!item.year && detail.release_date) patch.year = Number(detail.release_date.slice(0, 4))
       if (!item.year && detail.first_air_date) patch.year = Number(detail.first_air_date.slice(0, 4))
       if (isMovie && !item.runtime && detail.runtime) patch.runtime = detail.runtime
@@ -330,13 +307,10 @@ async function runRefresh() {
         if (!item.showRuntime && detail.number_of_episodes && detail.episode_run_time?.length) {
           patch.showRuntime = detail.number_of_episodes * detail.episode_run_time[0]
         }
-        // Refresh the per-season structure (new seasons air over time) while
-        // preserving watched counts by season number.
         const sp = buildSeasonProgress(detail, item.seasonProgress)
         if (sp.length) patch.seasonProgress = sp
       }
 
-      // Always refresh streaming (it changes)
       if (streaming) {
         patch.watchLink = streaming.link
         patch.streamingProvider = streaming.name
@@ -394,7 +368,6 @@ onMounted(load)
       </template>
 
       <template #right>
-        <!-- Search -->
         <div class="relative">
           <Icon name="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500 pointer-events-none" />
           <input
@@ -458,7 +431,6 @@ onMounted(load)
       />
 
       <div class="glass rounded-2xl p-2 flex flex-col gap-2.5">
-        <!-- Status segmented control + result count -->
         <div class="flex items-center gap-3">
           <div class="min-w-0 flex-1 overflow-x-auto no-scrollbar">
             <div class="inline-flex items-center gap-0.5 bg-black/[0.04] dark:bg-white/5 rounded-xl p-1">
@@ -484,7 +456,6 @@ onMounted(load)
 
         <div class="h-px bg-black/[0.06] dark:bg-white/8 -mx-2" />
 
-        <!-- Type segmented (left) · sort + grid size (right) -->
         <div class="flex flex-col gap-2.5 lg:flex-row lg:items-center lg:justify-between">
           <div class="flex items-center gap-2 self-start">
             <div class="inline-flex items-center gap-0.5 bg-black/[0.04] dark:bg-white/5 rounded-xl p-1">
@@ -518,7 +489,6 @@ onMounted(load)
           </div>
 
           <div class="flex items-center gap-1.5 shrink-0">
-            <!-- Sort icons; active shows the direction caret inline -->
             <div class="flex items-center gap-0.5">
               <button
                 @click="toggleSort('runtime')"
@@ -562,7 +532,6 @@ onMounted(load)
               </button>
             </div>
 
-            <!-- Grid size (segmented) -->
             <div class="flex items-center h-9 bg-black/[0.05] dark:bg-white/5 rounded-lg p-1 gap-0.5">
               <button @click="gridStyle = 'list'" :title="t('watchlist.list.viewList')" :class="['cursor-pointer h-full px-2.5 rounded-md inline-flex items-center transition-colors', gridStyle === 'list' ? 'text-indigo-600 dark:text-white bg-white dark:bg-white/15 shadow-sm' : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-white']">
                 <ListIcon class="w-4 h-4" />
@@ -577,10 +546,6 @@ onMounted(load)
           </div>
         </div>
 
-        <!-- Genre filter — a scrollable chip strip rather than a dropdown, so
-             the genres you own are visible at a glance. Only rendered once
-             something in view actually carries genres (a library that predates
-             genre tags, or one refreshed to nothing, shows no empty control). -->
         <template v-if="genreOptions.length">
           <div class="h-px bg-black/[0.06] dark:bg-white/8 -mx-2" />
           <div class="flex items-center gap-2">
@@ -668,7 +633,6 @@ onMounted(load)
       @updated="handleUpdated"
     />
 
-    <!-- Refresh warning -->
     <TemplateModal
       :show="showRefreshWarning"
       :title="t('watchlist.refresh.warningTitle')"
@@ -678,7 +642,6 @@ onMounted(load)
       @cancel="showRefreshWarning = false"
     />
 
-    <!-- Refresh progress modal -->
     <TemplateModal
       :show="refreshing"
       header

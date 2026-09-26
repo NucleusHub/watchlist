@@ -6,9 +6,6 @@ import CollectionCover from '@/components/CollectionCover.vue'
 import { Icon } from '@core/icons'
 import { useI18n } from '@core/useI18n.js'
 
-// One collection in the grid: a cover (uploaded image, chosen/auto poster
-// collage, or gradient) and its name/count, linking to the collection's items.
-// Edit / delete sit inline on the cover — no overflow menu needed for two.
 const { t } = useI18n()
 
 const props = defineProps({
@@ -16,8 +13,6 @@ const props = defineProps({
 })
 const emit = defineEmits(['rename', 'delete'])
 
-// Prefer the user's chosen cover posters; otherwise an auto preview capped at
-// the collection's configured count.
 const coverPosters = computed(() => {
   const c = props.collection
   if (c.coverPosters?.length) return c.coverPosters
@@ -31,11 +26,9 @@ const coverPosters = computed(() => {
       :to="`/collections/${collection._id}`"
       class="block rounded-2xl overflow-hidden bg-white/70 dark:bg-slate-800/60 border border-white/60 dark:border-white/8 shadow-sm hover:shadow-xl hover:shadow-indigo-500/10 hover:-translate-y-1 transition-all duration-300 ease-out no-underline"
     >
-      <!-- Cover -->
       <div class="relative aspect-[16/10] overflow-hidden">
         <CollectionCover :image="collection.coverUrl" :posters="coverPosters" class="transition-transform duration-500 group-hover:scale-[1.03]" />
 
-        <!-- Legibility veil + count pill -->
         <div class="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/45 to-transparent pointer-events-none" />
         <span class="absolute bottom-2 left-2 inline-flex items-center gap-1 rounded-full bg-black/45 backdrop-blur-md px-2.5 py-1 text-[11px] font-medium text-white/95">
           <Icon name="folder" class="w-3 h-3" :sw="2" />
@@ -43,7 +36,6 @@ const coverPosters = computed(() => {
         </span>
       </div>
 
-      <!-- Body -->
       <div class="px-3.5 py-3">
         <h3 class="text-sm font-semibold text-slate-900 dark:text-white truncate">{{ collection.name }}</h3>
         <p
@@ -55,7 +47,6 @@ const coverPosters = computed(() => {
       </div>
     </RouterLink>
 
-    <!-- Edit / delete — inline on the cover, reveal on hover (always on touch) -->
     <div class="absolute top-2 right-2 flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
       <button
         type="button"

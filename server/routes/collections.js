@@ -7,9 +7,6 @@ import { requireAuth } from '../middleware/auth.js'
 const router = Router()
 router.use(requireAuth)
 
-// Whitelist the fields a client may set/update. Keeps the forward-compatible
-// columns (kind/filter/itemOrder/parentId/…) off the public write surface until
-// their feature ships; name/description/cover are user-editable.
 const pickWritable = (body = {}) => {
   const out = {}
   if (typeof body.name === 'string') out.name = body.name.trim()
@@ -20,10 +17,6 @@ const pickWritable = (body = {}) => {
   return out
 }
 
-// Decorate a collection for the client: derived item count, an auto preview
-// (posters of a few members) and, when the user picked cover titles, their
-// posters in order. Kept in one place so every response shape is identical and
-// the client cache never drifts.
 async function decorate(col, profileId) {
   const base = col.toObject ? col.toObject() : col
   const [itemCount, members] = await Promise.all([
@@ -44,7 +37,6 @@ async function decorate(col, profileId) {
   return { ...base, itemCount, previewPosters: members.map((m) => m.posterUrl).filter(Boolean), coverPosters }
 }
 
-// GET / — the user's collections, each decorated with counts + cover posters.
 router.get('/', async (req, res) => {
   try {
     const profileId = req.profile.profileId
@@ -55,7 +47,6 @@ router.get('/', async (req, res) => {
   }
 })
 
-// POST / — create a collection.
 router.post('/', async (req, res) => {
   try {
     const data = pickWritable(req.body)
@@ -67,7 +58,6 @@ router.post('/', async (req, res) => {
   }
 })
 
-// PATCH /:id — rename / edit description (scoped to the owner).
 router.patch('/:id', async (req, res) => {
   try {
     const data = pickWritable(req.body)
@@ -83,10 +73,6 @@ router.patch('/:id', async (req, res) => {
   }
 })
 
-// POST /:id/items — add existing items to the collection in one shot. Uses
-// $addToSet so re-adding a member is a no-op; returns the affected items so the
-// client can refresh its list and the derived counts. Removal stays a plain item
-// PATCH ($pull), so there's no matching DELETE here.
 router.post('/:id/items', async (req, res) => {
   try {
     const ids = Array.isArray(req.body?.itemIds) ? req.body.itemIds : []
@@ -104,10 +90,6 @@ router.post('/:id/items', async (req, res) => {
   }
 })
 
-// PUT /:id/order — set the manual member order (an array of item ids). Only the
-// order is stored; membership itself still lives on the items, so ids that are
-// no longer members are harmless (the client ignores them) and self-heal on the
-// next save. Items missing from the list simply fall back to the default order.
 router.put('/:id/order', async (req, res) => {
   try {
     const itemIds = Array.isArray(req.body?.itemIds) ? req.body.itemIds : null
@@ -124,8 +106,6 @@ router.put('/:id/order', async (req, res) => {
   }
 })
 
-// DELETE /:id — remove the collection and detach it from every item. Items are
-// never deleted; we only $pull the collection id from their membership arrays.
 router.delete('/:id', async (req, res) => {
   try {
     const col = await Collection.findOneAndDelete({ _id: req.params.id, profileId: req.profile.profileId })

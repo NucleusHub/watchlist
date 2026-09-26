@@ -1,27 +1,14 @@
-// Search sources for the add/edit item form. A "source" abstracts a metadata
-// backend behind a uniform contract so the form can search any of them and
-// autofill from the chosen result:
-//
+// Source contract:
 //   id            unique string
 //   label         display name for the source picker
 //   pluginId?     set for plugin-contributed sources (host gates + badges on it)
 //   search(q)     -> [{ key, title, subtitle, poster, type, _raw }]   (dropdown)
 //   toForm(r,ctx) -> partial form fields to merge (ctx.existing = current form)
-//
-// A source that knows its item's genres should return them from `toForm` as
-// `genres: string[]` (plain names — see utils/genres.js); the host normalizes,
-// renders and filters on them regardless of which source produced them.
-//
-// TMDb is the built-in source (wraps api/tmdb.js). Plugins add more by shipping
-// `client/watchlistSources.js` and declaring `extensions.watchlistSources` with
-// `target: "watchlist"` — mirroring Shelf's plugin import sources. `../../plugins`
-// is the client-dir `plugins` symlink → repo /plugins, wired like `core`.
 import {
   searchMulti, fetchMovieDetail, fetchTvDetail, fetchWatchProviders, buildSeasonProgress,
 } from './tmdb.js'
 import { genresFromTmdbDetail } from '@/utils/genres.js'
 
-// ── Built-in: TMDb ────────────────────────────────────────────────────────────
 const tmdbSource = {
   id: 'tmdb',
   label: 'TMDb',
@@ -50,7 +37,6 @@ const tmdbSource = {
       type: isMovie ? 'movie' : 'show',
       year: (isMovie ? r.release_date : r.first_air_date)?.slice(0, 4) ?? '',
       posterUrl: r.poster_path ? `https://image.tmdb.org/t/p/w500${r.poster_path}` : null,
-      // Persist the TMDb id so cross-user matching (In Common plugin) is exact.
       tmdbId: r.id ?? null,
     }
     const mediaType = isMovie ? 'movie' : 'tv'
@@ -59,8 +45,6 @@ const tmdbSource = {
       fetchWatchProviders(r.id, mediaType),
     ])
     if (d.vote_average) form.tmdbRating = Math.round(d.vote_average * 10) / 10
-    // Genre tags — only the detail payload carries names (search results carry
-    // bare `genre_ids`), which is why this waits for the detail fetch.
     const genres = genresFromTmdbDetail(d)
     if (genres.length) form.genres = genres
     if (isMovie) {
@@ -71,7 +55,6 @@ const tmdbSource = {
       if (d.number_of_episodes && d.episode_run_time?.length) {
         form.showRuntime = d.number_of_episodes * d.episode_run_time[0]
       }
-      // Preserve any progress already recorded when re-selecting the same show.
       form.seasonProgress = buildSeasonProgress(d, ctx.existing?.seasonProgress)
     }
     if (streaming) {
@@ -85,7 +68,6 @@ const tmdbSource = {
 
 export const BUILTIN_SOURCES = [tmdbSource]
 
-// ── Plugin sources ────────────────────────────────────────────────────────────
 const manifests = import.meta.glob('../../plugins/*/nucleus.plugin.json', { eager: true, import: 'default' })
 const modules = import.meta.glob('../../plugins/*/client/watchlistSources.js', { eager: true })
 
@@ -105,12 +87,10 @@ function collectPluginSources() {
     const list = Array.isArray(exported) ? exported : exported ? [exported] : []
     for (const s of list) {
       if (!s?.id || typeof s.search !== 'function' || typeof s.toForm !== 'function') continue
-      // pluginId lets the host gate visibility (isPluginEnabled) and badge it.
       sources.push({ ...s, pluginId: manifest?.id || dir })
     }
   }
   return sources
 }
 
-// Resolved at load; the plugin set is fixed for a given bundle.
 export const PLUGIN_SOURCES = collectPluginSources()

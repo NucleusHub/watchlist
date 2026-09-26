@@ -15,7 +15,6 @@ const props = defineProps({
 })
 const emit = defineEmits(['close', 'updated'])
 
-// Editable working copy of the season list.
 const seasons = ref([])
 const loading = ref(false)
 const saving = ref(false)
@@ -30,9 +29,6 @@ function cloneProgress(sp) {
   }))
 }
 
-// Legacy shows have no per-season data. Try TMDb; if that fails, synthesise a
-// single "All episodes" bucket from the flat episode count so the user can
-// still track progress.
 async function loadSeasons() {
   const item = props.item
   if (item.seasonProgress?.length) {
@@ -149,7 +145,6 @@ async function save() {
   <TemplateModal :show="show" size="md" @cancel="$emit('close')">
     <div class="flex flex-col max-h-[85vh]">
 
-          <!-- Header -->
           <div class="px-5 pt-5 pb-4 border-b border-white/30 dark:border-white/8 shrink-0">
             <div class="flex items-start justify-between gap-3">
               <div class="min-w-0">
@@ -165,7 +160,6 @@ async function save() {
               </button>
             </div>
 
-            <!-- Overall progress -->
             <div v-if="totalEp" class="mt-3">
               <div class="flex items-end justify-between mb-1.5">
                 <span class="text-sm font-medium text-slate-700 dark:text-slate-200">{{ t('watchlist.progress.epCount', { watched: watchedEp, total: totalEp }) }}</span>
@@ -184,7 +178,6 @@ async function save() {
             </div>
           </div>
 
-          <!-- Body -->
           <div class="flex-1 overflow-y-auto px-3 py-3">
             <div v-if="loading" class="flex items-center justify-center py-12 text-slate-400 dark:text-slate-500 gap-2">
               <Spinner class="w-5 h-5 animate-spin" />
@@ -203,7 +196,6 @@ async function save() {
                 :key="s.seasonNumber"
                 class="flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
               >
-                <!-- Toggle circle -->
                 <button
                   @click="toggleSeason(s)"
                   :title="seasonState(s) === 'full' ? t('watchlist.progress.markUnwatched') : t('watchlist.progress.markWatched')"
@@ -220,13 +212,11 @@ async function save() {
                   <span v-else-if="seasonState(s) === 'partial'" class="w-2 h-2 rounded-full bg-indigo-500" />
                 </button>
 
-                <!-- Name + count -->
                 <div class="flex-1 min-w-0">
                   <p class="text-sm font-medium text-slate-800 dark:text-slate-100 truncate">{{ s.name }}</p>
                   <p class="text-xs text-slate-400 dark:text-slate-500">{{ t('watchlist.progress.episodeCount', { watched: s.watched, total: s.episodeCount }) }}</p>
                 </div>
 
-                <!-- Stepper -->
                 <div class="shrink-0 flex items-center gap-1 bg-black/5 dark:bg-white/8 rounded-lg p-0.5">
                   <button
                     @click="step(s, -1)"
@@ -250,7 +240,6 @@ async function save() {
             </div>
           </div>
 
-          <!-- Footer -->
           <div v-if="!loading && !loadError" class="px-5 py-4 border-t border-white/30 dark:border-white/8 shrink-0 flex items-center gap-2">
             <button
               @click="allWatched ? resetAll() : markAll()"

@@ -33,8 +33,6 @@ const notFound = ref(false)
 const items = ref([])
 const loading = ref(true)
 
-// Members in the collection's manual order: ids listed in `itemOrder` first (in
-// that order), then anything not yet ordered (e.g. newly added) in load order.
 const orderedItems = computed(() => {
   const order = (collection.value?.itemOrder || []).map(String)
   if (!order.length) return items.value
@@ -44,7 +42,6 @@ const orderedItems = computed(() => {
   )
 })
 
-// Match the main list's view-mode preference so the two feel like one surface.
 const gridStyle = ref(localStorage.getItem('watchlist-grid') || 'small')
 watch(gridStyle, (v) => localStorage.setItem('watchlist-grid', v))
 const gridClass = computed(() => ({
@@ -53,9 +50,6 @@ const gridClass = computed(() => ({
   small: 'grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5',
 }[gridStyle.value]))
 
-// Search + filters over the manually-ordered members. Sorting is intentionally
-// omitted here — the collection's own manual order is the ordering; filters and
-// search only narrow what's shown, preserving that order.
 const searchQuery = ref('')
 const activeStatus = ref('all')
 const activeType = ref('all')
@@ -94,7 +88,6 @@ const visible = computed(() => {
   })
 })
 
-// Modals.
 const showEditItem = ref(false)
 const editingItem = ref(null)
 const showManage = ref(false)
@@ -104,9 +97,6 @@ const showAdd = ref(false)
 const showDeleteCol = ref(false)
 const deletingBusy = ref(false)
 
-// ── Manual reorder ──────────────────────────────────────────────────────────
-// A dedicated mode over a single-column list: drag rows (desktop) or use the
-// arrows (touch/keyboard). `draft` is edited live and only persisted on save.
 const reordering = ref(false)
 const draft = ref([])
 const savingOrder = ref(false)
@@ -128,7 +118,6 @@ function move(from, to) {
   next.splice(to, 0, row)
   draft.value = next
 }
-// Jump an item to a typed 1-based position; everything else shifts to fill in.
 function moveTo(i, value) {
   const n = Math.round(Number(value))
   if (!Number.isFinite(n)) return
@@ -178,7 +167,6 @@ async function load() {
 onMounted(load)
 watch(() => props.id, load)
 
-// After any item change, keep the list scoped to this collection's members.
 function reconcile(updated) {
   const inHere = (updated.collectionIds || []).map(String).includes(String(props.id))
   if (inHere) items.value = items.value.map((i) => (i._id === updated._id ? updated : i))
@@ -223,7 +211,6 @@ async function confirmDeleteCol() {
 }
 
 function onItemsAdded(added) {
-  // Prepend the newly-added members (already scoped to this collection).
   const ids = new Set(items.value.map((i) => i._id))
   items.value = [...added.filter((i) => !ids.has(i._id)), ...items.value]
 }
@@ -246,7 +233,6 @@ function onItemsAdded(added) {
         </template>
 
         <template #right>
-          <!-- Reorder mode: only Cancel / Done. -->
           <template v-if="reordering">
             <button
               @click="cancelReorder"
@@ -303,7 +289,6 @@ function onItemsAdded(added) {
       </AppHeader>
 
       <main class="max-w-4xl mx-auto px-4 py-6 flex flex-col gap-6">
-        <!-- Collection meta -->
         <div v-if="collection" class="flex items-start gap-4">
           <div class="w-12 h-12 shrink-0 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-500/10 dark:from-indigo-500/25 dark:to-purple-500/10 text-indigo-600 dark:text-indigo-300 flex items-center justify-center ring-1 ring-inset ring-white/50 dark:ring-white/10">
             <Icon name="folder" class="w-6 h-6" :sw="1.5" />
@@ -322,7 +307,6 @@ function onItemsAdded(added) {
           <RouterLink to="/collections" class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">{{ t('watchlist.collections.backToCollections') }}</RouterLink>
         </div>
 
-        <!-- Empty collection -->
         <div v-else-if="!items.length" class="text-center py-16 flex flex-col items-center gap-4">
           <div class="w-14 h-14 rounded-2xl bg-indigo-500/10 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 flex items-center justify-center">
             <Icon name="folder" class="w-7 h-7" :sw="1.5" />
@@ -337,7 +321,6 @@ function onItemsAdded(added) {
           </button>
         </div>
 
-        <!-- Reorder mode: drag, type a position, or use the arrows. -->
         <template v-else-if="reordering">
           <div class="flex items-center gap-2 -mt-2 text-sm text-slate-400 dark:text-slate-500">
             <Icon name="menu" class="w-4 h-4 shrink-0" />
@@ -358,7 +341,6 @@ function onItemsAdded(added) {
                   : 'border-white/60 dark:border-white/8 shadow-sm hover:border-indigo-300/70 dark:hover:border-indigo-400/25',
               ]"
             >
-              <!-- Drag handle -->
               <span
                 class="shrink-0 cursor-grab active:cursor-grabbing text-slate-300 dark:text-slate-600 group-hover:text-slate-400 dark:group-hover:text-slate-400 transition-colors"
                 :title="t('watchlist.collections.reorder')"
@@ -366,7 +348,6 @@ function onItemsAdded(added) {
                 <Icon name="menu" class="w-4 h-4" />
               </span>
 
-              <!-- Editable position — type a number to jump there. -->
               <input
                 :value="i + 1"
                 type="number"
@@ -380,13 +361,11 @@ function onItemsAdded(added) {
                 class="pos-input w-9 h-9 shrink-0 rounded-lg bg-black/[0.04] dark:bg-white/8 text-center text-sm font-semibold tabular-nums text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-slate-700 transition-colors"
               />
 
-              <!-- Poster -->
               <div class="w-9 h-12 shrink-0 rounded-md overflow-hidden bg-slate-100 dark:bg-slate-700 flex items-center justify-center ring-1 ring-black/5 dark:ring-white/10">
                 <img v-if="item.posterUrl" :src="item.posterUrl" :alt="item.title" class="w-full h-full object-cover" />
                 <ArchiveBoxIcon v-else class="w-4 h-4 text-slate-300 dark:text-slate-600" />
               </div>
 
-              <!-- Title -->
               <div class="flex-1 min-w-0">
                 <p class="text-sm font-medium text-slate-900 dark:text-white truncate">{{ item.title }}</p>
                 <p class="text-xs text-slate-400 dark:text-slate-500 truncate">
@@ -394,7 +373,6 @@ function onItemsAdded(added) {
                 </p>
               </div>
 
-              <!-- Up / down -->
               <div class="flex items-center shrink-0 rounded-lg bg-black/[0.03] dark:bg-white/5 p-0.5 gap-0.5">
                 <button
                   type="button"
@@ -420,7 +398,6 @@ function onItemsAdded(added) {
         </template>
 
         <template v-else>
-          <!-- Controls: search · status · type · favorite · layout -->
           <div class="glass rounded-2xl p-2 flex flex-col gap-2.5">
             <div class="relative">
               <Icon name="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500 pointer-events-none" />
@@ -507,7 +484,6 @@ function onItemsAdded(added) {
             </div>
           </div>
 
-          <!-- No matches for the active filters -->
           <div v-if="!visible.length" class="text-center py-12 flex flex-col items-center gap-3">
             <p class="text-sm text-slate-400 dark:text-slate-500">{{ t('watchlist.collections.noMatches') }}</p>
             <button
@@ -574,8 +550,6 @@ function onItemsAdded(added) {
 </template>
 
 <style scoped>
-/* The position field is a number input, but the up/down spinners are redundant
-   next to the move buttons — hide them for a clean pill. */
 .pos-input::-webkit-outer-spin-button,
 .pos-input::-webkit-inner-spin-button {
   -webkit-appearance: none;

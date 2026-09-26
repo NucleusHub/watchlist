@@ -2,9 +2,6 @@
 import { computed } from 'vue'
 import { Icon } from '@core/icons'
 
-// A collection's cover art. Priority: an uploaded/URL image, else the chosen
-// (or auto) posters rendered as a diagonal "slash" collage, else a gradient
-// placeholder. Fills its (relatively-positioned) parent.
 const props = defineProps({
   image: { type: String, default: null },
   posters: { type: Array, default: () => [] },
@@ -12,8 +9,6 @@ const props = defineProps({
 
 const shown = computed(() => (props.posters || []).filter(Boolean).slice(0, 8))
 
-// Diagonal slices: each poster gets a skewed vertical band, with a small gap
-// along the seam so the "slash" reads as a clean cut.
 const SKEW = 9
 const GAP = 0.9
 function clip(i, n) {
@@ -26,9 +21,6 @@ function clip(i, n) {
   return `polygon(${tl}% 0, ${tr}% 0, ${br}% 100%, ${bl}% 100%)`
 }
 
-// Position each poster's box over its own band so object-cover centers the
-// poster on that band (not on the whole cover). The box is widened by SKEW on
-// each side to cover the diagonal corners; its centre stays at the band centre.
 function band(i, n) {
   if (n <= 1) return { left: '0%', width: '100%' }
   const left = (i / n) * 100 - SKEW
@@ -42,8 +34,6 @@ function band(i, n) {
     <img v-if="image" :src="image" alt="" class="absolute inset-0 w-full h-full object-cover" />
 
     <template v-else-if="shown.length">
-      <!-- Each poster lives in a clip-path band; its box is positioned over that
-           band so object-cover centres the poster on its own slice. -->
       <div
         v-for="(p, i) in shown"
         :key="i"

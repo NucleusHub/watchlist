@@ -1,10 +1,3 @@
-// Where a title opens when its poster is clicked.
-//
-// A "target" is `{ type, customUrl }`. The effective target for an item is its
-// own `openTarget` when set, otherwise the per-type global default (Movies vs
-// Shows) the user picked in Settings — see composables/useOpenSettings.js.
-
-// Ordered for display in the settings/form pickers. `i18n` is the label key.
 export const OPEN_OPTIONS = [
   { type: 'tmdb', i18n: 'watchlist.open.tmdb' },
   { type: 'csfd', i18n: 'watchlist.open.csfd' },
@@ -12,8 +5,6 @@ export const OPEN_OPTIONS = [
   { type: 'custom', i18n: 'watchlist.open.custom' },
 ]
 
-// How the {title} placeholder is shaped inside a custom URL. `raw` keeps the
-// title as-is (just URL-encoded); the rest normalise words first.
 export const TITLE_FORMATS = [
   { value: 'raw', i18n: 'watchlist.open.fmtRaw', example: 'The Matrix' },
   { value: 'lower', i18n: 'watchlist.open.fmtLower', example: 'the matrix' },
@@ -25,7 +16,6 @@ export const TITLE_FORMATS = [
 
 const enc = (s) => encodeURIComponent(String(s ?? '').trim())
 
-// Split a title into alphanumeric words, dropping punctuation/separators.
 const words = (s) =>
   String(s ?? '')
     .replace(/[^\p{L}\p{N}]+/gu, ' ')
@@ -35,7 +25,6 @@ const words = (s) =>
 
 const cap = (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()
 
-// Shape a title per the chosen format (see TITLE_FORMATS).
 export function formatTitle(title, format) {
   const raw = String(title ?? '').trim()
   switch (format) {
@@ -57,15 +46,11 @@ export function formatTitle(title, format) {
   }
 }
 
-// Resolve the effective target for an item: its own override wins, else the
-// global default for its type. `defaults` is `{ movie, show }`.
 export function resolveTarget(item, defaults) {
   if (item?.openTarget?.type) return item.openTarget
   return defaults?.[item?.type] ?? null
 }
 
-// Build the destination URL for a target + item, or null when it can't (e.g. an
-// empty custom template).
 export function buildOpenUrl(target, item) {
   if (!target?.type || !item) return null
   const title = item.title || ''

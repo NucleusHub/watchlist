@@ -24,15 +24,11 @@ const { t } = useI18n()
 const { isPluginEnabled } = useRegistry()
 const { searchSources } = useOpenSettings()
 
-// Sources actually searched: enabled in settings AND — for plugin sources —
-// their plugin is enabled. TMDb is always searched; a plugin source (e.g. anime)
-// joins in when toggled on in settings. Falls back to TMDb if empty.
 const enabledSources = computed(() => {
   const avail = [...BUILTIN_SOURCES, ...PLUGIN_SOURCES.filter((s) => isPluginEnabled(s.pluginId))]
   const on = avail.filter((s) => searchSources.value.includes(s.id))
   return on.length ? on : BUILTIN_SOURCES
 })
-// Tag each result row with its source only when more than one is searched.
 const multiSource = computed(() => enabledSources.value.length > 1)
 
 const props = defineProps({
@@ -54,11 +50,7 @@ const urlInput = ref(null)
 const showPosterMenu = ref(false)
 const showUrlInput = ref(false)
 const posterUrlDraft = ref('')
-// Free-text genre entry. Selecting a search result autofills `form.genres` from
-// the source; this lets you correct it — drop a genre TMDb insists on, add one
-// it doesn't have — without the fix being wiped on the next save.
 const genreDraft = ref('')
-// Per-item poster-click override. '' = inherit the global default.
 const openType = ref('')
 const openCustomUrl = ref('')
 const openTitleFormat = ref('raw')
@@ -102,9 +94,6 @@ function addGenre() {
   genreDraft.value = ''
 }
 
-// Enter or comma commits the typed genre — comma because pasting "Action,
-// Thriller" is the natural way to type a couple at once. A key modifier can't
-// express `,` reliably, so both live in one handler.
 function onGenreKey(e) {
   if (e.key !== 'Enter' && e.key !== ',') return
   e.preventDefault()
@@ -155,8 +144,6 @@ function onTitleInput() {
   searchTimer = setTimeout(async () => {
     searching.value = true
     try {
-      // Search every enabled source together and merge — one source failing
-      // (e.g. an anime API hiccup) never blocks the others.
       const sources = enabledSources.value
       const settled = await Promise.allSettled(sources.map((s) => s.search(q)))
       const merged = []
@@ -182,7 +169,6 @@ function closeDropdown() {
 
 async function selectResult(r) {
   showDropdown.value = false
-  // Optimistic fill from the list row, then autofill the rest from its source.
   form.value.title = r.title
   form.value.type = r.type
   if (r.poster) form.value.posterUrl = r.poster
@@ -192,7 +178,6 @@ async function selectResult(r) {
     const patch = await r._source.toForm(r, { existing: form.value })
     Object.assign(form.value, patch)
   } catch {
-    // user can fill manually
   } finally {
     fetchingDetail.value = false
   }
@@ -209,7 +194,6 @@ async function handleFileUpload(e) {
   try {
     form.value.posterUrl = await uploadImage(file)
   } catch {
-    // silent — user still has the field empty
   } finally {
     uploading.value = false
     e.target.value = ''
@@ -232,7 +216,6 @@ function handleSubmit(addAnother = false) {
     else payload[f] = Number(payload[f])
   }
   payload.genres = normalizeGenres(payload.genres)
-  // Poster-click override: null tells the item to inherit the global default.
   payload.openTarget = openType.value
     ? {
         type: openType.value,
@@ -255,7 +238,6 @@ function handleSubmit(addAnother = false) {
   >
     <form @submit.prevent="handleSubmit()" class="flex flex-col gap-5 sm:flex-row sm:gap-6 items-start">
 
-              <!-- Left: Poster -->
               <div class="w-36 sm:w-44 shrink-0 mx-auto sm:mx-0 flex flex-col gap-3 sm:sticky sm:top-0">
                 <label class="text-sm text-slate-500 dark:text-slate-400">{{ t('watchlist.form.poster') }}</label>
                 <div class="relative">
@@ -281,7 +263,6 @@ function handleSubmit(addAnother = false) {
                     </button>
                   </div>
                 </div>
-                <!-- Poster source menu -->
                 <div class="relative">
                   <button
                     type="button"
@@ -316,7 +297,6 @@ function handleSubmit(addAnother = false) {
                   </div>
                 </div>
 
-                <!-- URL input -->
                 <div v-if="showUrlInput" class="flex flex-col gap-1.5">
                   <input
                     ref="urlInput"
@@ -335,10 +315,8 @@ function handleSubmit(addAnother = false) {
                 <input ref="fileInput" type="file" accept="image/*" class="hidden" @change="handleFileUpload" />
               </div>
 
-              <!-- Right: Fields — two columns on desktop; wide groups span both. -->
               <div class="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-4 min-w-0 self-stretch content-start">
 
-                <!-- Title with typeahead -->
                 <div class="flex flex-col gap-1.5 sm:col-span-2">
                   <label class="text-sm text-slate-500 dark:text-slate-400">{{ t('watchlist.form.title') }}</label>
                   <div class="relative">
@@ -372,7 +350,6 @@ function handleSubmit(addAnother = false) {
                   </div>
                 </div>
 
-                <!-- Type + Status + Year in one row -->
                 <div class="grid grid-cols-3 gap-3 sm:col-span-2">
                   <div class="flex flex-col gap-1.5">
                     <label class="text-sm text-slate-500 dark:text-slate-400">{{ t('watchlist.form.type') }}</label>
@@ -395,7 +372,6 @@ function handleSubmit(addAnother = false) {
                   </div>
                 </div>
 
-                <!-- Type-specific fields -->
                 <div class="flex flex-col gap-3 relative sm:col-span-2">
                   <div v-if="fetchingDetail" class="absolute inset-0 bg-slate-800/60 rounded-lg flex items-center justify-center z-10">
                     <Spinner class="w-5 h-5 text-indigo-400 animate-spin" />
@@ -424,7 +400,6 @@ function handleSubmit(addAnother = false) {
                   </template>
                 </div>
 
-                <!-- Watch link -->
                 <div class="flex flex-col gap-1.5">
                   <div class="flex items-center gap-2">
                     <label class="text-sm text-slate-500 dark:text-slate-400">{{ t('watchlist.form.whereToWatch') }}</label>
@@ -434,7 +409,6 @@ function handleSubmit(addAnother = false) {
                   <input v-model="form.watchLink" type="url" placeholder="https://…" class="bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white rounded-lg px-3 py-2 text-sm placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
                 </div>
 
-                <!-- Open on click (overrides the global default) -->
                 <div class="flex flex-col gap-1.5">
                   <label class="text-sm text-slate-500 dark:text-slate-400">{{ t('watchlist.form.openOnClick') }}</label>
                   <select v-model="openType" class="cursor-pointer bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
@@ -458,7 +432,6 @@ function handleSubmit(addAnother = false) {
                   </template>
                 </div>
 
-                <!-- Your rating (+ favorite) -->
                 <div class="flex flex-col gap-1.5">
                   <div class="flex items-center justify-between">
                     <label class="text-sm text-slate-500 dark:text-slate-400">{{ t('watchlist.form.yourRating') }}</label>
@@ -476,7 +449,6 @@ function handleSubmit(addAnother = false) {
                   <RatingControl v-model="form.rating" :max="10" size="md" />
                 </div>
 
-                <!-- TMDb rating (auto-filled) -->
                 <div class="flex flex-col gap-1.5">
                   <label class="text-sm text-slate-500 dark:text-slate-400">{{ t('watchlist.form.tmdbRating') }}</label>
                   <div class="bg-slate-100 dark:bg-slate-700/50 rounded-lg px-3 py-2 text-sm text-slate-500 dark:text-slate-400 flex items-center gap-1.5 h-[38px]">
@@ -489,7 +461,6 @@ function handleSubmit(addAnother = false) {
                   </div>
                 </div>
 
-                <!-- Genres -->
                 <div class="flex flex-col gap-1.5 sm:col-span-2">
                   <div class="flex items-center justify-between">
                     <label class="text-sm text-slate-500 dark:text-slate-400">{{ t('watchlist.form.genres') }}</label>
@@ -522,10 +493,8 @@ function handleSubmit(addAnother = false) {
                   </div>
                 </div>
 
-                <!-- Divider before the grouping/notes section -->
                 <div class="sm:col-span-2 h-px bg-black/[0.06] dark:bg-white/8" />
 
-                <!-- Collections -->
                 <div class="flex flex-col gap-1.5 sm:col-span-2">
                   <div class="flex items-center justify-between">
                     <label class="text-sm text-slate-500 dark:text-slate-400">{{ t('watchlist.collections.label') }}</label>
@@ -534,7 +503,6 @@ function handleSubmit(addAnother = false) {
                   <CollectionSelect v-model="form.collectionIds" list-class="max-h-40 overflow-y-auto" />
                 </div>
 
-                <!-- Notes -->
                 <div class="flex flex-col gap-1.5 sm:col-span-2">
                   <label class="text-sm text-slate-500 dark:text-slate-400">{{ t('watchlist.form.notes') }}</label>
                   <textarea v-model="form.notes" rows="2" :placeholder="t('watchlist.form.notesPlaceholder')" class="bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white rounded-lg px-3 py-2 text-sm placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none" />

@@ -17,9 +17,6 @@ function requireAdmin(req, res, next) {
   next()
 }
 
-// Called by the admin panel when a user is deleted: remove their watchlist
-// items and any locally-uploaded poster images.
-//   POST /api/watchlist/users/:userId/teardown
 router.post('/users/:userId/teardown', requireAdmin, async (req, res) => {
   try {
     const items = await WatchlistItem.find({ profileId: req.params.userId }).select('posterUrl')
@@ -29,8 +26,6 @@ router.post('/users/:userId/teardown', requireAdmin, async (req, res) => {
       }
     }
     const { deletedCount } = await WatchlistItem.deleteMany({ profileId: req.params.userId })
-    // Their collections are just groupings of those items — remove them too so a
-    // deleted user leaves nothing behind.
     await Collection.deleteMany({ profileId: req.params.userId })
     res.json({ ok: true, deleted: deletedCount })
   } catch (err) {
@@ -38,19 +33,12 @@ router.post('/users/:userId/teardown', requireAdmin, async (req, res) => {
   }
 })
 
-// ── Per-user app preferences ────────────────────────────────────────────────
-// The per-type "open in" defaults. These used to live only in the browser, so
-// they vanished each session; now persisted per profile. Defined before the
-// `/:id` item routes for readability (no method collision — those are PATCH/DELETE).
-
-// Coerce a client-supplied open target into the stored shape, dropping junk.
 const pickOpenTarget = (t) => ({
   type: t?.type || 'tmdb',
   customUrl: t?.customUrl || '',
   titleFormat: t?.titleFormat || 'raw',
 })
 
-// A lean() Map comes back as a plain Map — hand the client an object.
 const placementsOut = (m) => (m instanceof Map ? Object.fromEntries(m) : m ?? {})
 
 router.get('/settings', async (req, res) => {
@@ -68,8 +56,6 @@ router.get('/settings', async (req, res) => {
 
 router.put('/settings', async (req, res) => {
   try {
-    // Partial-safe: only touch the fields present in the body so a search-source
-    // save can't wipe the open defaults (and vice-versa).
     const $set = {}
     if (req.body?.movie !== undefined || req.body?.show !== undefined) {
       $set.openDefaults = {
@@ -78,7 +64,6 @@ router.put('/settings', async (req, res) => {
       }
     }
     if (Array.isArray(req.body?.searchSources)) {
-      // Normalize: strings only, unique, and always keep TMDb (the built-in).
       const ids = req.body.searchSources.filter((s) => typeof s === 'string' && s)
       $set.searchSources = [...new Set(['tmdb', ...ids])]
     }
@@ -110,7 +95,6 @@ router.get('/', async (req, res) => {
     const filter = { profileId: req.profile.profileId }
     if (status) filter.status = status
     if (type) filter.type = type
-    // Browse a single collection: only its members (see models/Collection.js).
     if (collection) filter.collectionIds = collection
     const items = await WatchlistItem.find(filter).sort({ createdAt: -1 })
     res.json(items)
@@ -119,10 +103,6 @@ router.get('/', async (req, res) => {
   }
 })
 
-// Genres arrive from whichever source filled the item in, so treat them as
-// untrusted: strings only, trimmed, de-duped case-insensitively, length- and
-// count-capped. Mirrors client/src/utils/genres.js — the client normalizes for
-// a stable UI, this normalizes for a stable database.
 const MAX_GENRES = 12
 const MAX_GENRE_LEN = 40
 
@@ -146,7 +126,6 @@ router.post('/', async (req, res) => {
   try {
     const body = { ...req.body }
     if ('genres' in body) body.genres = cleanGenres(body.genres)
-    // An item added straight as "completed" still has a watched date.
     if (body.status === 'completed' && !body.completedAt) body.completedAt = new Date()
     const item = await WatchlistItem.create({ ...body, profileId: req.profile.profileId })
     res.status(201).json(item)
@@ -164,10 +143,7 @@ router.patch('/:id', async (req, res) => {
 
     const patch = { ...req.body }
     if ('genres' in patch) patch.genres = cleanGenres(patch.genres)
-    // `completedAt` is server-derived, never client-supplied: stamp it when the
-    // item crosses into `completed`, clear it when it leaves. Re-saving an item
-    // that is already completed leaves the original date alone, so editing a
-    // note doesn't rewrite when you watched it.
+    // completedAt is server-derived; re-saving an already completed item keeps the original date.
     delete patch.completedAt
     if (patch.status && patch.status !== current.status) {
       if (patch.status === 'completed') patch.completedAt = new Date()

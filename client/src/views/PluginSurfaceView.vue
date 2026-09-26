@@ -12,15 +12,6 @@ import { getItems } from '@/api/watchlist.js'
 import { surfaceByPath } from '@/utils/pluginSurfaces.js'
 import { useOpenSettings } from '@/composables/useOpenSettings.js'
 
-// Host chrome for a plugin-contributed watchlist surface shown as its own tab
-// (see utils/pluginSurfaces.js). The plugin ships plain content — this view
-// owns the header, sidebar, nav and item loading, so a surface component is the
-// same component whether the user placed it in a tab or as a panel on the main
-// list.
-//
-// Routed as /x/:surface; the route stays registered for every discovered
-// surface, so the disabled / hidden / uninstalled cases are handled here rather
-// than by rebuilding the router.
 const { t } = useI18n()
 const { isPluginEnabled } = useRegistry()
 const { placementOf } = useOpenSettings()
@@ -31,9 +22,6 @@ const items = ref([])
 const loading = ref(true)
 
 const surface = computed(() => surfaceByPath(route.params.surface))
-// The tab is reachable only when the plugin is installed, enabled, and the user
-// hasn't moved the surface elsewhere — but a bookmarked URL can outlive any of
-// those, so check rather than mounting a component that shouldn't render.
 const available = computed(
   () => !!surface.value && isPluginEnabled(surface.value.pluginId) && placementOf(surface.value) === 'tab'
 )

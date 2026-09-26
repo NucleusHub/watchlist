@@ -18,11 +18,9 @@ const { collections, loading, create, update, remove, reload } = useCollections(
 
 const sidebarOpen = ref(false)
 
-// Create / rename share one modal (null initial ⇒ create).
 const showForm = ref(false)
 const editing = ref(null)
 
-// Delete confirm.
 const deleting = ref(null)
 const deletingBusy = ref(false)
 
@@ -41,7 +39,6 @@ async function submitForm(data, itemIds = []) {
     const col = await create(data)
     if (itemIds.length) {
       await addItemsToCollection(col._id, itemIds)
-      // Refresh so the new collection's count and cover mosaic populate.
       await reload()
     }
   }
@@ -97,7 +94,6 @@ async function confirmDelete() {
           {{ t('watchlist.state.loading') }}
         </div>
 
-        <!-- Empty state -->
         <div v-else-if="!collections.length" class="text-center py-16 flex flex-col items-center gap-4">
           <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-500/10 dark:from-indigo-500/25 dark:to-purple-500/10 text-indigo-600 dark:text-indigo-300 flex items-center justify-center ring-1 ring-inset ring-white/50 dark:ring-white/10">
             <Icon name="folder" class="w-8 h-8" :sw="1.5" />
@@ -115,7 +111,6 @@ async function confirmDelete() {
           </button>
         </div>
 
-        <!-- Grid -->
         <template v-else>
           <div class="flex items-end justify-between gap-3">
             <div>
