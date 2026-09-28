@@ -16,6 +16,7 @@ import { useOpenSettings } from '@/composables/useOpenSettings.js'
 import { useSlidingPill } from '@/composables/useSlidingPill.js'
 import SegmentPill from '@/components/SegmentPill.vue'
 import { useTabsHeader, useHeaderActions } from '@/composables/useTabsHeader.js'
+import { onItemChange } from '@/composables/useItemEvents.js'
 import { Icon } from '@core/icons'
 import VideoCameraIcon from '@/assets/icons/video-camera.svg?component'
 import ClockAltIcon from '@/assets/icons/clock-alt.svg?component'
@@ -232,6 +233,7 @@ function openManage(item) {
 function handleDeleted(id) {
   items.value = items.value.filter((i) => i._id !== id)
 }
+onItemChange((e) => (e.type === 'deleted' ? handleDeleted(e.id) : handleUpdated(e.item)))
 
 function requestRefresh() {
   if (items.value.length === 0) return

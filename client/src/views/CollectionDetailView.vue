@@ -7,6 +7,7 @@ import FavoriteHeart from '@core/FavoriteHeart.vue'
 import { Icon } from '@core/icons'
 import { useI18n } from '@core/useI18n.js'
 import { useCollections } from '@/composables/useCollections.js'
+import { onItemChange } from '@/composables/useItemEvents.js'
 import { useSlidingPill } from '@/composables/useSlidingPill.js'
 import { getItems, updateItem, saveCollectionOrder } from '@/api/watchlist.js'
 import ArchiveBoxIcon from '@/assets/icons/archive-box.svg?component'
@@ -188,6 +189,7 @@ function reconcile(updated) {
 function handleDeleted(id) {
   items.value = items.value.filter((i) => i._id !== id)
 }
+onItemChange((e) => (e.type === 'deleted' ? handleDeleted(e.id) : reconcile(e.item)))
 
 function openEdit(item) {
   editingItem.value = item

@@ -3,7 +3,13 @@ import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { Icon } from '@core/icons'
 import { useI18n } from '@core/useI18n.js'
-import { getItems } from '@/api/watchlist.js'
+import TemplateModal from '@core/TemplateModal.vue'
+import TrashIcon from '@core/TrashIcon.vue'
+import { getItems, updateItem, deleteItem } from '@/api/watchlist.js'
+import { useOpenSettings } from '@/composables/useOpenSettings.js'
+import { emitItemChange } from '@/composables/useItemEvents.js'
+import { resolveTarget, buildOpenUrl } from '@/utils/openTarget.js'
+import { haptic } from '@/native.js'
 import { useCollections } from '@/composables/useCollections.js'
 import { runHeaderAction } from '@/composables/useTabsHeader.js'
 import { useSlidingPill } from '@/composables/useSlidingPill.js'
@@ -19,7 +25,8 @@ const emit = defineEmits(['update:modelValue', 'add'])
 
 const { t } = useI18n()
 const router = useRouter()
-const { collections } = useCollections()
+const { collections, applyMembership } = useCollections()
+const { defaults } = useOpenSettings()
 
 const input = ref(null)
 const open = ref(false)
@@ -99,9 +106,53 @@ function clear() {
   input.value?.focus()
 }
 
-function pickItem(item) {
+function editItem(item) {
   close()
   runHeaderAction('edit', router, item)
+}
+
+function openItem(item) {
+  const url = buildOpenUrl(resolveTarget(item, defaults), item)
+  if (url) window.open(url, '_blank', 'noopener,noreferrer')
+  else editItem(item)
+}
+
+function replaceItem(updated) {
+  items.value = items.value.map((i) => (i._id === updated._id ? updated : i))
+  emitItemChange({ type: 'updated', item: updated })
+}
+
+const busy = ref(null)
+async function completeItem(item) {
+  if (busy.value) return
+  haptic('Light')
+  busy.value = item._id
+  try {
+    const patch = { status: 'completed' }
+    if (item.type === 'show' && item.seasonProgress?.length) {
+      patch.seasonProgress = item.seasonProgress.map((s) => ({ ...s, watched: s.episodeCount }))
+    }
+    replaceItem(await updateItem(item._id, patch))
+  } finally {
+    busy.value = null
+  }
+}
+
+const deleting = ref(null)
+const deletingBusy = ref(false)
+async function confirmDelete() {
+  const item = deleting.value
+  if (!item) return
+  deletingBusy.value = true
+  try {
+    await deleteItem(item._id)
+    applyMembership(item.collectionIds || [], [])
+    items.value = items.value.filter((i) => i._id !== item._id)
+    emitItemChange({ type: 'deleted', id: item._id })
+    deleting.value = null
+  } finally {
+    deletingBusy.value = false
+  }
 }
 
 function pickCollection(col) {
@@ -114,7 +165,7 @@ watch(open, (v) => {
 })
 
 function onKey(e) {
-  if (e.key === 'Escape' && open.value) close()
+  if (e.key === 'Escape' && open.value && !deleting.value) close()
 }
 
 onMounted(() => window.addEventListener('keydown', onKey))
@@ -159,7 +210,7 @@ onBeforeUnmount(() => {
 
             <section v-if="titleResults.length">
               <h3 class="ss-heading">{{ t('watchlist.search.titles') }}</h3>
-              <button v-for="i in titleResults" :key="i._id" type="button" class="ss-row" @click="pickItem(i)">
+              <div v-for="i in titleResults" :key="i._id" role="button" tabindex="0" class="ss-row" @click="openItem(i)" @keydown.enter="openItem(i)">
                 <span class="w-10 h-14 shrink-0 rounded-md overflow-hidden bg-slate-500/15">
                   <img v-if="i.posterUrl" :src="i.posterUrl" alt="" loading="lazy" class="w-full h-full object-cover" />
                 </span>
@@ -170,7 +221,25 @@ onBeforeUnmount(() => {
                     <span class="truncate">{{ meta(i) }}</span>
                   </span>
                 </span>
-              </button>
+                <span class="flex items-center gap-1 shrink-0">
+                  <button
+                    v-if="i.status !== 'completed'"
+                    type="button"
+                    :title="t('watchlist.card.markWatched')"
+                    :disabled="busy === i._id"
+                    class="ss-act nuc-press"
+                    @click.stop="completeItem(i)"
+                  >
+                    <Icon name="check" class="w-4 h-4" :sw="2.5" />
+                  </button>
+                  <button type="button" :title="t('watchlist.card.edit')" class="ss-act nuc-press" @click.stop="editItem(i)">
+                    <Icon name="edit" class="w-4 h-4" />
+                  </button>
+                  <button type="button" :title="t('watchlist.card.delete')" class="ss-act ss-act-danger nuc-trash nuc-press" @click.stop="deleting = i">
+                    <TrashIcon class="w-4 h-4" stroke-width="2" />
+                  </button>
+                </span>
+              </div>
             </section>
           </template>
         </div>
@@ -207,6 +276,16 @@ onBeforeUnmount(() => {
         </div>
       </div>
     </Transition>
+
+    <TemplateModal
+      :show="!!deleting"
+      :title="t('watchlist.card.removeTitle')"
+      :message="t('watchlist.card.removeMessage', { title: deleting?.title })"
+      :confirm-label="t('watchlist.card.remove')"
+      :busy="deletingBusy"
+      @confirm="confirmDelete"
+      @cancel="deleting = null"
+    />
 
     <div class="ss-bar">
       <form
@@ -406,6 +485,26 @@ onBeforeUnmount(() => {
   .ss-row:hover { background: rgba(15, 23, 42, 0.05); }
   .dark .ss-row:hover { background: rgba(255, 255, 255, 0.06); }
 }
+
+.ss-act {
+  width: 32px;
+  height: 32px;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgb(100 116 139);
+  background: rgba(15, 23, 42, 0.06);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.dark .ss-act {
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.08);
+}
+.ss-act:disabled { opacity: 0.5; cursor: wait; }
+.ss-act-danger:hover,
+.ss-act-danger:active { color: #ef4444; }
 
 .ss-filters {
   flex: 0 0 auto;
