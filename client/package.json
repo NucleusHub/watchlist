@@ -5,12 +5,16 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build"
+    "build": "vite build",
+    "build:ios": "vite build --mode native --outDir dist-native && cap sync ios",
+    "dev:ios": "node scripts/dev-ios.mjs"
   },
   "dependencies": {
     "@capacitor/cli": "^8.5.2",
     "@capacitor/core": "^8.5.2",
+    "@capacitor/haptics": "^8.0.2",
     "@capacitor/ios": "^8.5.2",
+    "@capacitor/keyboard": "^8.0.5",
     "@tailwindcss/vite": "^4.3.0",
     "@zaosoula/liquid-glass-vue": "^1.1.2",
     "axios": "^1.7.0",

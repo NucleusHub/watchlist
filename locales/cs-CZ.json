@@ -241,5 +241,10 @@
   "watchlist.stats.rated": "{count} hodnoceno",
   "watchlist.stats.tmdbAvg": "průměr TMDb",
   "watchlist.stats.availableOn": "Dostupné na",
-  "watchlist.stats.topYears": "Nejčastější roky vydání"
+  "watchlist.stats.topYears": "Nejčastější roky vydání",
+
+  "watchlist.search.cancel": "Zrušit",
+  "watchlist.search.hint": "Hledej ve svých titulech a kolekcích",
+  "watchlist.search.titles": "Tituly",
+  "watchlist.search.empty": "Nic nenalezeno"
 }

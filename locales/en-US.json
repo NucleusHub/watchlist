@@ -241,5 +241,10 @@
   "watchlist.stats.rated": "{count} rated",
   "watchlist.stats.tmdbAvg": "TMDb avg",
   "watchlist.stats.availableOn": "Available on",
-  "watchlist.stats.topYears": "Top release years"
+  "watchlist.stats.topYears": "Top release years",
+
+  "watchlist.search.cancel": "Cancel",
+  "watchlist.search.hint": "Search your titles and collections",
+  "watchlist.search.titles": "Titles",
+  "watchlist.search.empty": "Nothing found"
 }
