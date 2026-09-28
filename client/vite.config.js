@@ -5,9 +5,20 @@ import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import tailwindcss from '@tailwindcss/vite'
 import svgLoader from 'vite-svg-loader'
+import { readFileSync } from 'node:fs'
+
+// The version bug reports carry from the web build; the iOS app reports its own.
+function appVersion() {
+  try {
+    return JSON.parse(readFileSync(new URL('../nucleus.app.json', import.meta.url), 'utf8')).version
+  } catch {
+    return process.env.npm_package_version || ''
+  }
+}
 
 export default defineConfig(({ mode }) => ({
   base: mode === 'native' ? '/' : '/watchlist/',
+  define: { __APP_VERSION__: JSON.stringify(appVersion()) },
   plugins: [
     vue(),
     mode !== 'production' && vueDevTools(),

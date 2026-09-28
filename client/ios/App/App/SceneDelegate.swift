@@ -7,7 +7,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         guard let windowScene = scene as? UIWindowScene else { return }
 
-        window = UIWindow(windowScene: windowScene)
+        window = ShakeWindow(windowScene: windowScene)
         window?.rootViewController = CAPBridgeViewController()
         window?.makeKeyAndVisible()
 
@@ -20,5 +20,16 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     func scene(_ scene: UIScene, continue userActivity: NSUserActivity) {
         SceneDelegateProxy.shared.scene(scene, continue: userActivity)
+    }
+}
+
+// Shake to report a problem. Caught on the window because nothing past it
+// sees the shake: UIApplication keeps it for shake-to-undo. The web app
+// listens for "nativeshake" (src/composables/useReportSheet.js); no permission
+// is needed, unlike DeviceMotionEvent in the web view.
+class ShakeWindow: UIWindow {
+    override func motionEnded(_ motion: UIEvent.EventSubtype, with event: UIEvent?) {
+        guard motion == .motionShake else { return super.motionEnded(motion, with: event) }
+        (rootViewController as? CAPBridgeViewController)?.bridge?.triggerWindowJSEvent(eventName: "nativeshake")
     }
 }
