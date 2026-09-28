@@ -20,7 +20,7 @@ import { useNucleusId, ACCOUNT_DELETE_URL, PRIVACY_URL } from '@/auth/nucleusId.
 import { useCloudSync } from '@/sync/cloudSync.js'
 import { db, revision } from '@/storage/localDb.js'
 import { exportBackup, readBackup, applyBackup } from '@/storage/backup.js'
-import logo from '@/assets/nucleus-logo-transparent.png'
+import logo from '@/assets/nucleus-mark.png'
 import tmdbLogo from '@/assets/tmdb-logo.svg'
 import { collectDiagnostics } from '@/api/report.js'
 import { useNativePlugins } from '@/plugins/runtime.js'

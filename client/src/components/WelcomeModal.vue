@@ -4,7 +4,7 @@ import { useI18n } from '@core/useI18n.js'
 import { isNative, haptic } from '@/native.js'
 import { readJson, writeJson } from '@/storage/persist.js'
 import { useNucleusId } from '@/auth/nucleusId.js'
-import logo from '@/assets/nucleus-logo-transparent.png'
+import logo from '@/assets/nucleus-mark.png'
 
 // Shown once, on the first launch of the iOS app. Keeping the watchlist on
 // the device is the default path; a Nucleus ID account is the optional extra.
