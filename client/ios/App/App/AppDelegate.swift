@@ -8,7 +8,46 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
+        hideWebFormAccessoryBar()
         return true
+    }
+
+    // Hides the bar WebKit shows above the keyboard for web inputs (prev/next
+    // arrows + checkmark). @capacitor/keyboard only swizzles WKContentView, but
+    // current WebKit makes the WKWebView itself first responder and returns a
+    // WKFormAccessoryView from its inputAccessoryView, so patch both classes.
+    private func hideWebFormAccessoryBar() {
+        func swizzle(_ className: String, _ selector: Selector, _ block: Any) {
+            guard let cls = NSClassFromString(className),
+                  let method = class_getInstanceMethod(cls, selector) else { return }
+            let imp = imp_implementationWithBlock(block)
+            if !class_addMethod(cls, selector, imp, method_getTypeEncoding(method)) {
+                method_setImplementation(method, imp)
+            }
+        }
+
+        let noAccessory: @convention(block) (AnyObject) -> Bool = { _ in false }
+        swizzle("WKContentView", NSSelectorFromString("requiresAccessoryView"), noAccessory)
+
+        let nilView: @convention(block) (AnyObject) -> UIView? = { _ in nil }
+        for name in ["WKContentView", "WKWebView"] {
+            swizzle(name, #selector(getter: UIResponder.inputAccessoryView), nilView)
+        }
+
+        for name in ["WKContentView", "WKWebView"] {
+            let selector = #selector(getter: UIResponder.inputAssistantItem)
+            guard let cls = NSClassFromString(name),
+                  let original = class_getMethodImplementation(cls, selector) else { continue }
+            typealias Getter = @convention(c) (AnyObject, Selector) -> UITextInputAssistantItem
+            let callOriginal = unsafeBitCast(original, to: Getter.self)
+            let emptyGroups: @convention(block) (AnyObject) -> UITextInputAssistantItem = { obj in
+                let item = callOriginal(obj, selector)
+                item.leadingBarButtonGroups = []
+                item.trailingBarButtonGroups = []
+                return item
+            }
+            swizzle(name, selector, emptyGroups)
+        }
     }
 
     func applicationWillResignActive(_ application: UIApplication) {
