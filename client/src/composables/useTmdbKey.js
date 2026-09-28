@@ -42,6 +42,11 @@ async function hydrate() {
   }
 }
 
+export function reloadTmdbKey() {
+  hydrated = false
+  return hydrate()
+}
+
 export function useTmdbKey() {
   hydrate()
   return { apiKey }

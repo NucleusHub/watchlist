@@ -87,6 +87,12 @@ async function hydrate() {
   }
 }
 
+export function reloadOpenSettings() {
+  hydrated = false
+  touched = false
+  return hydrate()
+}
+
 export function useOpenSettings() {
   hydrate()
   return {

@@ -28,7 +28,9 @@ export function useNativeUrls(instance) {
 export function installNativeNetworking() {
   if (!isNative) return
   if (!API_ORIGIN) {
-    console.error('[native] VITE_API_ORIGIN is not set — API calls will fail. Create client/.env.native.')
+    // The watchlist itself lives on the device; the home server only adds
+    // plugins and translations.
+    console.info('[native] VITE_API_ORIGIN is not set — running without a Nucleus home server.')
     return
   }
   const origFetch = window.fetch.bind(window)

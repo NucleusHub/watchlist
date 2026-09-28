@@ -23,6 +23,8 @@ async function hydrate(force = false) {
   }
 }
 
+export const reloadCollections = () => hydrate(true)
+
 function upsert(col) {
   const i = collections.value.findIndex((c) => c._id === col._id)
   if (i === -1) collections.value.push(col)
