@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import confetti from 'canvas-confetti'
 import { updateItem, deleteItem } from '@/api/watchlist.js'
 import { logoUrl } from '@/api/tmdb.js'
@@ -7,6 +7,9 @@ import { showTotals, watchedFraction, remainingMinutes } from '@/utils/progress.
 import TemplateModal from '@core/TemplateModal.vue'
 import TrashIcon from '@core/TrashIcon.vue'
 import ContextMenu from '@core/ContextMenu.vue'
+import { useLongPress } from '@/composables/useLongPress.js'
+import { useSwipeActions } from '@/composables/useSwipeActions.js'
+import { haptic } from '@/native.js'
 import SeasonProgressModal from '@/components/SeasonProgressModal.vue'
 import RatingControl from '@/components/RatingControl.vue'
 import FavoriteHeart from '@core/FavoriteHeart.vue'
@@ -16,7 +19,6 @@ import { useOpenSettings } from '@/composables/useOpenSettings.js'
 import { useCollections } from '@/composables/useCollections.js'
 import { resolveTarget, buildOpenUrl } from '@/utils/openTarget.js'
 import { watchlistIndicators } from '@/utils/pluginIndicators.js'
-import { genrePillClass } from '@/utils/genres.js'
 import { Icon, ICONS } from '@core/icons'
 import ArchiveBoxIcon from '@/assets/icons/archive-box.svg?component'
 import ClockIcon from '@/assets/icons/clock.svg?component'
@@ -43,15 +45,12 @@ const isCompact = computed(() => props.gridStyle === 'list' || props.gridStyle =
 const emit = defineEmits(['updated', 'deleted', 'edit', 'manage-collections'])
 
 const STATUS_COLORS = {
-  planned:   'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300',
-  watching:  'bg-blue-100  dark:bg-blue-900  text-blue-700  dark:text-blue-300',
-  completed: 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300',
+  planned:   'bg-[#eb6834] dark:bg-[#d95926]',
+  watching:  'bg-[#2a78d6] dark:bg-[#3987e5]',
+  completed: 'bg-[#1baf7a] dark:bg-[#199e70]',
 }
 
-const TYPE_COLORS = {
-  movie: 'bg-purple-900 text-purple-300',
-  show: 'bg-amber-900 text-amber-300',
-}
+const TAG = 'shrink-0 text-xs font-medium px-2 py-0.5 rounded-full bg-black/[0.05] dark:bg-white/[0.08] text-slate-600 dark:text-white/70'
 
 const CARD_GENRES = 2
 const cardGenres = computed(() => (props.item.genres ?? []).slice(0, CARD_GENRES))
@@ -114,6 +113,7 @@ const meta = computed(() => {
 })
 
 async function toggleFavorite() {
+  haptic('Light')
   const updated = await updateItem(props.item._id, { favorite: !props.item.favorite })
   emit('updated', updated)
 }
@@ -127,6 +127,7 @@ async function cycleStatus() {
 
 async function markWatched() {
   if (marking.value) return
+  haptic('Light')
   marking.value = true
   try {
     const patch = { status: 'completed' }
@@ -177,6 +178,9 @@ const menuItems = computed(() => {
     { label: t('watchlist.card.edit'), icon: ICONS.pencil, action: () => emit('edit', props.item) },
     { label: t('watchlist.collections.manage'), icon: ICONS.folder, action: () => emit('manage-collections', props.item) },
   ]
+  if (isShow.value) {
+    items.push({ label: t('watchlist.card.trackEpisodes'), icon: ICONS.menu, action: () => (showProgress.value = true) })
+  }
   if (props.collectionId) {
     items.push({ label: t('watchlist.collections.removeFromThis'), icon: ICONS.minus, action: removeFromCollection })
   }
@@ -185,21 +189,69 @@ const menuItems = computed(() => {
     { divider: true },
     { label: t('watchlist.card.delete'), iconTrash: true, danger: true, action: () => (showConfirm.value = true) },
   )
-  return items
+  return items.map((it) => (it.action ? { ...it, action: () => { haptic('Light'); it.action() } } : it))
 })
 function openMenu(e) {
   menu.value = { show: true, x: e.clientX, y: e.clientY }
 }
+const longPress = useLongPress(({ x, y }) => {
+  menu.value = { show: true, x, y }
+})
+const swipe = useSwipeActions({
+  enabled: computed(() => isList.value),
+  onLeft: () => toggleFavorite(),
+  onRight: () => { showConfirm.value = true },
+})
+watch(showConfirm, (v) => { if (!v && !deleting.value) swipe.reset() })
+const swipeStyle = computed(() => {
+  const x = swipe.offset.value
+  if (!x) return undefined
+  return { transform: `translateX(${x}px)`, opacity: swipe.leaving.value ? 0 : 1 }
+})
+
+function openMenuFrom(e) {
+  const r = e.currentTarget.getBoundingClientRect()
+  menu.value = { show: true, x: r.right, y: r.bottom + 6 }
+}
 </script>
 
 <template>
-  <div ref="cardRef" @contextmenu.prevent="openMenu" :class="['group h-full rounded-xl overflow-hidden flex transition-all duration-200 ease-out hover:-translate-y-0.5 backdrop-blur-sm shadow-sm', isList ? 'flex-row' : 'flex-col', item.status === 'completed' ? 'bg-green-50/80 dark:bg-green-900/20 ring-1 ring-inset ring-green-500/50 dark:ring-green-500/25 shadow-green-500/10' : item.status === 'watching' ? 'bg-blue-50/80 dark:bg-blue-900/20 ring-1 ring-inset ring-blue-500/50 dark:ring-blue-500/25 shadow-blue-500/10' : 'bg-white/70 dark:bg-slate-800/70 border border-white/60 dark:border-white/8 hover:bg-white/85 dark:hover:bg-slate-800/85 hover:shadow-md']">
+  <div
+    :class="['relative h-full', { 'z-10': menu.show }]"
+    :data-no-swipe="isList ? '' : undefined"
+    v-on="swipe.handlers"
+    @click.capture="swipe.onClickCapture"
+  >
+  <template v-if="isList && swipe.offset.value">
     <div
-      :class="['relative shrink-0 overflow-hidden bg-slate-100 dark:bg-slate-700/60', isList ? 'w-14 self-stretch' : 'w-full aspect-[2/3]', openUrl ? 'cursor-pointer group/poster' : '']"
+      v-if="swipe.offset.value > 0"
+      :class="['swipe-bg swipe-del', { 'is-armed': swipe.rightArmed.value }]"
+      :style="{ width: `${swipe.offset.value + 24}px` }"
+    >
+      <TrashIcon class="swipe-icon w-6 h-6" stroke-width="2" />
+    </div>
+    <div
+      v-else
+      :class="['swipe-bg swipe-fav', { 'is-armed': swipe.leftArmed.value }]"
+      :style="{ width: `${-swipe.offset.value + 24}px` }"
+    >
+      <FavoriteHeart :active="swipe.leftArmed.value ? !item.favorite : !!item.favorite" class="swipe-icon w-6 h-6" />
+    </div>
+  </template>
+  <div
+    ref="cardRef"
+    v-on="longPress.handlers"
+    @click.capture="longPress.onClickCapture"
+    @contextmenu.prevent="openMenu"
+    :style="swipeStyle"
+    :class="['item-card lg-glass group h-full rounded-2xl overflow-hidden flex', isList ? 'flex-row' : 'flex-col', swipe.dragging.value ? 'is-dragging' : '', { 'is-pressing': longPress.pressing.value, 'is-lifted': menu.show }]"
+  >
+    <div
+      :class="['relative shrink-0 overflow-hidden bg-black/[0.05] dark:bg-white/[0.05]', isList ? 'w-[52px] h-[78px] self-center ml-2 my-2 rounded-lg' : 'w-full aspect-[2/3]', openUrl ? 'cursor-pointer group/poster' : '']"
       @click="openPoster"
       :title="openUrl ? t('watchlist.card.openExternal') : undefined"
     >
-      <img v-if="item.posterUrl" :src="item.posterUrl" :alt="item.title" class="w-full h-full object-cover" />
+      <img v-if="item.posterUrl" :src="item.posterUrl" :alt="item.title" draggable="false" class="w-full h-full object-cover" />
       <div v-else class="w-full h-full flex items-center justify-center">
         <ArchiveBoxIcon class="w-8 h-8 text-slate-300 dark:text-slate-600" />
       </div>
@@ -221,12 +273,13 @@ function openMenu(e) {
         <Icon name="externalLink" class="w-5 h-5 text-white opacity-0 group-hover/poster:opacity-100 transition-opacity drop-shadow" />
       </div>
 
+      <template v-if="!isList">
       <button
         v-if="item.status === 'planned'"
         @click.stop="markWatched"
         :disabled="marking"
         :title="t('watchlist.card.markWatched')"
-        class="cursor-pointer watched-btn absolute top-2 left-2 w-7 h-7 rounded-full border-2 border-white/60 bg-black/40 backdrop-blur-sm flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-200 hover:border-white hover:bg-black/60 hover:scale-110 disabled:cursor-wait"
+        class="cursor-pointer watched-btn absolute top-2 left-2 w-7 h-7 rounded-full border-2 border-white/60 bg-black/30 backdrop-blur-md shadow-[inset_0_1px_0_rgba(255,255,255,0.25)] flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-200 hover:border-white hover:bg-black/50 hover:scale-110 disabled:cursor-wait"
       >
         <Icon name="checkBold" class="w-3.5 h-3.5 text-white/80" :sw="3" />
       </button>
@@ -253,10 +306,11 @@ function openMenu(e) {
         v-if="isShow"
         @click.stop="showProgress = true"
         :title="t('watchlist.card.trackEpisodes')"
-        class="cursor-pointer watched-btn absolute top-10 left-2 w-7 h-7 rounded-full border-2 border-white/60 bg-black/40 backdrop-blur-sm flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 hover:border-white hover:bg-black/60 hover:scale-110"
+        class="cursor-pointer watched-btn absolute top-10 left-2 w-7 h-7 rounded-full border-2 border-white/60 bg-black/30 backdrop-blur-md shadow-[inset_0_1px_0_rgba(255,255,255,0.25)] flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 hover:border-white hover:bg-black/50 hover:scale-110"
       >
         <ListBulletIcon class="w-3.5 h-3.5 text-white/80" />
       </button>
+      </template>
 
       <a
         v-if="item.streamingLogo"
@@ -271,9 +325,10 @@ function openMenu(e) {
       </a>
 
       <button
+        v-if="!isList"
         @click.stop="toggleFavorite"
         :title="item.favorite ? t('watchlist.card.unfavorite') : t('watchlist.card.favorite')"
-        class="nuc-fav nuc-press cursor-pointer absolute top-2 right-2 w-7 h-7 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-200 hover:bg-black/60 hover:scale-110"
+        class="nuc-fav nuc-press cursor-pointer absolute top-2 right-2 w-7 h-7 rounded-full bg-black/30 backdrop-blur-md shadow-[inset_0_1px_0_rgba(255,255,255,0.25)] flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-200 hover:bg-black/50 hover:scale-110"
         :class="{ '!opacity-100': item.favorite }"
       >
         <FavoriteHeart :active="item.favorite" class="w-4 h-4 text-white/80" />
@@ -284,20 +339,20 @@ function openMenu(e) {
         type="button"
         @click.stop="showDetail = true"
         :title="t('watchlist.card.details')"
-        class="sm:hidden nuc-press cursor-pointer absolute bottom-1.5 right-1.5 w-7 h-7 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-white/80 transition-all duration-200 hover:bg-black/60 hover:scale-110"
+        class="sm:hidden nuc-press cursor-pointer absolute bottom-1.5 right-1.5 w-7 h-7 rounded-full bg-black/30 backdrop-blur-md shadow-[inset_0_1px_0_rgba(255,255,255,0.25)] flex items-center justify-center text-white/80 transition-all duration-200 hover:bg-black/50 hover:scale-110"
       >
         <InfoCircleIcon class="w-4 h-4" />
       </button>
     </div>
 
-    <div :class="['flex-1 flex flex-col min-w-0', isList ? 'p-2 gap-0.5' : isCompact ? 'p-3 gap-1' : 'p-4 gap-1.5']">
+    <div :class="['flex-1 flex flex-col min-w-0', isList ? 'py-2.5 pl-3 pr-1 gap-0.5' : isCompact ? 'p-3 gap-1' : 'p-4 gap-1.5']">
       <div class="flex items-start justify-between gap-1.5">
         <h3
           :class="['font-semibold text-slate-900 dark:text-white text-sm leading-tight', !isList ? 'line-clamp-2 sm:line-clamp-none' : '', openUrl ? 'cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors' : '']"
           :title="openUrl ? t('watchlist.card.openExternal') : undefined"
           @click="openPoster"
         >{{ item.title }}</h3>
-        <div :class="['gap-0.5 shrink-0', isList ? 'flex' : 'hidden sm:flex']">
+        <div v-if="!isList" class="hidden sm:flex gap-0.5 shrink-0">
           <button
             @click="$emit('edit', item)"
             class="nuc-press cursor-pointer text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors p-1 rounded"
@@ -340,7 +395,7 @@ function openMenu(e) {
               <span class="min-w-0 truncate text-slate-500 dark:text-slate-400">{{ t('watchlist.card.episodeProgress', { watched: item.status === 'completed' ? totals.totalEp : totals.watchedEp, total: totals.totalEp }) }}</span>
               <span v-if="remainingLabel" class="shrink-0 text-slate-400 dark:text-slate-500">{{ remainingLabel }}</span>
             </div>
-            <div class="h-1.5 bg-slate-200/80 dark:bg-slate-700/80 rounded-full overflow-hidden">
+            <div class="h-1 bg-black/[0.07] dark:bg-white/10 rounded-full overflow-hidden">
               <div
                 class="h-full rounded-full transition-all duration-300"
                 :class="item.status === 'completed' ? 'bg-green-500' : 'bg-indigo-500 group-hover/prog:bg-indigo-400'"
@@ -359,21 +414,22 @@ function openMenu(e) {
         </template>
 
         <div :class="['items-center gap-1.5 flex-wrap', isList ? 'flex' : 'hidden sm:flex']">
-          <span :class="['shrink-0 text-xs font-medium px-2 py-0.5 rounded-full', TYPE_COLORS[item.type]]">
+          <span :class="TAG">
             {{ item.type === 'movie' ? t('watchlist.type.movie') : t('watchlist.type.show') }}
           </span>
           <button
             @click="cycleStatus"
-            :class="['shrink-0 cursor-pointer text-xs font-medium px-2 py-0.5 rounded-full transition-opacity hover:opacity-80', STATUS_COLORS[item.status]]"
+            :class="[TAG, 'cursor-pointer inline-flex items-center gap-1.5 transition-opacity hover:opacity-80']"
             :title="t('watchlist.card.cycleStatus')"
           >
+            <span :class="['w-1.5 h-1.5 rounded-full', STATUS_COLORS[item.status]]" />
             {{ t('watchlist.status.' + item.status) }}
           </button>
           <template v-if="gridStyle !== 'small'">
             <span
               v-for="g in cardGenres"
               :key="g"
-              :class="['shrink-0 text-xs font-medium px-2 py-0.5 rounded-full', genrePillClass(g)]"
+              :class="TAG"
             >
               {{ g }}
             </span>
@@ -394,6 +450,40 @@ function openMenu(e) {
         </div>
       </div>
     </div>
+
+    <div v-if="isList" class="shrink-0 flex flex-col items-center justify-center gap-1 pr-2 py-2">
+      <button
+        v-if="item.status !== 'completed'"
+        @click.stop="markWatched"
+        :disabled="marking"
+        :title="t('watchlist.card.markWatched')"
+        :class="['list-act nuc-press cursor-pointer disabled:cursor-wait', item.status === 'watching' ? 'bg-blue-500 text-white hover:bg-green-500 group/clock' : 'list-act-idle']"
+      >
+        <template v-if="item.status === 'watching'">
+          <ClockIcon class="w-3.5 h-3.5 group-hover/clock:hidden" />
+          <Icon name="checkBold" class="w-3.5 h-3.5 hidden group-hover/clock:block" :sw="3" />
+        </template>
+        <Icon v-else name="checkBold" class="w-3.5 h-3.5" :sw="3" />
+      </button>
+      <span v-else class="list-act bg-green-500 text-white">
+        <Icon name="checkBold" class="w-3.5 h-3.5" :sw="3" />
+      </span>
+      <button
+        @click.stop="toggleFavorite"
+        :title="item.favorite ? t('watchlist.card.unfavorite') : t('watchlist.card.favorite')"
+        class="list-act list-act-idle nuc-fav nuc-press cursor-pointer"
+      >
+        <FavoriteHeart :active="item.favorite" class="w-4 h-4" />
+      </button>
+      <button
+        @click.stop="openMenuFrom"
+        :title="t('watchlist.header.menu')"
+        class="list-act list-act-idle nuc-press cursor-pointer"
+      >
+        <Icon name="kebab" class="w-4 h-4" />
+      </button>
+    </div>
+  </div>
   </div>
 
   <TemplateModal
@@ -464,21 +554,22 @@ function openMenu(e) {
             <span
               v-for="g in item.genres"
               :key="g"
-              :class="['text-xs font-medium px-2 py-0.5 rounded-full', genrePillClass(g)]"
+              :class="TAG"
             >
               {{ g }}
             </span>
           </div>
 
           <div class="flex items-center gap-1.5 flex-wrap">
-            <span :class="['text-xs font-medium px-2 py-0.5 rounded-full', TYPE_COLORS[item.type]]">
+            <span :class="TAG">
               {{ item.type === 'movie' ? t('watchlist.type.movie') : t('watchlist.type.show') }}
             </span>
             <button
               @click="cycleStatus"
-              :class="['cursor-pointer text-xs font-medium px-2 py-0.5 rounded-full transition-opacity hover:opacity-80', STATUS_COLORS[item.status]]"
+              :class="[TAG, 'cursor-pointer inline-flex items-center gap-1.5 transition-opacity hover:opacity-80']"
               :title="t('watchlist.card.cycleStatus')"
             >
+              <span :class="['w-1.5 h-1.5 rounded-full', STATUS_COLORS[item.status]]" />
               {{ t('watchlist.status.' + item.status) }}
             </button>
             <span v-if="item.tmdbRating" class="inline-flex items-center gap-0.5 text-xs text-amber-400">
@@ -568,4 +659,88 @@ function openMenu(e) {
 .watched-btn:active {
   transform: scale(0.9);
 }
+
+.item-card {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.item-card {
+  transition: transform 0.35s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.22s ease, box-shadow 0.3s ease;
+}
+.item-card.is-dragging { transition: none; }
+@media (hover: hover) {
+  .item-card:hover { transform: translateY(-2px); }
+}
+.item-card.is-pressing {
+  transform: scale(0.96);
+  transition: transform 0.3s cubic-bezier(0.3, 0.6, 0.3, 1);
+}
+.item-card.is-lifted {
+  animation: card-lift 0.4s cubic-bezier(0.2, 0.9, 0.3, 1.2) forwards;
+  box-shadow: 0 26px 50px -14px rgba(15, 23, 42, 0.45), 0 0 0 1px rgba(99, 102, 241, 0.25);
+}
+.dark .item-card.is-lifted {
+  box-shadow: 0 26px 56px -14px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(167, 139, 250, 0.3);
+}
+@keyframes card-lift {
+  0% { transform: scale(0.96); }
+  55% { transform: scale(1.045); }
+  100% { transform: scale(1.02); }
+}
+
+.swipe-bg {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  border-radius: 1rem;
+  color: #fff;
+  transition: background-color 0.2s ease;
+}
+.swipe-del {
+  left: 0;
+  justify-content: flex-start;
+  padding-left: 22px;
+  background: rgba(239, 68, 68, 0.55);
+}
+.swipe-del.is-armed { background: #ef4444; }
+.swipe-fav {
+  right: 0;
+  justify-content: flex-end;
+  padding-right: 22px;
+  background: rgba(236, 72, 153, 0.5);
+}
+.swipe-fav.is-armed { background: #ec4899; }
+.swipe-icon {
+  transition: transform 0.25s cubic-bezier(0.2, 0.9, 0.3, 1.4);
+}
+.is-armed .swipe-icon { transform: scale(1.3); }
+
+@media (prefers-reduced-motion: reduce) {
+  .item-card.is-lifted { animation: none; }
+}
+
+.list-act {
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.list-act-idle {
+  color: rgb(100 116 139);
+  background: rgba(15, 23, 42, 0.06);
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.06);
+}
+.dark .list-act-idle {
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+.list-act-idle:hover { color: rgb(15 23 42); }
+.dark .list-act-idle:hover { color: #fff; }
 </style>
