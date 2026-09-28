@@ -197,14 +197,17 @@ function openMenu(e) {
 const longPress = useLongPress(({ x, y }) => {
   menu.value = { show: true, x, y }
 })
+const isCompleted = computed(() => props.item.status === 'completed')
 const swipe = useSwipeActions({
   enabled: computed(() => isList.value),
   shortDir: 1,
-  canShort: computed(() => props.item.status !== 'completed'),
-  onShort: () => markWatched(),
+  // Nothing left to complete on a completed item, so its swipe favorites it instead.
+  onShort: () => (isCompleted.value ? toggleFavorite() : markWatched()),
   onFull: () => { showConfirm.value = true },
 })
 watch(showConfirm, (v) => { if (!v && !deleting.value) swipe.reset() })
+// Whether the swipe will favorite (fills when armed) or unfavorite (empties).
+const swipeHeartFilled = computed(() => props.item.favorite !== swipe.shortArmed.value)
 const swipeStyle = computed(() => {
   const x = swipe.offset.value
   if (!x) return undefined
@@ -227,10 +230,13 @@ function openMenuFrom(e) {
   <template v-if="isList && swipe.offset.value">
     <div
       v-if="swipe.offset.value > 0"
-      :class="['swipe-bg swipe-done', { 'is-armed': swipe.shortArmed.value }]"
+      :class="['swipe-bg', isCompleted ? 'swipe-fav' : 'swipe-done', { 'is-armed': swipe.shortArmed.value }]"
       :style="{ width: `${swipe.offset.value + 24}px` }"
     >
-      <Icon name="checkBold" class="swipe-icon w-6 h-6" :sw="3" />
+      <svg v-if="isCompleted" viewBox="0 0 24 24" class="swipe-icon w-6 h-6" stroke="currentColor" stroke-width="2" stroke-linejoin="round" :fill="swipeHeartFilled ? 'currentColor' : 'none'">
+        <path d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+      </svg>
+      <Icon v-else name="checkBold" class="swipe-icon w-6 h-6" :sw="3" />
     </div>
     <div
       v-else
@@ -715,6 +721,13 @@ function openMenuFrom(e) {
   background: rgba(27, 175, 122, 0.5);
 }
 .swipe-done.is-armed { background: #1baf7a; }
+.swipe-fav {
+  left: 0;
+  justify-content: flex-start;
+  padding-left: 22px;
+  background: rgba(244, 63, 94, 0.5);
+}
+.swipe-fav.is-armed { background: #f43f5e; }
 .swipe-icon {
   transition: transform 0.25s cubic-bezier(0.2, 0.9, 0.3, 1.4);
 }
