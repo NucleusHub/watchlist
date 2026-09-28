@@ -47,9 +47,15 @@ export function lockNativeZoom() {
   if (meta) meta.content = 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover'
 }
 
-function revealFocusedInModal() {
+function revealFocused() {
   const el = document.activeElement
-  if (el?.closest?.('.tm-panel')) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+  if (!el?.matches?.('input, textarea, select')) return
+  if (el.closest('.tm-panel')) return el.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+  if (el.closest('.ss-bar')) return
+  const kb = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--kb')) || 0
+  const limit = window.innerHeight - kb - 24
+  const { bottom } = el.getBoundingClientRect()
+  if (bottom > limit) window.scrollBy({ top: bottom - limit, behavior: 'smooth' })
 }
 
 export async function setupNativeKeyboard() {
@@ -60,8 +66,9 @@ export async function setupNativeKeyboard() {
     const root = document.documentElement
     Keyboard.addListener('keyboardWillShow', ({ keyboardHeight }) => {
       root.style.setProperty('--kb', `${keyboardHeight}px`)
-      setTimeout(revealFocusedInModal, 340)
+      setTimeout(revealFocused, 60)
     })
+    document.addEventListener('focusin', () => setTimeout(revealFocused, 60))
     Keyboard.addListener('keyboardWillHide', () => root.style.setProperty('--kb', '0px'))
   } catch {}
 }
