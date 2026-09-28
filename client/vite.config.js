@@ -7,7 +7,7 @@ import tailwindcss from '@tailwindcss/vite'
 import svgLoader from 'vite-svg-loader'
 
 export default defineConfig(({ mode }) => ({
-  base: '/watchlist/',
+  base: mode === 'native' ? '/' : '/watchlist/',
   plugins: [
     vue(),
     mode !== 'production' && vueDevTools(),

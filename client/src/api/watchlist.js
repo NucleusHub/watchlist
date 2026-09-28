@@ -1,6 +1,8 @@
 import axios from 'axios'
+import { useNativeUrls, toAbsolute } from '@/native.js'
 
 const api = axios.create({ baseURL: '/api/watchlist' })
+useNativeUrls(api)
 
 export const getItems = (params = {}) => api.get('/', { params }).then((r) => r.data)
 export const createItem = (data) => api.post('/', data).then((r) => r.data)
@@ -23,5 +25,5 @@ export async function uploadImage(file) {
   const form = new FormData()
   form.append('image', file)
   const res = await axios.post('/api/upload', form)
-  return res.data.url
+  return toAbsolute(res.data.url)
 }
