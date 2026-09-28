@@ -1,42 +1,31 @@
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { watch } from 'vue'
 import LoadingBar from '@/components/LoadingBar.vue'
-import { useTmdbKey } from '@/composables/useTmdbKey.js'
+import WelcomeModal from '@/components/WelcomeModal.vue'
+import NavStack from '@/components/NavStack.vue'
+import ReportProblemSheet from '@/components/ReportProblemSheet.vue'
+import { useReportSheet } from '@/composables/useReportSheet.js'
+import { useTmdbKey, reloadTmdbKey } from '@/composables/useTmdbKey.js'
+import { reloadOpenSettings } from '@/composables/useOpenSettings.js'
+import { reloadCollections } from '@/composables/useCollections.js'
+import { revision } from '@/storage/localDb.js'
 
-const router = useRouter()
 useTmdbKey()
-const pageTransition = ref('')
-router.beforeEach((to, from) => {
-  const a = from.meta.depth
-  const b = to.meta.depth
-  pageTransition.value = a === undefined || b === undefined || a === b ? '' : b > a ? 'page-push' : 'page-pop'
+const { open: reportOpen, listenForShake } = useReportSheet()
+listenForShake()
+// A sync or an import replaced the data under the views: the pages remount
+// (NavStack keys them by revision) so they fetch again; refresh the shared
+// state that outlives pages.
+watch(revision, () => {
+  reloadCollections()
+  reloadOpenSettings()
+  reloadTmdbKey()
 })
 </script>
 
 <template>
   <LoadingBar />
-  <RouterView v-slot="{ Component, route }">
-    <Transition :name="pageTransition" mode="out-in">
-      <component :is="Component" :key="route.matched[0]?.path" />
-    </Transition>
-  </RouterView>
+  <NavStack />
+  <WelcomeModal />
+  <ReportProblemSheet :show="reportOpen" @close="reportOpen = false" />
 </template>
-
-<style>
-.page-push-enter-active,
-.page-pop-enter-active {
-  transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.32s ease;
-}
-.page-push-leave-active,
-.page-pop-leave-active {
-  transition: transform 0.14s ease-in, opacity 0.14s ease-in;
-}
-.page-push-enter-from { transform: translateX(28%); opacity: 0; }
-.page-push-leave-to { transform: translateX(-8%); opacity: 0; }
-.page-pop-enter-from { transform: translateX(-8%); opacity: 0; }
-.page-pop-leave-to { transform: translateX(28%); opacity: 0; }
-@media (prefers-reduced-motion: reduce) {
-  .page-push-enter-from, .page-push-leave-to, .page-pop-enter-from, .page-pop-leave-to { transform: none; }
-}
-</style>

@@ -88,3 +88,14 @@ export async function haptic(style = 'Medium') {
     await Haptics.impact({ style: ImpactStyle[style] })
   } catch {}
 }
+
+/** A web page in an in-app Safari sheet on device, a new tab in the browser. */
+export async function openExternal(url) {
+  if (!isNative) return window.open(url, '_blank', 'noopener')
+  try {
+    const { Browser } = await import('@capacitor/browser')
+    await Browser.open({ url, presentationStyle: 'popover' })
+  } catch {
+    window.open(url, '_blank')
+  }
+}
