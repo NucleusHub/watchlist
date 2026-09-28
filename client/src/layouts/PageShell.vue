@@ -16,27 +16,11 @@ function back() {
   if (window.history.state?.back) router.back()
   else router.push(props.fallback)
 }
-
-let edge = null
-function onTouchStart(e) {
-  const p = e.touches[0]
-  edge = e.touches.length === 1 && p.clientX < 28 ? { x: p.clientX, y: p.clientY } : null
-}
-function onTouchEnd(e) {
-  if (!edge) return
-  const p = e.changedTouches[0]
-  const dx = p.clientX - edge.x
-  const dy = Math.abs(p.clientY - edge.y)
-  edge = null
-  if (dx > 70 && dx > dy * 1.5) back()
-}
 </script>
 
 <template>
   <div
     class="relative min-h-screen bg-slate-100 dark:bg-[#0d0d1a] text-slate-900 dark:text-white overflow-x-hidden"
-    @touchstart.passive="onTouchStart"
-    @touchend.passive="onTouchEnd"
   >
     <BackgroundBlobs />
     <div :class="['relative z-10 mx-auto px-4', wide ? 'max-w-4xl' : 'max-w-2xl']" class="pt-[max(12px,env(safe-area-inset-top))] pb-[max(24px,env(safe-area-inset-bottom))]">

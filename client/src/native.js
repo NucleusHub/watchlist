@@ -57,6 +57,12 @@ function revealFocused() {
   const kb = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--kb')) || 0
   const limit = window.innerHeight - kb - 24
   const { bottom } = el.getBoundingClientRect()
+  // A page sheet scrolls itself; the page behind it must stay put.
+  const sheetBody = el.closest('.ps-body')
+  if (sheetBody) {
+    if (bottom > limit) sheetBody.scrollBy({ top: bottom - limit, behavior: 'smooth' })
+    return
+  }
   if (bottom > limit) window.scrollBy({ top: bottom - limit, behavior: 'smooth' })
 }
 
