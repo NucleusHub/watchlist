@@ -8,10 +8,6 @@ import { Icon, Spinner } from '@core/icons'
 import { useI18n } from '@core/useI18n.js'
 import { uploadImage, getItems } from '@/api/watchlist.js'
 
-// Create or rename a collection. `initial` null → create; an object → edit.
-// Collects name, description, a cover (auto / uploaded image / chosen member
-// titles) and — when creating — the members to add up front. Cover titles are
-// always drawn from the collection's own members.
 const { t } = useI18n()
 
 const props = defineProps({
@@ -22,11 +18,10 @@ const emit = defineEmits(['close', 'submit'])
 
 const name = ref('')
 const description = ref('')
-const itemIds = ref([]) // members to add (create only)
+const itemIds = ref([])
 const busy = ref(false)
 const nameInput = ref(null)
 
-// Cover: 'auto' (member posters) | 'image' (upload/URL) | 'titles' (chosen members).
 const coverMode = ref('auto')
 const coverUrl = ref('')
 const coverItemIds = ref([])
@@ -34,8 +29,6 @@ const coverCount = ref(4)
 const uploading = ref(false)
 const fileInput = ref(null)
 
-// Candidate titles for the cover = the collection's members. In edit mode we
-// fetch them; in create mode they are whatever the "add titles" picker selects.
 const memberItems = ref([])
 
 const canSave = computed(() => name.value.trim().length > 0)
@@ -53,7 +46,6 @@ function toggleCover(id) {
   coverItemIds.value = coverSelected(key) ? coverItemIds.value.filter((x) => String(x) !== key) : [...coverItemIds.value, key]
 }
 
-// Live preview posters for the current mode.
 const previewPosters = computed(() => {
   if (coverMode.value === 'titles') return coverItemIds.value.map((id) => memberPosters.value.get(String(id))).filter(Boolean)
   if (coverMode.value === 'auto') return memberItems.value.map((i) => i.posterUrl).filter(Boolean).slice(0, coverCount.value)
@@ -75,7 +67,6 @@ watch(
     busy.value = false
     uploading.value = false
     nextTick(() => nameInput.value?.focus())
-    // Edit: load the collection's members as cover candidates.
     if (props.initial?._id) {
       try {
         memberItems.value = await getItems({ collection: props.initial._id })
@@ -94,7 +85,6 @@ async function handleUpload(e) {
   try {
     coverUrl.value = await uploadImage(file)
   } catch {
-    // leave as-is
   } finally {
     uploading.value = false
     e.target.value = ''
@@ -110,11 +100,9 @@ async function submit() {
       name: name.value.trim(),
       description: description.value.trim(),
       coverUrl: coverMode.value === 'image' ? coverUrl.value || null : null,
-      // Only keep cover titles that are actually members.
       coverItemIds: coverMode.value === 'titles' ? coverItemIds.value.filter((id) => memberIdSet.has(String(id))) : [],
       coverCount: coverCount.value,
     }
-    // Second arg carries the members to add (create only; empty when renaming).
     await emit('submit', data, itemIds.value)
   } finally {
     busy.value = false
@@ -159,7 +147,6 @@ async function submit() {
         />
       </div>
 
-      <!-- Add titles right away (create only). These become the cover candidates. -->
       <div v-if="!initial" class="flex flex-col gap-1.5">
         <div class="flex items-center justify-between">
           <label class="text-sm text-slate-500 dark:text-slate-400">{{ t('watchlist.collections.addItemsOptional') }}</label>
@@ -168,17 +155,14 @@ async function submit() {
         <ItemPicker v-model="itemIds" @update:selected-items="memberItems = $event" list-class="max-h-52 overflow-y-auto" />
       </div>
 
-      <!-- Cover -->
       <div class="flex flex-col gap-2.5">
         <label class="text-sm text-slate-500 dark:text-slate-400">{{ t('watchlist.collections.cover') }}</label>
         <div class="flex items-start gap-4">
-          <!-- Live preview -->
           <div class="w-32 shrink-0 relative aspect-[16/10] rounded-xl overflow-hidden ring-1 ring-inset ring-black/10 dark:ring-white/10">
             <CollectionCover :image="coverMode === 'image' ? coverUrl : null" :posters="previewPosters" />
           </div>
 
           <div class="flex-1 min-w-0 flex flex-col gap-2.5">
-            <!-- Source segmented control -->
             <div class="inline-flex items-center gap-0.5 bg-black/[0.04] dark:bg-white/5 rounded-xl p-1 self-start">
               <button
                 v-for="tab in COVER_TABS"
@@ -194,7 +178,6 @@ async function submit() {
               </button>
             </div>
 
-            <!-- Auto: type how many posters -->
             <template v-if="coverMode === 'auto'">
               <div class="flex items-center gap-2">
                 <label class="text-xs text-slate-500 dark:text-slate-400">{{ t('watchlist.collections.coverCountLabel') }}</label>
@@ -210,7 +193,6 @@ async function submit() {
               <p class="text-xs text-slate-400 dark:text-slate-500">{{ t('watchlist.collections.coverAutoHint') }}</p>
             </template>
 
-            <!-- Image: upload -->
             <template v-else-if="coverMode === 'image'">
               <div class="flex items-center gap-2">
                 <button
@@ -235,7 +217,6 @@ async function submit() {
               <input ref="fileInput" type="file" accept="image/*" class="hidden" @change="handleUpload" />
             </template>
 
-            <!-- Titles: pick from members only -->
             <template v-else>
               <p class="text-xs text-slate-400 dark:text-slate-500">{{ t('watchlist.collections.coverTitlesHint') }}</p>
               <div v-if="memberItems.length" class="grid grid-cols-5 sm:grid-cols-6 gap-1.5 max-h-44 overflow-y-auto pr-0.5">

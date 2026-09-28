@@ -26,8 +26,6 @@ const planned   = computed(() => props.items.filter(i => i.status === 'planned')
 const movies    = computed(() => props.items.filter(i => i.type === 'movie'))
 const shows     = computed(() => props.items.filter(i => i.type === 'show'))
 
-// Time watched counts partially-finished shows; in-progress and planned show
-// the runtime that is still left to watch.
 const completedTime = computed(() => fmtTime(sum(props.items, watchedMinutes)))
 const watchingTime  = computed(() => fmtTime(sum(watching.value, remainingMinutes)))
 const plannedTime   = computed(() => fmtTime(sum(planned.value, remainingMinutes)))
@@ -69,7 +67,6 @@ const topYears = computed(() => {
 <template>
   <div class="flex flex-col gap-4">
 
-    <!-- Watchtime -->
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
       <div class="bg-white dark:bg-slate-800 rounded-xl p-4 flex flex-col gap-1 shadow-sm dark:shadow-none">
         <p class="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide">{{ t('watchlist.stats.watched') }}</p>
@@ -93,7 +90,6 @@ const topYears = computed(() => {
       </div>
     </div>
 
-    <!-- Type breakdown + Ratings -->
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <div class="bg-white dark:bg-slate-800 rounded-xl p-4 flex flex-col gap-3 shadow-sm dark:shadow-none">
         <p class="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide">{{ t('watchlist.stats.typeBreakdown') }}</p>
@@ -143,7 +139,6 @@ const topYears = computed(() => {
       </div>
     </div>
 
-    <!-- Streaming + Years -->
     <div v-if="topProviders.length || topYears.length" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <div v-if="topProviders.length" class="bg-white dark:bg-slate-800 rounded-xl p-4 flex flex-col gap-3 shadow-sm dark:shadow-none">
         <p class="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide">{{ t('watchlist.stats.availableOn') }}</p>

@@ -1,10 +1,4 @@
 <script setup>
-// Star rating on a 0.5..max scale (watchlist ratings run 0.5..10). Supports half
-// stars: each star has two hit zones — the left half sets n-0.5, the right half
-// sets n. Interactive by default (hover preview, click to set, click the current
-// value again to clear); pass :readonly for a static display. Keyboard-operable:
-// each half is a focusable button (Enter/Space). Self-contained — inlines the
-// star glyph so it needs no shared Icon util. Mirrors shelf's RatingControl.
 import { ref, computed } from 'vue'
 import { useI18n } from '@core/useI18n.js'
 import { Icon } from '@core/icons'
@@ -17,7 +11,7 @@ const props = defineProps({
   modelValue: { type: Number, default: null },
   max: { type: Number, default: 10 },
   readonly: { type: Boolean, default: false },
-  size: { type: String, default: 'md' }, // sm | md | lg
+  size: { type: String, default: 'md' },
   showValue: { type: Boolean, default: true },
 })
 const emit = defineEmits(['update:modelValue'])
@@ -27,7 +21,6 @@ const clearLabel = computed(() => t('watchlist.form.clearRating'))
 const shown = computed(() => hover.value || props.modelValue || 0)
 const sizeClass = computed(() => ({ sm: 'w-3.5 h-3.5', md: 'w-5 h-5', lg: 'w-7 h-7' }[props.size]))
 
-// Percentage of star n (1..max) to fill given the shown value: full, half, empty.
 function fill(n) {
   const v = shown.value
   if (v >= n) return 100
@@ -50,7 +43,6 @@ function set(v) {
         class="relative inline-flex"
         :class="[sizeClass, readonly ? '' : 'transition-transform hover:scale-110']"
       >
-        <!-- Empty base -->
         <svg
           viewBox="0 0 24 24"
           fill="none"
@@ -63,13 +55,11 @@ function set(v) {
         >
           <path :d="STAR" />
         </svg>
-        <!-- Filled overlay, clipped to the fill fraction -->
         <div class="absolute inset-0 overflow-hidden pointer-events-none" :style="{ width: fill(n) + '%' }">
           <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" :class="[sizeClass, 'max-w-none text-amber-400']">
             <path :d="STAR" />
           </svg>
         </div>
-        <!-- Half-star hit zones (interactive only) -->
         <template v-if="!readonly">
           <button
             type="button"

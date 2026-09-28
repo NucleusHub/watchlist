@@ -9,15 +9,9 @@
 html { background-color: #f1f5f9; }
 html.dark { background-color: #0d0d1a; }
 
-/* Horizontal scroll without a visible scrollbar (toolbar tabs on mobile). */
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
 
-/* Liquid glass — translucent + heavily saturated so the ambient background blobs
-   bleed their colour through, with a bright inset top edge for the sheen and a
-   soft drop shadow so the panel reads as glass floating over the scene. The
-   `backdrop-filter` is left unprefixed on purpose: Lightning CSS (see
-   vite.config css.lightningcss.targets) adds the -webkit- prefix at build. */
 .glass {
   background: rgba(255, 255, 255, 0.42);
   backdrop-filter: blur(22px) saturate(190%);

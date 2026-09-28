@@ -45,10 +45,7 @@ app.post('/api/upload', upload.single('image'), (req, res) => {
 })
 
 app.get('/api/watchlist/health', (_, res) => res.json({ ok: true }))
-// Refuse all Watchlist API access for users who have Watchlist disabled (admin override).
 app.use('/api/watchlist', requireAppEnabled('watchlist'))
-// Mounted before the item routes; the paths don't collide (item routes are
-// /:id single-segment) but keeping collections first makes the intent explicit.
 app.use('/api/watchlist/collections', collectionsRoutes)
 app.use('/api/watchlist', watchlistRoutes)
 

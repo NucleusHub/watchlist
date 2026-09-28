@@ -5,21 +5,13 @@ import ArchiveBoxIcon from '@/assets/icons/archive-box.svg?component'
 import { useI18n } from '@core/useI18n.js'
 import { getItems } from '@/api/watchlist.js'
 
-// Searchable multi-select over the user's watchlist items. Selection is a plain
-// array of ids bound with v-model; the caller decides what to do with them
-// (assign to a new collection, add to an existing one, …). Shared by the create
-// modal and the "add items" modal so the row markup lives in one place.
 const { t } = useI18n()
 
 const props = defineProps({
   modelValue: { type: Array, default: () => [] },
-  // Ids to hide from the list (e.g. items already in the collection).
   exclude: { type: Array, default: () => [] },
-  // Scroll container sizing, so each host can size the list to its layout.
   listClass: { type: String, default: 'max-h-72 overflow-y-auto' },
 })
-// `update:selectedItems` is optional — it hands the caller the full selected
-// item objects (e.g. so a cover preview can read their posters).
 const emit = defineEmits(['update:modelValue', 'update:selectedItems'])
 
 const allItems = ref([])

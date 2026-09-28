@@ -4,20 +4,10 @@ import EchoEmbedContainer from '@core/echo/EchoEmbedContainer.vue'
 import EchoAddButton from '@core/echo/EchoAddButton.vue'
 import TableIcon from './icons/table.svg?component'
 
-// Renderer for "watchlist.item" messages. Lives in Watchlist (next to its
-// manifest.echo.json) and is auto-registered into Echo via this app's
-// integration.echo.js.
-// payload = { itemId, title, type, status, posterUrl, year, rating, tmdbRating,
-//   runtime, seasons, episodes, showRuntime }.
 const props = defineProps({
   payload: { type: Object, required: true },
 })
 
-// "Add" → create the item in the caller's own watchlist (the Watchlist app's
-// API does the insert). Added as "planned" — it's new to your list. Carry the
-// runtime/season metadata across too, and let the type decide which of the
-// movie- vs show-only fields apply, so the added item isn't missing data the
-// sender's card showed.
 async function addToWatchlist() {
   const p = props.payload
   const isShow = p.type === 'show'

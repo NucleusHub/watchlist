@@ -1,7 +1,4 @@
 const BASE = 'https://api.themoviedb.org/3'
-// User-supplied key (Settings → Search sources) takes priority over one baked
-// in at build time via VITE_TMDB_API_KEY. Read fresh per request — not cached
-// at module load — so saving a key in Settings works without a reload.
 export const KEY_STORAGE_KEY = 'watchlist-tmdb-api-key'
 
 function getKey() {
@@ -9,7 +6,6 @@ function getKey() {
     const stored = localStorage.getItem(KEY_STORAGE_KEY)
     if (stored) return stored
   } catch {
-    // Storage unavailable — fall through to the build-time key.
   }
   return import.meta.env.VITE_TMDB_API_KEY || ''
 }
@@ -38,7 +34,6 @@ export async function fetchTvDetail(id) {
   return get(`/tv/${id}`)
 }
 
-// Priority order: Netflix, Disney+, Max, Peacock, Apple TV+, Hulu, Paramount+
 const PROVIDER_PRIORITY = [8, 337, 384, 386, 350, 15, 531]
 
 export async function fetchWatchProviders(id, type) {
@@ -66,10 +61,6 @@ export function logoUrl(path) {
   return path ? `https://image.tmdb.org/t/p/w45${path}` : null
 }
 
-// Build a per-season progress list from a TMDb TV detail payload, excluding
-// specials (season 0) and empty seasons. Carries over any already-watched
-// counts from an existing list, keyed by season number, so refreshing a show
-// preserves the user's progress.
 export function buildSeasonProgress(detail, existing = []) {
   const prev = new Map((existing || []).map((s) => [s.seasonNumber, s.watched || 0]))
   return (detail.seasons || [])

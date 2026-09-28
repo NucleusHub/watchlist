@@ -4,9 +4,6 @@ import { Icon } from '@core/icons'
 import { useI18n } from '@core/useI18n.js'
 import { useCollections } from '@/composables/useCollections.js'
 
-// Toggle-list of the user's collections with inline "create new", bound with
-// v-model (array of collection ids). Shared by the add/edit item form and the
-// per-item "manage collections" modal so the selection UI lives in one place.
 const { t } = useI18n()
 const { collections, create } = useCollections()
 

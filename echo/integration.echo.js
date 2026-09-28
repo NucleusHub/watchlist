@@ -1,8 +1,5 @@
 import WatchlistCard from './WatchlistCard.vue'
 
-// Watchlist's Echo client integration — the single file Echo auto-discovers for
-// this app. Owns the renderer for its message type plus the "share from
-// watchlist" composer action. Server-side declaration: manifest.echo.json here.
 export default {
   app: 'watchlist',
 
@@ -10,7 +7,6 @@ export default {
     'watchlist.item': WatchlistCard,
   },
 
-  // `source` drives Echo's generic share picker in grid (poster) layout.
   composerActions: {
     share_watchlist: {
       source: {

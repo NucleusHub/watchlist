@@ -6,9 +6,6 @@ import { useI18n } from '@core/useI18n.js'
 import { useCollections } from '@/composables/useCollections.js'
 import { updateItem } from '@/api/watchlist.js'
 
-// Assign a single item to any number of collections. Membership is a plain field
-// on the item, so saving is just updateItem(id, { collectionIds }) — no bespoke
-// endpoint. New collections can be created inline via CollectionSelect.
 const { t } = useI18n()
 const { applyMembership } = useCollections()
 

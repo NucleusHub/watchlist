@@ -30,15 +30,11 @@ const { isPluginEnabled } = useRegistry()
 const { defaults } = useOpenSettings()
 const { applyMembership } = useCollections()
 
-// Plugin-contributed card badges (e.g. In Common's "others watching this"),
-// filtered to the ones enabled for this user. Empty badges render no DOM.
 const indicators = computed(() => watchlistIndicators.filter((i) => isPluginEnabled(i.pluginId)))
 
 const props = defineProps({
   item: { type: Object, required: true },
   gridStyle: { type: String, default: 'small' },
-  // When rendered inside a collection's detail view, enables the
-  // "remove from this collection" action (removal ≠ deletion).
   collectionId: { type: String, default: null },
 })
 
@@ -57,9 +53,6 @@ const TYPE_COLORS = {
   show: 'bg-amber-900 text-amber-300',
 }
 
-// Genre pills on the card. Capped at two on the card face — the footer is a
-// fixed-height row shared with the type/status tags, and a five-genre title
-// would push them out of alignment; the detail modal shows the full list.
 const CARD_GENRES = 2
 const cardGenres = computed(() => (props.item.genres ?? []).slice(0, CARD_GENRES))
 const extraGenres = computed(() => Math.max(0, (props.item.genres?.length ?? 0) - CARD_GENRES))
@@ -69,11 +62,8 @@ const deleting = ref(false)
 const showConfirm = ref(false)
 const marking = ref(false)
 const showProgress = ref(false)
-// Grid (non-list) cards stay minimal — title + one metric — and reveal the full
-// metadata/actions in this on-demand detail modal (the ⓘ button on the poster).
 const showDetail = ref(false)
 
-// Show progress: episode totals, percentage and remaining runtime.
 const totals = computed(() => showTotals(props.item))
 const progressPct = computed(() => {
   if (props.item.status === 'completed') return 100
@@ -88,7 +78,6 @@ const remainingLabel = computed(() => {
   return t('watchlist.card.timeLeft', { time: formatRuntime(remainingMinutes(props.item)) })
 })
 
-// Poster click destination — item override, else the per-type global default.
 const openUrl = computed(() => buildOpenUrl(resolveTarget(props.item, defaults), props.item))
 
 function openPoster() {
@@ -107,7 +96,6 @@ function formatRuntime(minutes) {
   return m ? `${h}h ${m}m` : `${h}h`
 }
 
-// The single metric grid cards show for movies (shows use the progress bar).
 const runtimeLabel = computed(() => (isShow.value ? null : formatRuntime(props.item.runtime)))
 
 const meta = computed(() => {
@@ -142,7 +130,6 @@ async function markWatched() {
   marking.value = true
   try {
     const patch = { status: 'completed' }
-    // Fill season progress so the bar and progress modal stay consistent.
     if (props.item.type === 'show' && props.item.seasonProgress?.length) {
       patch.seasonProgress = props.item.seasonProgress.map((s) => ({ ...s, watched: s.episodeCount }))
     }
@@ -171,13 +158,10 @@ async function confirmDelete() {
   showConfirm.value = false
   deleting.value = true
   await deleteItem(props.item._id)
-  // Deleting the item drops all its memberships; keep cached counts in step.
   applyMembership(props.item.collectionIds || [], [])
   emit('deleted', props.item._id)
 }
 
-// Detach this item from the collection currently being browsed. Membership is a
-// field on the item, so this only rewrites collectionIds — the item is untouched.
 async function removeFromCollection() {
   if (!props.collectionId) return
   const prev = props.item.collectionIds || []
@@ -187,7 +171,6 @@ async function removeFromCollection() {
   emit('updated', updated)
 }
 
-// Right-click menu — the shared core ContextMenu, driven by plain item objects.
 const menu = ref({ show: false, x: 0, y: 0 })
 const menuItems = computed(() => {
   const items = [
@@ -211,7 +194,6 @@ function openMenu(e) {
 
 <template>
   <div ref="cardRef" @contextmenu.prevent="openMenu" :class="['group h-full rounded-xl overflow-hidden flex transition-all duration-200 ease-out hover:-translate-y-0.5 backdrop-blur-sm shadow-sm', isList ? 'flex-row' : 'flex-col', item.status === 'completed' ? 'bg-green-50/80 dark:bg-green-900/20 ring-1 ring-inset ring-green-500/50 dark:ring-green-500/25 shadow-green-500/10' : item.status === 'watching' ? 'bg-blue-50/80 dark:bg-blue-900/20 ring-1 ring-inset ring-blue-500/50 dark:ring-blue-500/25 shadow-blue-500/10' : 'bg-white/70 dark:bg-slate-800/70 border border-white/60 dark:border-white/8 hover:bg-white/85 dark:hover:bg-slate-800/85 hover:shadow-md']">
-    <!-- Poster — fixed 2:3 box in grid views (like Shelf), stretches to row height in list view -->
     <div
       :class="['relative shrink-0 overflow-hidden bg-slate-100 dark:bg-slate-700/60', isList ? 'w-14 self-stretch' : 'w-full aspect-[2/3]', openUrl ? 'cursor-pointer group/poster' : '']"
       @click="openPoster"
@@ -222,10 +204,6 @@ function openMenu(e) {
         <ArchiveBoxIcon class="w-8 h-8 text-slate-300 dark:text-slate-600" />
       </div>
 
-      <!-- Plugin card badges (e.g. In Common) — an absolute overlay so they never
-           add to the card's height. Bottom-right, hidden on phone where the
-           details (ⓘ) button lives there; the corner is free on desktop. Renders
-           no visible box without a match. -->
       <div v-if="indicators.length" class="absolute bottom-1.5 right-1.5 z-20 hidden sm:flex">
         <component
           v-for="ind in indicators"
@@ -236,7 +214,6 @@ function openMenu(e) {
         />
       </div>
 
-      <!-- Open-on-click affordance — reveals on poster hover (desktop only) -->
       <div
         v-if="openUrl"
         class="pointer-events-none absolute inset-0 hidden sm:flex items-center justify-center bg-black/0 group-hover/poster:bg-black/30 transition-colors"
@@ -244,7 +221,6 @@ function openMenu(e) {
         <Icon name="externalLink" class="w-5 h-5 text-white opacity-0 group-hover/poster:opacity-100 transition-opacity drop-shadow" />
       </div>
 
-      <!-- Watch checkbox — hover to reveal on planned -->
       <button
         v-if="item.status === 'planned'"
         @click.stop="markWatched"
@@ -255,7 +231,6 @@ function openMenu(e) {
         <Icon name="checkBold" class="w-3.5 h-3.5 text-white/80" :sw="3" />
       </button>
 
-      <!-- Clock badge — always visible on watching, swaps to checkmark on hover -->
       <button
         v-else-if="item.status === 'watching'"
         @click.stop="markWatched"
@@ -267,7 +242,6 @@ function openMenu(e) {
         <Icon name="checkBold" class="w-3.5 h-3.5 text-white hidden group-hover/clock:block" :sw="3" />
       </button>
 
-      <!-- Green checkmark — always visible on completed -->
       <div
         v-else
         class="absolute top-2 left-2 w-7 h-7 rounded-full bg-green-500 flex items-center justify-center shadow-md"
@@ -275,7 +249,6 @@ function openMenu(e) {
         <Icon name="checkBold" class="w-3.5 h-3.5 text-white" :sw="3" />
       </div>
 
-      <!-- Progress button — opens the season/episode modal (shows only) -->
       <button
         v-if="isShow"
         @click.stop="showProgress = true"
@@ -285,7 +258,6 @@ function openMenu(e) {
         <ListBulletIcon class="w-3.5 h-3.5 text-white/80" />
       </button>
 
-      <!-- Streaming logo -->
       <a
         v-if="item.streamingLogo"
         :href="item.watchLink || undefined"
@@ -298,7 +270,6 @@ function openMenu(e) {
         <img :src="logoUrl(item.streamingLogo)" :alt="item.streamingProvider" class="w-6 h-6 rounded-md object-cover shadow-md" />
       </a>
 
-      <!-- Favorite heart — always visible when favorited, reveals on hover otherwise -->
       <button
         @click.stop="toggleFavorite"
         :title="item.favorite ? t('watchlist.card.unfavorite') : t('watchlist.card.favorite')"
@@ -308,8 +279,6 @@ function openMenu(e) {
         <FavoriteHeart :active="item.favorite" class="w-4 h-4 text-white/80" />
       </button>
 
-      <!-- Details (ⓘ) — phone grid cards stay lean; this opens the full metadata
-           + actions. Phone-only: on desktop the card already shows everything. -->
       <button
         v-if="!isList"
         type="button"
@@ -321,9 +290,6 @@ function openMenu(e) {
       </button>
     </div>
 
-    <!-- Content — full on desktop and in list view; on phone the grid cards
-         (non-list) collapse to title + one metric, with the rest behind the ⓘ
-         detail button. The `sm:` toggles below express "phone grid only". -->
     <div :class="['flex-1 flex flex-col min-w-0', isList ? 'p-2 gap-0.5' : isCompact ? 'p-3 gap-1' : 'p-4 gap-1.5']">
       <div class="flex items-start justify-between gap-1.5">
         <h3
@@ -331,7 +297,6 @@ function openMenu(e) {
           :title="openUrl ? t('watchlist.card.openExternal') : undefined"
           @click="openPoster"
         >{{ item.title }}</h3>
-        <!-- Edit/delete — hidden on phone grid (use the ⓘ detail there). -->
         <div :class="['gap-0.5 shrink-0', isList ? 'flex' : 'hidden sm:flex']">
           <button
             @click="$emit('edit', item)"
@@ -351,9 +316,6 @@ function openMenu(e) {
         </div>
       </div>
 
-      <!-- Metadata line + TMDB rating — hidden on phone grid. Meta may be long
-           (year · seasons · episodes · runtime); let it wrap to two lines and
-           keep the rating pinned top-right so it never gets squished. -->
       <div v-if="meta || item.tmdbRating" :class="['items-start gap-1.5', isList ? 'flex' : 'hidden sm:flex']">
         <p v-if="meta" class="min-w-0 flex-1 text-xs text-slate-400 dark:text-slate-500 leading-snug line-clamp-2">{{ meta }}</p>
         <div v-if="item.tmdbRating" class="shrink-0 flex items-center gap-0.5 text-xs text-amber-400 mt-px">
@@ -362,17 +324,11 @@ function openMenu(e) {
         </div>
       </div>
 
-      <!-- Movie runtime — phone grid only (desktop shows it in the meta line). -->
       <p v-if="!isList && runtimeLabel" class="sm:hidden text-xs text-slate-400 dark:text-slate-500">{{ runtimeLabel }}</p>
 
-      <!-- Notes (big desktop cards only) — hidden on phone. -->
       <p v-if="item.notes && !isCompact" class="hidden sm:block text-xs text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-2">{{ item.notes }}</p>
 
-      <!-- Pinned footer (mt-auto): the progress bar sits just above the tags,
-           and the type/status tags are the bottom-most row — neither shifts with
-           how much text is above. -->
       <div :class="['mt-auto flex flex-col', isList ? 'gap-1 pt-1' : isCompact ? 'gap-1.5 pt-1.5' : 'gap-2 pt-2']">
-        <!-- Season progress (shows) — fixed just above the tags. -->
         <template v-if="isShow">
           <button
             v-if="totals.totalEp > 0"
@@ -380,7 +336,6 @@ function openMenu(e) {
             :title="t('watchlist.card.trackProgressCount', { watched: totals.watchedEp, total: totals.totalEp })"
             class="cursor-pointer group/prog flex flex-col gap-1 w-full text-left"
           >
-            <!-- Episode-count label — grid views, hidden on phone (bar stays). -->
             <div v-if="!isList" :class="['items-center justify-between gap-2 text-xs min-w-0', 'hidden sm:flex']">
               <span class="min-w-0 truncate text-slate-500 dark:text-slate-400">{{ t('watchlist.card.episodeProgress', { watched: item.status === 'completed' ? totals.totalEp : totals.watchedEp, total: totals.totalEp }) }}</span>
               <span v-if="remainingLabel" class="shrink-0 text-slate-400 dark:text-slate-500">{{ remainingLabel }}</span>
@@ -403,7 +358,6 @@ function openMenu(e) {
           </button>
         </template>
 
-        <!-- Type · status · rating tags — the bottom-most row. Hidden on phone grid. -->
         <div :class="['items-center gap-1.5 flex-wrap', isList ? 'flex' : 'hidden sm:flex']">
           <span :class="['shrink-0 text-xs font-medium px-2 py-0.5 rounded-full', TYPE_COLORS[item.type]]">
             {{ item.type === 'movie' ? t('watchlist.type.movie') : t('watchlist.type.show') }}
@@ -415,8 +369,6 @@ function openMenu(e) {
           >
             {{ t('watchlist.status.' + item.status) }}
           </button>
-          <!-- Genres — skipped on the small grid, where the row has no room
-               left beside type/status. The detail modal always has them. -->
           <template v-if="gridStyle !== 'small'">
             <span
               v-for="g in cardGenres"
@@ -444,7 +396,6 @@ function openMenu(e) {
     </div>
   </div>
 
-  <!-- Full details — the "on demand" view behind the ⓘ button on grid cards. -->
   <TemplateModal
     :show="showDetail"
     header
@@ -457,7 +408,6 @@ function openMenu(e) {
   >
     <div class="flex flex-col gap-5">
       <div class="flex gap-4">
-        <!-- Poster -->
         <div
           :class="['relative w-28 shrink-0 overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-700/60 aspect-[2/3] ring-1 ring-black/5 dark:ring-white/10', openUrl ? 'cursor-pointer' : '']"
           @click="openPoster"
@@ -470,7 +420,6 @@ function openMenu(e) {
         </div>
 
         <div class="flex-1 min-w-0 flex flex-col gap-3">
-          <!-- Actions -->
           <div class="flex items-center gap-0.5 -mt-0.5">
             <button
               v-if="openUrl"
@@ -511,7 +460,6 @@ function openMenu(e) {
             </button>
           </div>
 
-          <!-- Genres in full — the card face only has room for the first two. -->
           <div v-if="item.genres?.length" class="flex items-center gap-1.5 flex-wrap">
             <span
               v-for="g in item.genres"
@@ -522,7 +470,6 @@ function openMenu(e) {
             </span>
           </div>
 
-          <!-- Type · status · TMDb rating -->
           <div class="flex items-center gap-1.5 flex-wrap">
             <span :class="['text-xs font-medium px-2 py-0.5 rounded-full', TYPE_COLORS[item.type]]">
               {{ item.type === 'movie' ? t('watchlist.type.movie') : t('watchlist.type.show') }}
@@ -546,7 +493,6 @@ function openMenu(e) {
             />
           </div>
 
-          <!-- Your rating -->
           <RatingControl
             v-if="item.rating"
             :model-value="item.rating"
@@ -558,7 +504,6 @@ function openMenu(e) {
         </div>
       </div>
 
-      <!-- Season progress (shows) -->
       <div v-if="isShow" class="flex flex-col gap-2.5 rounded-xl bg-white/60 dark:bg-slate-800/50 border border-white/60 dark:border-white/8 p-4">
         <template v-if="totals.totalEp > 0">
           <div class="flex items-center justify-between gap-2 text-sm">
@@ -578,7 +523,6 @@ function openMenu(e) {
         </button>
       </div>
 
-      <!-- Mark as watched -->
       <button
         v-if="item.status !== 'completed'"
         @click="markWatched"
@@ -589,7 +533,6 @@ function openMenu(e) {
         {{ t('watchlist.card.markWatched') }}
       </button>
 
-      <!-- Notes -->
       <div v-if="item.notes" class="flex flex-col gap-1">
         <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/35">{{ t('watchlist.card.notes') }}</p>
         <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line">{{ item.notes }}</p>
