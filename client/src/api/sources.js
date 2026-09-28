@@ -1,3 +1,4 @@
+import { shallowReactive } from 'vue'
 import {
   searchMulti, fetchMovieDetail, fetchTvDetail, fetchWatchProviders, buildSeasonProgress,
 } from './tmdb.js'
@@ -78,13 +79,32 @@ function collectPluginSources() {
     const targets = Array.isArray(manifest?.target) ? manifest.target : [manifest?.target]
     if (!targets.includes('watchlist')) continue
     const exported = mod?.default
-    const list = Array.isArray(exported) ? exported : exported ? [exported] : []
-    for (const s of list) {
-      if (!s?.id || typeof s.search !== 'function' || typeof s.toForm !== 'function') continue
-      sources.push({ ...s, pluginId: manifest?.id || dir })
-    }
+    sources.push(...validSources(exported, manifest?.id || dir))
   }
   return sources
 }
 
-export const PLUGIN_SOURCES = collectPluginSources()
+function validSources(exported, pluginId) {
+  const list = Array.isArray(exported) ? exported : exported ? [exported] : []
+  return list
+    .filter((s) => s?.id && typeof s.search === 'function' && typeof s.toForm === 'function')
+    .map((s) => ({ ...s, pluginId }))
+}
+
+// Reactive so that plugins installed at runtime in the iOS app (see
+// plugins/runtime.js) show up in search and Settings without a reload.
+export const PLUGIN_SOURCES = shallowReactive(collectPluginSources())
+
+/** Register a runtime plugin's sources; returns the source ids it added. */
+export function addRuntimeSources(pluginId, exported) {
+  removeRuntimeSources(pluginId)
+  const added = validSources(exported, pluginId)
+  PLUGIN_SOURCES.push(...added)
+  return added.map((s) => s.id)
+}
+
+export function removeRuntimeSources(pluginId) {
+  for (let i = PLUGIN_SOURCES.length - 1; i >= 0; i--) {
+    if (PLUGIN_SOURCES[i].pluginId === pluginId) PLUGIN_SOURCES.splice(i, 1)
+  }
+}
