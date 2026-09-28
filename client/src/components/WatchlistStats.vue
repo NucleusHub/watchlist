@@ -20,151 +20,208 @@ function fmtTime(min) {
   return `${m}m`
 }
 
-const completed = computed(() => props.items.filter(i => i.status === 'completed'))
-const watching  = computed(() => props.items.filter(i => i.status === 'watching'))
-const planned   = computed(() => props.items.filter(i => i.status === 'planned'))
-const movies    = computed(() => props.items.filter(i => i.type === 'movie'))
-const shows     = computed(() => props.items.filter(i => i.type === 'show'))
+const byStatus = (s) => props.items.filter((i) => i.status === s)
+const completed = computed(() => byStatus('completed'))
+const watching = computed(() => byStatus('watching'))
+const planned = computed(() => byStatus('planned'))
 
-const completedTime = computed(() => fmtTime(sum(props.items, watchedMinutes)))
-const watchingTime  = computed(() => fmtTime(sum(watching.value, remainingMinutes)))
-const plannedTime   = computed(() => fmtTime(sum(planned.value, remainingMinutes)))
-const totalTime     = computed(() => fmtTime(sum(props.items, itemRuntime)))
+const STATUS = computed(() => [
+  { key: 'completed', label: t('watchlist.status.completed'), count: completed.value.length, cls: 'st-completed' },
+  { key: 'watching', label: t('watchlist.status.watching'), count: watching.value.length, cls: 'st-watching' },
+  { key: 'planned', label: t('watchlist.status.planned'), count: planned.value.length, cls: 'st-planned' },
+])
+const statusSegments = computed(() => STATUS.value.filter((s) => s.count > 0))
 
-const ratedItems = computed(() => props.items.filter(i => i.rating))
-const avgRating  = computed(() => {
-  if (!ratedItems.value.length) return null
-  return (ratedItems.value.reduce((s, i) => s + i.rating, 0) / ratedItems.value.length).toFixed(1)
-})
+const watchedTime = computed(() => fmtTime(sum(props.items, watchedMinutes)))
 
-const tmdbItems = computed(() => props.items.filter(i => i.tmdbRating))
-const avgTmdb   = computed(() => {
-  if (!tmdbItems.value.length) return null
-  return (tmdbItems.value.reduce((s, i) => s + i.tmdbRating, 0) / tmdbItems.value.length).toFixed(1)
-})
+const tiles = computed(() => [
+  { label: t('watchlist.stats.inProgress'), value: fmtTime(sum(watching.value, remainingMinutes)), note: t('watchlist.stats.titlesLeft', { count: watching.value.length }) },
+  { label: t('watchlist.stats.planned'), value: fmtTime(sum(planned.value, remainingMinutes)), note: t('watchlist.stats.titlesLeft', { count: planned.value.length }) },
+  { label: t('watchlist.stats.total'), value: fmtTime(sum(props.items, itemRuntime)), note: t('watchlist.stats.titles', { count: props.items.length }) },
+])
+
+const avgOf = (list, key) => (list.length ? (list.reduce((s, i) => s + i[key], 0) / list.length).toFixed(1) : null)
+const ratedItems = computed(() => props.items.filter((i) => i.rating))
+const tmdbItems = computed(() => props.items.filter((i) => i.tmdbRating))
+const avgRating = computed(() => avgOf(ratedItems.value, 'rating'))
+const avgTmdb = computed(() => avgOf(tmdbItems.value, 'tmdbRating'))
+
+const types = computed(() =>
+  [
+    { key: 'movie', label: t('watchlist.stats.movies') },
+    { key: 'show', label: t('watchlist.stats.shows') },
+  ].map((ty) => {
+    const all = props.items.filter((i) => i.type === ty.key)
+    const done = all.filter((i) => i.status === 'completed').length
+    return { ...ty, total: all.length, done, pct: all.length ? (done / all.length) * 100 : 0 }
+  })
+)
 
 const topProviders = computed(() => {
   const map = {}
-  props.items.forEach(i => {
-    if (i.streamingProvider) {
-      if (!map[i.streamingProvider]) map[i.streamingProvider] = { name: i.streamingProvider, logo: i.streamingLogo, count: 0 }
-      map[i.streamingProvider].count++
-    }
-  })
+  for (const i of props.items) {
+    if (!i.streamingProvider) continue
+    map[i.streamingProvider] ??= { name: i.streamingProvider, logo: i.streamingLogo, count: 0 }
+    map[i.streamingProvider].count++
+  }
   return Object.values(map).sort((a, b) => b.count - a.count).slice(0, 5)
 })
 
 const topYears = computed(() => {
   const map = {}
-  props.items.forEach(i => { if (i.year) map[i.year] = (map[i.year] || 0) + 1 })
+  for (const i of props.items) if (i.year) map[i.year] = (map[i.year] || 0) + 1
   return Object.entries(map)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5)
     .map(([year, count]) => ({ year: Number(year), count }))
 })
+
+const barWidth = (count, max) => `${Math.max(4, (count / max) * 100)}%`
 </script>
 
 <template>
-  <div class="flex flex-col gap-4">
+  <div class="stats flex flex-col gap-3">
+    <section class="lg-glass rounded-3xl p-5">
+      <p class="stats-label">{{ t('watchlist.stats.watched') }}</p>
+      <p class="mt-1 text-5xl font-semibold tracking-tight text-slate-900 dark:text-white">{{ watchedTime }}</p>
+      <p class="mt-1 text-xs text-slate-500 dark:text-white/50">{{ t('watchlist.stats.watchedNote') }}</p>
+
+      <div v-if="items.length" class="mt-5">
+        <div class="flex h-2.5 gap-[2px] rounded-full overflow-hidden" role="img" :aria-label="STATUS.map((s) => `${s.label} ${s.count}`).join(', ')">
+          <div
+            v-for="s in statusSegments"
+            :key="s.key"
+            :class="['h-full', s.cls]"
+            :style="{ flexGrow: s.count }"
+            :title="`${s.label}: ${s.count}`"
+          />
+        </div>
+        <ul class="mt-3 flex flex-wrap gap-x-4 gap-y-1.5">
+          <li v-for="s in STATUS" :key="s.key" class="flex items-center gap-1.5 text-sm">
+            <span :class="['w-2 h-2 rounded-full', s.cls]" />
+            <span class="text-slate-600 dark:text-white/70">{{ s.label }}</span>
+            <span class="font-semibold text-slate-900 dark:text-white">{{ s.count }}</span>
+          </li>
+        </ul>
+      </div>
+    </section>
 
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-      <div class="bg-white dark:bg-slate-800 rounded-xl p-4 flex flex-col gap-1 shadow-sm dark:shadow-none">
-        <p class="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide">{{ t('watchlist.stats.watched') }}</p>
-        <p class="text-2xl font-bold text-green-400">{{ completedTime }}</p>
-        <p class="text-xs text-slate-400 dark:text-slate-500">{{ t('watchlist.stats.watchedNote') }}</p>
-      </div>
-      <div class="bg-white dark:bg-slate-800 rounded-xl p-4 flex flex-col gap-1 shadow-sm dark:shadow-none">
-        <p class="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide">{{ t('watchlist.stats.inProgress') }}</p>
-        <p class="text-2xl font-bold text-blue-400">{{ watchingTime }}</p>
-        <p class="text-xs text-slate-400 dark:text-slate-500">{{ t('watchlist.stats.titlesLeft', { count: watching.length }) }}</p>
-      </div>
-      <div class="bg-white dark:bg-slate-800 rounded-xl p-4 flex flex-col gap-1 shadow-sm dark:shadow-none">
-        <p class="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide">{{ t('watchlist.stats.planned') }}</p>
-        <p class="text-2xl font-bold text-slate-500 dark:text-slate-300">{{ plannedTime }}</p>
-        <p class="text-xs text-slate-400 dark:text-slate-500">{{ t('watchlist.stats.titlesLeft', { count: planned.length }) }}</p>
-      </div>
-      <div class="bg-white dark:bg-slate-800 rounded-xl p-4 flex flex-col gap-1 shadow-sm dark:shadow-none">
-        <p class="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide">{{ t('watchlist.stats.total') }}</p>
-        <p class="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{{ totalTime }}</p>
-        <p class="text-xs text-slate-400 dark:text-slate-500">{{ t('watchlist.stats.titles', { count: items.length }) }}</p>
-      </div>
-    </div>
+      <section v-for="tile in tiles" :key="tile.label" class="lg-glass rounded-3xl p-4">
+        <p class="stats-label">{{ tile.label }}</p>
+        <p class="mt-1.5 text-2xl font-semibold text-slate-900 dark:text-white">{{ tile.value }}</p>
+        <p class="mt-0.5 text-xs text-slate-500 dark:text-white/50">{{ tile.note }}</p>
+      </section>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      <div class="bg-white dark:bg-slate-800 rounded-xl p-4 flex flex-col gap-3 shadow-sm dark:shadow-none">
-        <p class="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide">{{ t('watchlist.stats.typeBreakdown') }}</p>
-        <div class="flex flex-col gap-3">
+      <section class="lg-glass rounded-3xl p-4">
+        <p class="stats-label">{{ t('watchlist.stats.ratings') }}</p>
+        <div class="mt-1.5 flex items-end gap-4">
           <div>
-            <div class="flex items-center justify-between mb-1.5">
-              <div class="flex items-center gap-2">
-                <span class="text-xs px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300">{{ t('watchlist.stats.movies') }}</span>
-                <span class="text-sm font-medium text-slate-900 dark:text-white">{{ movies.length }}</span>
-              </div>
-              <span class="text-xs text-slate-400 dark:text-slate-500">{{ t('watchlist.stats.done', { count: movies.filter(i => i.status === 'completed').length }) }}</span>
-            </div>
-            <div class="h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-              <div class="h-full bg-purple-500 rounded-full transition-all" :style="{ width: `${items.length ? movies.length / items.length * 100 : 0}%` }" />
-            </div>
+            <p class="text-2xl font-semibold text-slate-900 dark:text-white">{{ avgRating ?? '—' }}</p>
+            <p class="mt-0.5 text-xs text-slate-500 dark:text-white/50">{{ t('watchlist.stats.yourAvg') }}</p>
           </div>
           <div>
-            <div class="flex items-center justify-between mb-1.5">
-              <div class="flex items-center gap-2">
-                <span class="text-xs px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300">{{ t('watchlist.stats.shows') }}</span>
-                <span class="text-sm font-medium text-slate-900 dark:text-white">{{ shows.length }}</span>
-              </div>
-              <span class="text-xs text-slate-400 dark:text-slate-500">{{ t('watchlist.stats.done', { count: shows.filter(i => i.status === 'completed').length }) }}</span>
-            </div>
-            <div class="h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-              <div class="h-full bg-amber-500 rounded-full transition-all" :style="{ width: `${items.length ? shows.length / items.length * 100 : 0}%` }" />
-            </div>
+            <p class="text-2xl font-semibold text-slate-900 dark:text-white">{{ avgTmdb ?? '—' }}</p>
+            <p class="mt-0.5 text-xs text-slate-500 dark:text-white/50">{{ t('watchlist.stats.tmdbAvg') }}</p>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <section class="lg-glass rounded-3xl p-5">
+      <p class="stats-label">{{ t('watchlist.stats.typeBreakdown') }}</p>
+      <div class="mt-3 flex flex-col gap-4">
+        <div v-for="ty in types" :key="ty.key">
+          <div class="flex items-baseline justify-between gap-3">
+            <span class="text-sm font-medium text-slate-900 dark:text-white">
+              {{ ty.label }} <span class="font-normal text-slate-500 dark:text-white/50">{{ ty.total }}</span>
+            </span>
+            <span class="text-xs text-slate-500 dark:text-white/50">{{ t('watchlist.stats.done', { count: ty.done }) }}</span>
+          </div>
+          <div class="mt-2 h-2 rounded-full meter-track overflow-hidden" :title="`${ty.done} / ${ty.total}`">
+            <div class="h-full rounded-full st-completed transition-[width] duration-700 ease-out" :style="{ width: `${ty.pct}%` }" />
           </div>
         </div>
       </div>
-
-      <div class="bg-white dark:bg-slate-800 rounded-xl p-4 flex flex-col gap-3 shadow-sm dark:shadow-none">
-        <p class="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide">{{ t('watchlist.stats.ratings') }}</p>
-        <div class="flex items-center justify-around flex-1 pt-1">
-          <div class="flex flex-col items-center gap-1">
-            <p class="text-3xl font-bold text-amber-400">{{ avgRating ?? '—' }}</p>
-            <p class="text-xs text-slate-400 dark:text-slate-500 text-center">{{ t('watchlist.stats.yourAvg') }}</p>
-            <p v-if="ratedItems.length" class="text-xs text-slate-400 dark:text-slate-600">{{ t('watchlist.stats.rated', { count: ratedItems.length }) }}</p>
-          </div>
-          <div class="w-px h-12 bg-slate-200 dark:bg-slate-700" />
-          <div class="flex flex-col items-center gap-1">
-            <p class="text-3xl font-bold text-slate-500 dark:text-slate-300">{{ avgTmdb ?? '—' }}</p>
-            <p class="text-xs text-slate-400 dark:text-slate-500 text-center">{{ t('watchlist.stats.tmdbAvg') }}</p>
-            <p v-if="tmdbItems.length" class="text-xs text-slate-400 dark:text-slate-600">{{ t('watchlist.stats.rated', { count: tmdbItems.length }) }}</p>
-          </div>
-        </div>
-      </div>
-    </div>
+    </section>
 
     <div v-if="topProviders.length || topYears.length" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      <div v-if="topProviders.length" class="bg-white dark:bg-slate-800 rounded-xl p-4 flex flex-col gap-3 shadow-sm dark:shadow-none">
-        <p class="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide">{{ t('watchlist.stats.availableOn') }}</p>
-        <div class="flex flex-col gap-2">
-          <div v-for="p in topProviders" :key="p.name" class="flex items-center gap-2.5">
-            <img v-if="p.logo" :src="logoUrl(p.logo)" :alt="p.name" class="w-5 h-5 rounded shrink-0 object-cover" />
-            <div v-else class="w-5 h-5 rounded bg-slate-200 dark:bg-slate-700 shrink-0" />
-            <span class="text-sm text-slate-700 dark:text-slate-300 flex-1 truncate">{{ p.name }}</span>
-            <span class="text-xs font-medium text-slate-500 dark:text-slate-400">{{ p.count }}</span>
-          </div>
-        </div>
-      </div>
-
-      <div v-if="topYears.length" class="bg-white dark:bg-slate-800 rounded-xl p-4 flex flex-col gap-3 shadow-sm dark:shadow-none">
-        <p class="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide">{{ t('watchlist.stats.topYears') }}</p>
-        <div class="flex flex-col gap-2">
-          <div v-for="y in topYears" :key="y.year" class="flex items-center gap-2">
-            <span class="text-sm text-slate-500 dark:text-slate-400 w-11 shrink-0">{{ y.year }}</span>
-            <div class="flex-1 h-1.5 bg-slate-700 rounded-full overflow-hidden">
-              <div class="h-full bg-indigo-500 rounded-full" :style="{ width: `${(y.count / topYears[0].count) * 100}%` }" />
+      <section v-if="topProviders.length" class="lg-glass rounded-3xl p-5">
+        <p class="stats-label">{{ t('watchlist.stats.availableOn') }}</p>
+        <ul class="mt-3 flex flex-col gap-3">
+          <li v-for="p in topProviders" :key="p.name" class="bar-row" :title="`${p.name}: ${p.count}`">
+            <div class="flex items-center gap-2 min-w-0">
+              <img v-if="p.logo" :src="logoUrl(p.logo)" :alt="p.name" class="w-5 h-5 rounded-md shrink-0 object-cover" />
+              <span v-else class="w-5 h-5 rounded-md shrink-0 meter-track" />
+              <span class="text-sm text-slate-700 dark:text-white/80 truncate">{{ p.name }}</span>
             </div>
-            <span class="text-xs text-slate-400 dark:text-slate-500 w-4 text-right shrink-0">{{ y.count }}</span>
-          </div>
-        </div>
-      </div>
-    </div>
+            <div class="flex items-center gap-2">
+              <div class="flex-1 h-2 flex">
+                <div class="h-full bar-fill" :style="{ width: barWidth(p.count, topProviders[0].count) }" />
+              </div>
+              <span class="w-5 text-right text-xs font-medium tabular-nums text-slate-600 dark:text-white/70">{{ p.count }}</span>
+            </div>
+          </li>
+        </ul>
+      </section>
 
+      <section v-if="topYears.length" class="lg-glass rounded-3xl p-5">
+        <p class="stats-label">{{ t('watchlist.stats.topYears') }}</p>
+        <ul class="mt-3 flex flex-col gap-3">
+          <li v-for="y in topYears" :key="y.year" class="flex items-center gap-3" :title="`${y.year}: ${y.count}`">
+            <span class="w-10 shrink-0 text-sm tabular-nums text-slate-600 dark:text-white/70">{{ y.year }}</span>
+            <div class="flex-1 h-2 flex">
+              <div class="h-full bar-fill" :style="{ width: barWidth(y.count, topYears[0].count) }" />
+            </div>
+            <span class="w-5 text-right text-xs font-medium tabular-nums text-slate-600 dark:text-white/70">{{ y.count }}</span>
+          </li>
+        </ul>
+      </section>
+    </div>
   </div>
 </template>
+
+<style scoped>
+.stats {
+  --st-completed: #1baf7a;
+  --st-watching: #2a78d6;
+  --st-planned: #eb6834;
+  --accent: #6366f1;
+  --track: rgba(15, 23, 42, 0.08);
+}
+.dark .stats {
+  --st-completed: #199e70;
+  --st-watching: #3987e5;
+  --st-planned: #d95926;
+  --accent: #818cf8;
+  --track: rgba(255, 255, 255, 0.09);
+}
+
+.stats-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgb(100 116 139);
+}
+.dark .stats-label { color: rgba(255, 255, 255, 0.45); }
+
+.st-completed { background: var(--st-completed); }
+.st-watching { background: var(--st-watching); }
+.st-planned { background: var(--st-planned); }
+.meter-track { background: var(--track); }
+
+.bar-row {
+  display: grid;
+  grid-template-columns: minmax(0, 7.5rem) 1fr;
+  align-items: center;
+  gap: 12px;
+}
+
+.bar-fill {
+  background: var(--accent);
+  border-radius: 0 4px 4px 0;
+  transition: width 0.7s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.15s ease;
+}
+li:hover .bar-fill { opacity: 0.8; }
+</style>
