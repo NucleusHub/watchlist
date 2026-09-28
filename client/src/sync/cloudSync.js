@@ -58,10 +58,10 @@ async function failure(res) {
   return err
 }
 
-async function runSync() {
+async function runSync(localDirty) {
   // Nothing changed here and the account copy is still the version we last
   // saw: a cheap 304 and we're done.
-  if (!dirty && remoteVersion) {
+  if (!localDirty && remoteVersion) {
     const probe = await fetchRemote(remoteVersion)
     if (probe.unchanged) return
   }
@@ -96,7 +96,7 @@ export function syncNow() {
     const wasDirty = dirty
     dirty = false
     try {
-      await runSync()
+      await runSync(wasDirty)
       lastSyncedAt.value = new Date().toISOString()
       lastError.value = ''
       status.value = 'idle'
