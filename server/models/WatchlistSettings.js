@@ -32,6 +32,7 @@ const watchlistSettingsSchema = new mongoose.Schema(
     },
     searchSources: { type: [String], default: ['tmdb'] },
     pluginPlacements: { type: Map, of: String, default: () => ({}) },
+    tmdbApiKey: { type: String, default: '', maxlength: 256 },
   },
   { timestamps: true }
 )

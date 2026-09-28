@@ -48,6 +48,7 @@ router.get('/settings', async (req, res) => {
       openDefaults: doc?.openDefaults ?? null,
       searchSources: doc?.searchSources ?? ['tmdb'],
       pluginPlacements: placementsOut(doc?.pluginPlacements),
+      tmdbApiKey: doc?.tmdbApiKey ?? '',
     })
   } catch (err) {
     res.status(500).json({ error: err.message })
@@ -74,6 +75,9 @@ router.put('/settings', async (req, res) => {
       }
       $set.pluginPlacements = placements
     }
+    if (typeof req.body?.tmdbApiKey === 'string') {
+      $set.tmdbApiKey = req.body.tmdbApiKey.trim().slice(0, 256)
+    }
     const doc = await WatchlistSettings.findOneAndUpdate(
       { profileId: req.profile.profileId },
       { $set },
@@ -83,6 +87,7 @@ router.put('/settings', async (req, res) => {
       openDefaults: doc.openDefaults,
       searchSources: doc.searchSources ?? ['tmdb'],
       pluginPlacements: placementsOut(doc.pluginPlacements),
+      tmdbApiKey: doc.tmdbApiKey ?? '',
     })
   } catch (err) {
     res.status(400).json({ error: err.message })

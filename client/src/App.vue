@@ -2,8 +2,10 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import LoadingBar from '@/components/LoadingBar.vue'
+import { useTmdbKey } from '@/composables/useTmdbKey.js'
 
 const router = useRouter()
+useTmdbKey()
 const pageTransition = ref('')
 router.beforeEach((to, from) => {
   const a = from.meta.depth
