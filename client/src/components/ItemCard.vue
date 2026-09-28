@@ -199,8 +199,10 @@ const longPress = useLongPress(({ x, y }) => {
 })
 const swipe = useSwipeActions({
   enabled: computed(() => isList.value),
-  onLeft: () => toggleFavorite(),
-  onRight: () => { showConfirm.value = true },
+  shortDir: 1,
+  canShort: computed(() => props.item.status !== 'completed'),
+  onShort: () => markWatched(),
+  onFull: () => { showConfirm.value = true },
 })
 watch(showConfirm, (v) => { if (!v && !deleting.value) swipe.reset() })
 const swipeStyle = computed(() => {
@@ -225,17 +227,17 @@ function openMenuFrom(e) {
   <template v-if="isList && swipe.offset.value">
     <div
       v-if="swipe.offset.value > 0"
-      :class="['swipe-bg swipe-del', { 'is-armed': swipe.rightArmed.value }]"
+      :class="['swipe-bg swipe-done', { 'is-armed': swipe.shortArmed.value }]"
       :style="{ width: `${swipe.offset.value + 24}px` }"
     >
-      <TrashIcon class="swipe-icon w-6 h-6" stroke-width="2" />
+      <Icon name="checkBold" class="swipe-icon w-6 h-6" :sw="3" />
     </div>
     <div
       v-else
-      :class="['swipe-bg swipe-fav', { 'is-armed': swipe.leftArmed.value }]"
+      :class="['swipe-bg swipe-del', { 'is-armed': swipe.fullArmed.value }]"
       :style="{ width: `${-swipe.offset.value + 24}px` }"
     >
-      <FavoriteHeart :active="swipe.leftArmed.value ? !item.favorite : !!item.favorite" class="swipe-icon w-6 h-6" />
+      <TrashIcon class="swipe-icon w-6 h-6" stroke-width="2" />
     </div>
   </template>
   <div
@@ -700,19 +702,19 @@ function openMenuFrom(e) {
   transition: background-color 0.2s ease;
 }
 .swipe-del {
-  left: 0;
-  justify-content: flex-start;
-  padding-left: 22px;
-  background: rgba(239, 68, 68, 0.55);
-}
-.swipe-del.is-armed { background: #ef4444; }
-.swipe-fav {
   right: 0;
   justify-content: flex-end;
   padding-right: 22px;
-  background: rgba(236, 72, 153, 0.5);
+  background: rgba(239, 68, 68, 0.55);
 }
-.swipe-fav.is-armed { background: #ec4899; }
+.swipe-del.is-armed { background: #ef4444; }
+.swipe-done {
+  left: 0;
+  justify-content: flex-start;
+  padding-left: 22px;
+  background: rgba(27, 175, 122, 0.5);
+}
+.swipe-done.is-armed { background: #1baf7a; }
 .swipe-icon {
   transition: transform 0.25s cubic-bezier(0.2, 0.9, 0.3, 1.4);
 }
