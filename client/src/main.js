@@ -10,6 +10,7 @@ import { applyDeviceLocale } from './nativeLocale.js'
 import { loadDb } from './storage/localDb.js'
 import { initNucleusId } from './auth/nucleusId.js'
 import { initCloudSync } from './sync/cloudSync.js'
+import { initWatchInbox } from './sync/watchInbox.js'
 import { initNativePlugins } from './plugins/runtime.js'
 import { showLaunchCopy, handOver } from './launchHandover.js'
 lockNativeZoom()
@@ -28,6 +29,7 @@ async function boot() {
       await loadDb()
       await initNucleusId()
       await initNativePlugins()
+      await initWatchInbox()
       initCloudSync().catch((err) => console.error('[watchlist] sync setup failed', err))
     } catch (err) {
       console.error('[watchlist] startup failed', err)
