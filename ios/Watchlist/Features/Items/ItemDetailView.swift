@@ -1,0 +1,239 @@
+import NucleusUI
+import SwiftUI
+
+struct ItemDetailView: View {
+    let itemID: String
+    @Environment(WatchlistStore.self) private var store
+    @Environment(Navigator.self) private var navigator
+    @Environment(\.openURL) private var openURL
+    @Environment(\.dismiss) private var dismiss
+    @State private var confirmingDelete = false
+
+    var body: some View {
+        if let item = store.item(itemID) {
+            NucleusPage(actions: {
+                GlassCircleButton("pencil") { navigator.present(.editItem(itemID)) }.accessibilityLabel("Edit")
+                Menu {
+                    ItemMenu(item: item) { confirmingDelete = true }
+                } label: {
+                    Image(systemName: "ellipsis")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(Nucleus.glyph)
+                        .frame(width: 40, height: 40)
+                        .nucleusGlass(in: Circle(), interactive: true)
+                }
+                .accessibilityLabel("More")
+            }) {
+                content(item)
+            }
+            .modifier(DeleteItemDialog(item: item, isPresented: $confirmingDelete))
+        } else {
+            NucleusPage {
+                NucleusEmptyState("film", title: "Title not found", message: "It may have been deleted on another device.")
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 60)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func content(_ item: Item) -> some View {
+        VStack(spacing: 14) {
+            Poster(url: item.posterUrl, type: item.type, cornerRadius: 22)
+                .aspectRatio(2 / 3, contentMode: .fit)
+                .frame(maxWidth: 220)
+                .shadow(color: .black.opacity(0.35), radius: 24, y: 14)
+                .onTapGesture { if let url = OpenLinks.url(for: item, settings: store.settings) { openURL(url) } }
+            Text(verbatim: item.title)
+                .font(.system(size: 26, weight: .bold))
+                .tracking(-0.4)
+                .multilineTextAlignment(.center)
+                .foregroundStyle(Nucleus.primaryText)
+            if !item.metaLine.isEmpty {
+                Text(item.metaLine).font(.system(size: 15)).foregroundStyle(Nucleus.secondaryText)
+            }
+            HStack(spacing: 6) {
+                Tag(text: Text(item.type.title))
+                Menu {
+                    ForEach(WatchStatus.allCases, id: \.self) { status in
+                        Button(status.title) { Haptics.selection(); store.updateItem(itemID) { $0.status = status } }
+                    }
+                } label: { Tag(text: Text(item.status.title), color: item.status.color) }
+                if let tmdb = item.tmdbRating, tmdb > 0 {
+                    Tag(text: Text(verbatim: "TMDb ★ \(String(format: "%.1f", tmdb))"))
+                }
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.bottom, 24)
+
+        HStack(spacing: 10) {
+            if item.isCompleted {
+                Label("Watched", systemImage: "checkmark.circle.fill")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(WatchStatus.completed.color)
+                    .frame(maxWidth: .infinity).frame(height: 52)
+                    .nucleusGlass(in: Capsule())
+            } else {
+                Button {
+                    Haptics.success()
+                    withAnimation(NucleusMotion.quick) { store.markWatched(itemID) }
+                } label: { Label("Mark as watched", systemImage: "checkmark") }
+                    .buttonStyle(NucleusPrimaryButtonStyle())
+            }
+            FavoriteButton(item: item, size: 52, onPoster: false)
+        }
+        .padding(.bottom, 24)
+
+        if item.isShow {
+            showProgress(item)
+        }
+
+        NucleusSection("Your rating") {
+            RatingControl(rating: Binding(get: { item.rating }, set: { value in store.updateItem(itemID) { $0.rating = value } }))
+                .padding(.horizontal, 16).frame(maxWidth: .infinity, minHeight: 56, alignment: .leading)
+        }
+
+        if let provider = item.streamingProvider, !provider.isEmpty {
+            NucleusSection("Where to watch") {
+                Button {
+                    if let link = item.watchLink, let url = URL(string: link) { openURL(url) }
+                } label: {
+                    HStack(spacing: 12) {
+                        AsyncImage(url: TMDb.logoURL(item.streamingLogo)) { $0.resizable() } placeholder: { Nucleus.well }
+                            .frame(width: 32, height: 32)
+                            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                        Text(verbatim: provider).font(.system(size: 16)).foregroundStyle(Nucleus.primaryText)
+                        Spacer()
+                        if item.watchLink != nil { Image(systemName: "arrow.up.right").foregroundStyle(Nucleus.secondaryText) }
+                    }
+                    .padding(.horizontal, 16).frame(minHeight: 52).contentShape(Rectangle())
+                }
+                .buttonStyle(NucleusRowButtonStyle())
+            }
+        }
+
+        if !item.genres.isEmpty {
+            NucleusSection("Genres") {
+                FlowLayout(spacing: 6) {
+                    ForEach(item.genres, id: \.self) { g in
+                        Text(verbatim: g)
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 12).frame(height: 28)
+                            .background(Capsule().fill(GenrePalette.color(g)))
+                    }
+                }
+                .padding(14)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+
+        let collections = store.collections.filter { item.isIn($0.id) }
+        NucleusSection("Collections") {
+            ForEach(collections) { col in
+                Button { navigator.open(.collection(col.id)) } label: {
+                    NucleusRow(verbatim: col.name, icon: IconTile("folder.fill", tint: .violet)) { Chevron() }
+                }
+                .buttonStyle(NucleusRowButtonStyle())
+            }
+            Button { navigator.present(.manageCollections(itemID)) } label: {
+                NucleusRow(collections.isEmpty ? "Add to a collection" : "Change collections", icon: IconTile("plus", tint: .indigo))
+            }
+            .buttonStyle(NucleusRowButtonStyle())
+        }
+
+        if !item.notes.isEmpty {
+            NucleusSection("Notes") {
+                Text(verbatim: item.notes)
+                    .font(.system(size: 15))
+                    .foregroundStyle(Nucleus.primaryText)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(16)
+            }
+        }
+
+        NucleusSection {
+            if let url = OpenLinks.url(for: item, settings: store.settings) {
+                Button { openURL(url) } label: {
+                    NucleusRow("Open on \(OpenLinks.target(for: item, settings: store.settings).type.label)",
+                               icon: IconTile("arrow.up.right.square", tint: .sky))
+                }
+                .buttonStyle(NucleusRowButtonStyle())
+            }
+            Button { confirmingDelete = true } label: { NucleusRow("Delete", titleColor: Nucleus.danger) }
+                .buttonStyle(NucleusRowButtonStyle())
+        }
+    }
+
+    @ViewBuilder
+    private func showProgress(_ item: Item) -> some View {
+        let totals = item.episodeTotals
+        NucleusSection("Progress") {
+            Button { navigator.present(.seasons(itemID)) } label: {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack {
+                        if totals.tracked {
+                            Text("\(totals.watched) of \(totals.total) episodes")
+                                .font(.system(size: 16, weight: .semibold)).foregroundStyle(Nucleus.primaryText)
+                        } else {
+                            Text("Track episodes").font(.system(size: 16, weight: .semibold)).foregroundStyle(Nucleus.primaryText)
+                        }
+                        Spacer()
+                        if item.remainingMinutes > 0, item.watchedFraction > 0 {
+                            Text("\(RuntimeText.short(item.remainingMinutes)) left").font(.system(size: 13)).foregroundStyle(Nucleus.secondaryText)
+                        }
+                        Chevron()
+                    }
+                    if totals.tracked {
+                        ProgressView(value: item.watchedFraction)
+                            .tint(item.isCompleted ? WatchStatus.completed.color : WatchStatus.watching.color)
+                    }
+                }
+                .padding(16)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(NucleusRowButtonStyle())
+        }
+    }
+}
+
+extension OpenTarget.Kind {
+    var label: String {
+        switch self {
+        case .tmdb: "TMDb"
+        case .csfd: "ČSFD"
+        case .google: "Google"
+        case .custom: String(localized: "your link")
+        }
+    }
+}
+
+/// Wraps chips onto as many lines as they need.
+struct FlowLayout: Layout {
+    var spacing: CGFloat = 6
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let width = proposal.width ?? .infinity
+        var x: CGFloat = 0, y: CGFloat = 0, line: CGFloat = 0, widest: CGFloat = 0
+        for s in subviews {
+            let size = s.sizeThatFits(.unspecified)
+            if x > 0, x + size.width > width { y += line + spacing; x = 0; line = 0 }
+            x += size.width + spacing
+            line = max(line, size.height)
+            widest = max(widest, x - spacing)
+        }
+        return CGSize(width: min(widest, width), height: y + line)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        var x = bounds.minX, y = bounds.minY, line: CGFloat = 0
+        for s in subviews {
+            let size = s.sizeThatFits(.unspecified)
+            if x > bounds.minX, x + size.width > bounds.maxX { y += line + spacing; x = bounds.minX; line = 0 }
+            s.place(at: CGPoint(x: x, y: y), proposal: ProposedViewSize(size))
+            x += size.width + spacing
+            line = max(line, size.height)
+        }
+    }
+}

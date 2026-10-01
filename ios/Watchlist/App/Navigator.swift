@@ -1,0 +1,36 @@
+import Foundation
+import Observation
+
+enum Route: Hashable {
+    case item(String)
+    case collection(String)
+    case settings
+    case stats
+    case openDefaults
+}
+
+/// A sheet over everything else. One at a time, as iOS presents them.
+enum Sheet: Identifiable, Hashable {
+    case newItem(collectionID: String?)
+    case editItem(String)
+    case manageCollections(String)
+    case seasons(String)
+    case newCollection
+    case editCollection(String)
+    case addItems(String)
+    case reorder(String)
+    case report
+
+    var id: Self { self }
+}
+
+/// Where the app is: the pushed pages and the open sheet. Any view can open an editor through it.
+@MainActor
+@Observable
+final class Navigator {
+    var path: [Route] = []
+    var sheet: Sheet?
+
+    func open(_ route: Route) { path.append(route) }
+    func present(_ sheet: Sheet) { self.sheet = sheet }
+}
