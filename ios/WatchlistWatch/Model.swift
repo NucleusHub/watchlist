@@ -41,7 +41,7 @@ struct WatchCollection: Codable, Identifiable, Hashable {
     var createdAt: String
 }
 
-/// One tap on the watch, replayed on the phone by src/sync/watchInbox.js.
+/// One tap on the watch, applied on the phone by PhoneWatchBridge.
 struct WatchOp: Codable, Identifiable {
     enum Field: String, Codable { case favorite, completed }
 
