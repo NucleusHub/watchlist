@@ -6,7 +6,7 @@ import { logoUrl } from '@/api/tmdb.js'
 import { showTotals, watchedFraction, remainingMinutes } from '@/utils/progress.js'
 import TemplateModal from '@core/TemplateModal.vue'
 import TrashIcon from '@core/TrashIcon.vue'
-import ContextMenu from '@core/ContextMenu.vue'
+import ActionMenu from '@/components/ActionMenu.vue'
 import { useLongPress } from '@/composables/useLongPress.js'
 import { useSwipeActions } from '@/composables/useSwipeActions.js'
 import { haptic } from '@/native.js'
@@ -172,7 +172,7 @@ async function removeFromCollection() {
   emit('updated', updated)
 }
 
-const menu = ref({ show: false, x: 0, y: 0 })
+const menu = ref({ show: false, anchor: null, point: null, source: null })
 const menuItems = computed(() => {
   const items = [
     { label: t('watchlist.card.edit'), icon: ICONS.pencil, action: () => emit('edit', props.item) },
@@ -191,12 +191,28 @@ const menuItems = computed(() => {
   )
   return items.map((it) => (it.action ? { ...it, action: () => { haptic('Light'); it.action() } } : it))
 })
-function openMenu(e) {
-  menu.value = { show: true, x: e.clientX, y: e.clientY }
+// Measured unscaled: the card is still shrunk from the press when the menu opens.
+function cardAnchor() {
+  const el = cardRef.value
+  if (!el) return null
+  const r = el.getBoundingClientRect()
+  const w = el.offsetWidth, h = el.offsetHeight
+  const left = r.left + r.width / 2 - w / 2, top = r.top + r.height / 2 - h / 2
+  return { left, top, right: left + w, bottom: top + h, width: w, height: h }
 }
-const longPress = useLongPress(({ x, y }) => {
-  menu.value = { show: true, x, y }
+// A right-click opens at the cursor; on touch it attaches to the card.
+function openMenu(e) {
+  const point = { x: e.clientX, y: e.clientY }
+  menu.value = e.pointerType === 'touch' || e.sourceCapabilities?.firesTouchEvents
+    ? { show: true, anchor: cardAnchor(), point, source: cardRef.value }
+    : { show: true, anchor: { left: point.x, right: point.x, top: point.y, bottom: point.y, width: 0, height: 0 }, point, source: null }
+}
+const longPress = useLongPress((point) => {
+  menu.value = { show: true, anchor: cardAnchor(), point, source: cardRef.value }
 })
+function openMenuFrom(e) {
+  menu.value = { show: true, anchor: e.currentTarget.getBoundingClientRect(), point: null, source: e.currentTarget }
+}
 const isCompleted = computed(() => props.item.status === 'completed')
 const swipe = useSwipeActions({
   enabled: computed(() => isList.value),
@@ -213,11 +229,6 @@ const swipeStyle = computed(() => {
   if (!x) return undefined
   return { transform: `translateX(${x}px)`, opacity: swipe.leaving.value ? 0 : 1 }
 })
-
-function openMenuFrom(e) {
-  const r = e.currentTarget.getBoundingClientRect()
-  menu.value = { show: true, x: r.right, y: r.bottom + 6 }
-}
 </script>
 
 <template>
@@ -252,7 +263,7 @@ function openMenuFrom(e) {
     @click.capture="longPress.onClickCapture"
     @contextmenu.prevent="openMenu"
     :style="swipeStyle"
-    :class="['item-card lg-glass group h-full rounded-2xl overflow-hidden flex', isList ? 'flex-row' : 'flex-col', swipe.dragging.value ? 'is-dragging' : '', { 'is-pressing': longPress.pressing.value, 'is-lifted': menu.show }]"
+    :class="['item-card lg-glass group h-full rounded-2xl overflow-hidden flex', isList ? 'flex-row' : 'flex-col', swipe.dragging.value ? 'is-dragging' : '', { 'is-pressing': longPress.pressing.value }]"
   >
     <div
       :class="['relative shrink-0 overflow-hidden bg-black/[0.05] dark:bg-white/[0.05]', isList ? 'w-[52px] h-[78px] self-center ml-2 my-2 rounded-lg' : 'w-full aspect-[2/3]', openUrl ? 'cursor-pointer group/poster' : '']"
@@ -656,7 +667,14 @@ function openMenuFrom(e) {
     @updated="handleProgressUpdated"
   />
 
-  <ContextMenu :show="menu.show" :x="menu.x" :y="menu.y" :items="menuItems" @close="menu.show = false" />
+  <ActionMenu
+    :show="menu.show"
+    :anchor="menu.anchor"
+    :point="menu.point"
+    :source="menu.source"
+    :items="menuItems"
+    @close="menu.show = false"
+  />
 </template>
 
 <style scoped>
@@ -683,18 +701,6 @@ function openMenuFrom(e) {
 .item-card.is-pressing {
   transform: scale(0.96);
   transition: transform 0.3s cubic-bezier(0.3, 0.6, 0.3, 1);
-}
-.item-card.is-lifted {
-  animation: card-lift 0.4s cubic-bezier(0.2, 0.9, 0.3, 1.2) forwards;
-  box-shadow: 0 26px 50px -14px rgba(15, 23, 42, 0.45), 0 0 0 1px rgba(99, 102, 241, 0.25);
-}
-.dark .item-card.is-lifted {
-  box-shadow: 0 26px 56px -14px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(167, 139, 250, 0.3);
-}
-@keyframes card-lift {
-  0% { transform: scale(0.96); }
-  55% { transform: scale(1.045); }
-  100% { transform: scale(1.02); }
 }
 
 .swipe-bg {
@@ -733,9 +739,6 @@ function openMenuFrom(e) {
 }
 .is-armed .swipe-icon { transform: scale(1.3); }
 
-@media (prefers-reduced-motion: reduce) {
-  .item-card.is-lifted { animation: none; }
-}
 
 .list-act {
   width: 28px;
