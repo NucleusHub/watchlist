@@ -1,0 +1,843 @@
+{
+  "now": "2026-10-01T12:00:00.000Z",
+  "cases": {
+    "newerRemoteWins": {
+      "a": {
+        "items": [
+          {
+            "_id": "a",
+            "title": "Local",
+            "type": "movie",
+            "status": "planned",
+            "createdAt": "2026-01-01T00:00:00.000Z",
+            "updatedAt": "2026-05-01T00:00:00.000Z"
+          }
+        ]
+      },
+      "b": {
+        "items": [
+          {
+            "_id": "a",
+            "title": "Remote",
+            "type": "movie",
+            "status": "planned",
+            "createdAt": "2026-01-01T00:00:00.000Z",
+            "updatedAt": "2026-06-01T00:00:00.000Z"
+          }
+        ]
+      },
+      "merged": {
+        "items": [
+          {
+            "_id": "a",
+            "title": "Remote",
+            "type": "movie",
+            "status": "planned",
+            "createdAt": "2026-01-01T00:00:00.000Z",
+            "updatedAt": "2026-06-01T00:00:00.000Z"
+          }
+        ],
+        "collections": [],
+        "settings": {
+          "openDefaults": null,
+          "searchSources": [
+            "tmdb"
+          ],
+          "pluginPlacements": {},
+          "tmdbApiKey": "",
+          "updatedAt": null
+        },
+        "deleted": {}
+      },
+      "fingerprint": "a@2026-06-01T00:00:00.000Z||null|0",
+      "normalizedA": {
+        "items": [
+          {
+            "_id": "a",
+            "title": "Local",
+            "type": "movie",
+            "status": "planned",
+            "createdAt": "2026-01-01T00:00:00.000Z",
+            "updatedAt": "2026-05-01T00:00:00.000Z"
+          }
+        ],
+        "collections": [],
+        "settings": {
+          "openDefaults": null,
+          "searchSources": [
+            "tmdb"
+          ],
+          "pluginPlacements": {},
+          "tmdbApiKey": "",
+          "updatedAt": null
+        },
+        "deleted": {}
+      }
+    },
+    "tieKeepsLocal": {
+      "a": {
+        "items": [
+          {
+            "_id": "a",
+            "title": "Local",
+            "type": "movie",
+            "status": "planned",
+            "createdAt": "2026-01-01T00:00:00.000Z",
+            "updatedAt": "2026-05-01T00:00:00.000Z"
+          }
+        ]
+      },
+      "b": {
+        "items": [
+          {
+            "_id": "a",
+            "title": "Remote",
+            "type": "movie",
+            "status": "planned",
+            "createdAt": "2026-01-01T00:00:00.000Z",
+            "updatedAt": "2026-05-01T00:00:00.000Z"
+          }
+        ]
+      },
+      "merged": {
+        "items": [
+          {
+            "_id": "a",
+            "title": "Local",
+            "type": "movie",
+            "status": "planned",
+            "createdAt": "2026-01-01T00:00:00.000Z",
+            "updatedAt": "2026-05-01T00:00:00.000Z"
+          }
+        ],
+        "collections": [],
+        "settings": {
+          "openDefaults": null,
+          "searchSources": [
+            "tmdb"
+          ],
+          "pluginPlacements": {},
+          "tmdbApiKey": "",
+          "updatedAt": null
+        },
+        "deleted": {}
+      },
+      "fingerprint": "a@2026-05-01T00:00:00.000Z||null|0",
+      "normalizedA": {
+        "items": [
+          {
+            "_id": "a",
+            "title": "Local",
+            "type": "movie",
+            "status": "planned",
+            "createdAt": "2026-01-01T00:00:00.000Z",
+            "updatedAt": "2026-05-01T00:00:00.000Z"
+          }
+        ],
+        "collections": [],
+        "settings": {
+          "openDefaults": null,
+          "searchSources": [
+            "tmdb"
+          ],
+          "pluginPlacements": {},
+          "tmdbApiKey": "",
+          "updatedAt": null
+        },
+        "deleted": {}
+      }
+    },
+    "unionKeepsOrder": {
+      "a": {
+        "items": [
+          {
+            "_id": "b",
+            "title": "B",
+            "type": "movie",
+            "status": "planned",
+            "createdAt": "2026-01-01T00:00:00.000Z",
+            "updatedAt": "2026-05-01T00:00:00.000Z"
+          },
+          {
+            "_id": "a",
+            "title": "A",
+            "type": "movie",
+            "status": "planned",
+            "createdAt": "2026-01-01T00:00:00.000Z",
+            "updatedAt": "2026-05-01T00:00:00.000Z"
+          }
+        ]
+      },
+      "b": {
+        "items": [
+          {
+            "_id": "c",
+            "title": "C",
+            "type": "movie",
+            "status": "planned",
+            "createdAt": "2026-01-01T00:00:00.000Z",
+            "updatedAt": "2026-05-01T00:00:00.000Z"
+          },
+          {
+            "_id": "a",
+            "title": "A2",
+            "type": "movie",
+            "status": "planned",
+            "createdAt": "2026-01-01T00:00:00.000Z",
+            "updatedAt": "2026-07-01T00:00:00.000Z"
+          }
+        ]
+      },
+      "merged": {
+        "items": [
+          {
+            "_id": "b",
+            "title": "B",
+            "type": "movie",
+            "status": "planned",
+            "createdAt": "2026-01-01T00:00:00.000Z",
+            "updatedAt": "2026-05-01T00:00:00.000Z"
+          },
+          {
+            "_id": "a",
+            "title": "A2",
+            "type": "movie",
+            "status": "planned",
+            "createdAt": "2026-01-01T00:00:00.000Z",
+            "updatedAt": "2026-07-01T00:00:00.000Z"
+          },
+          {
+            "_id": "c",
+            "title": "C",
+            "type": "movie",
+            "status": "planned",
+            "createdAt": "2026-01-01T00:00:00.000Z",
+            "updatedAt": "2026-05-01T00:00:00.000Z"
+          }
+        ],
+        "collections": [],
+        "settings": {
+          "openDefaults": null,
+          "searchSources": [
+            "tmdb"
+          ],
+          "pluginPlacements": {},
+          "tmdbApiKey": "",
+          "updatedAt": null
+        },
+        "deleted": {}
+      },
+      "fingerprint": "a@2026-07-01T00:00:00.000Z,b@2026-05-01T00:00:00.000Z,c@2026-05-01T00:00:00.000Z||null|0",
+      "normalizedA": {
+        "items": [
+          {
+            "_id": "b",
+            "title": "B",
+            "type": "movie",
+            "status": "planned",
+            "createdAt": "2026-01-01T00:00:00.000Z",
+            "updatedAt": "2026-05-01T00:00:00.000Z"
+          },
+          {
+            "_id": "a",
+            "title": "A",
+            "type": "movie",
+            "status": "planned",
+            "createdAt": "2026-01-01T00:00:00.000Z",
+            "updatedAt": "2026-05-01T00:00:00.000Z"
+          }
+        ],
+        "collections": [],
+        "settings": {
+          "openDefaults": null,
+          "searchSources": [
+            "tmdb"
+          ],
+          "pluginPlacements": {},
+          "tmdbApiKey": "",
+          "updatedAt": null
+        },
+        "deleted": {}
+      }
+    },
+    "deleteBeatsOlderEdit": {
+      "a": {
+        "items": [
+          {
+            "_id": "a",
+            "title": "A",
+            "type": "movie",
+            "status": "planned",
+            "createdAt": "2026-01-01T00:00:00.000Z",
+            "updatedAt": "2026-05-01T00:00:00.000Z"
+          }
+        ]
+      },
+      "b": {
+        "items": [],
+        "deleted": {
+          "a": "2026-06-01T00:00:00.000Z"
+        }
+      },
+      "merged": {
+        "items": [],
+        "collections": [],
+        "settings": {
+          "openDefaults": null,
+          "searchSources": [
+            "tmdb"
+          ],
+          "pluginPlacements": {},
+          "tmdbApiKey": "",
+          "updatedAt": null
+        },
+        "deleted": {
+          "a": "2026-06-01T00:00:00.000Z"
+        }
+      },
+      "fingerprint": "||null|1",
+      "normalizedA": {
+        "items": [
+          {
+            "_id": "a",
+            "title": "A",
+            "type": "movie",
+            "status": "planned",
+            "createdAt": "2026-01-01T00:00:00.000Z",
+            "updatedAt": "2026-05-01T00:00:00.000Z"
+          }
+        ],
+        "collections": [],
+        "settings": {
+          "openDefaults": null,
+          "searchSources": [
+            "tmdb"
+          ],
+          "pluginPlacements": {},
+          "tmdbApiKey": "",
+          "updatedAt": null
+        },
+        "deleted": {}
+      }
+    },
+    "editAfterDeleteSurvives": {
+      "a": {
+        "items": [
+          {
+            "_id": "a",
+            "title": "A",
+            "type": "movie",
+            "status": "planned",
+            "createdAt": "2026-01-01T00:00:00.000Z",
+            "updatedAt": "2026-07-01T00:00:00.000Z"
+          }
+        ]
+      },
+      "b": {
+        "items": [],
+        "deleted": {
+          "a": "2026-06-01T00:00:00.000Z"
+        }
+      },
+      "merged": {
+        "items": [
+          {
+            "_id": "a",
+            "title": "A",
+            "type": "movie",
+            "status": "planned",
+            "createdAt": "2026-01-01T00:00:00.000Z",
+            "updatedAt": "2026-07-01T00:00:00.000Z"
+          }
+        ],
+        "collections": [],
+        "settings": {
+          "openDefaults": null,
+          "searchSources": [
+            "tmdb"
+          ],
+          "pluginPlacements": {},
+          "tmdbApiKey": "",
+          "updatedAt": null
+        },
+        "deleted": {
+          "a": "2026-06-01T00:00:00.000Z"
+        }
+      },
+      "fingerprint": "a@2026-07-01T00:00:00.000Z||null|1",
+      "normalizedA": {
+        "items": [
+          {
+            "_id": "a",
+            "title": "A",
+            "type": "movie",
+            "status": "planned",
+            "createdAt": "2026-01-01T00:00:00.000Z",
+            "updatedAt": "2026-07-01T00:00:00.000Z"
+          }
+        ],
+        "collections": [],
+        "settings": {
+          "openDefaults": null,
+          "searchSources": [
+            "tmdb"
+          ],
+          "pluginPlacements": {},
+          "tmdbApiKey": "",
+          "updatedAt": null
+        },
+        "deleted": {}
+      }
+    },
+    "expiredTombstoneDropped": {
+      "a": {
+        "items": [],
+        "deleted": {
+          "old": "2025-01-01T00:00:00.000Z",
+          "fresh": "2026-09-01T00:00:00.000Z"
+        }
+      },
+      "b": {
+        "items": [],
+        "deleted": {
+          "fresh": "2026-09-15T00:00:00.000Z"
+        }
+      },
+      "merged": {
+        "items": [],
+        "collections": [],
+        "settings": {
+          "openDefaults": null,
+          "searchSources": [
+            "tmdb"
+          ],
+          "pluginPlacements": {},
+          "tmdbApiKey": "",
+          "updatedAt": null
+        },
+        "deleted": {
+          "fresh": "2026-09-15T00:00:00.000Z"
+        }
+      },
+      "fingerprint": "||null|1",
+      "normalizedA": {
+        "items": [],
+        "collections": [],
+        "settings": {
+          "openDefaults": null,
+          "searchSources": [
+            "tmdb"
+          ],
+          "pluginPlacements": {},
+          "tmdbApiKey": "",
+          "updatedAt": null
+        },
+        "deleted": {
+          "old": "2025-01-01T00:00:00.000Z",
+          "fresh": "2026-09-01T00:00:00.000Z"
+        }
+      }
+    },
+    "newerTombstoneKept": {
+      "a": {
+        "deleted": {
+          "x": "2026-08-01T00:00:00.000Z"
+        }
+      },
+      "b": {
+        "deleted": {
+          "x": "2026-09-01T00:00:00.000Z"
+        }
+      },
+      "merged": {
+        "items": [],
+        "collections": [],
+        "settings": {
+          "openDefaults": null,
+          "searchSources": [
+            "tmdb"
+          ],
+          "pluginPlacements": {},
+          "tmdbApiKey": "",
+          "updatedAt": null
+        },
+        "deleted": {
+          "x": "2026-09-01T00:00:00.000Z"
+        }
+      },
+      "fingerprint": "||null|1",
+      "normalizedA": {
+        "items": [],
+        "collections": [],
+        "settings": {
+          "openDefaults": null,
+          "searchSources": [
+            "tmdb"
+          ],
+          "pluginPlacements": {},
+          "tmdbApiKey": "",
+          "updatedAt": null
+        },
+        "deleted": {
+          "x": "2026-08-01T00:00:00.000Z"
+        }
+      }
+    },
+    "missingUpdatedAtUsesCreatedAt": {
+      "a": {
+        "items": [
+          {
+            "_id": "a",
+            "title": "NoStamp",
+            "createdAt": "2026-03-01T00:00:00.000Z"
+          }
+        ]
+      },
+      "b": {
+        "items": [
+          {
+            "_id": "a",
+            "title": "Stamped",
+            "type": "movie",
+            "status": "planned",
+            "createdAt": "2026-01-01T00:00:00.000Z",
+            "updatedAt": "2026-02-01T00:00:00.000Z"
+          }
+        ]
+      },
+      "merged": {
+        "items": [
+          {
+            "_id": "a",
+            "title": "NoStamp",
+            "createdAt": "2026-03-01T00:00:00.000Z"
+          }
+        ],
+        "collections": [],
+        "settings": {
+          "openDefaults": null,
+          "searchSources": [
+            "tmdb"
+          ],
+          "pluginPlacements": {},
+          "tmdbApiKey": "",
+          "updatedAt": null
+        },
+        "deleted": {}
+      },
+      "fingerprint": "a@undefined||null|0",
+      "normalizedA": {
+        "items": [
+          {
+            "_id": "a",
+            "title": "NoStamp",
+            "createdAt": "2026-03-01T00:00:00.000Z"
+          }
+        ],
+        "collections": [],
+        "settings": {
+          "openDefaults": null,
+          "searchSources": [
+            "tmdb"
+          ],
+          "pluginPlacements": {},
+          "tmdbApiKey": "",
+          "updatedAt": null
+        },
+        "deleted": {}
+      }
+    },
+    "invalidRecordsDropped": {
+      "a": {
+        "items": [
+          {
+            "_id": "",
+            "title": "no id"
+          },
+          {
+            "_id": "n",
+            "title": ""
+          },
+          {
+            "_id": "ok",
+            "title": "Ok",
+            "type": "movie",
+            "status": "planned",
+            "createdAt": "2026-01-01T00:00:00.000Z",
+            "updatedAt": "2026-01-02T00:00:00.000Z"
+          }
+        ],
+        "collections": [
+          {
+            "_id": "c"
+          }
+        ]
+      },
+      "b": {
+        "items": null,
+        "collections": [
+          {
+            "_id": "c2",
+            "name": "Named",
+            "createdAt": "2026-01-01T00:00:00.000Z",
+            "updatedAt": "2026-01-02T00:00:00.000Z"
+          }
+        ]
+      },
+      "merged": {
+        "items": [
+          {
+            "_id": "ok",
+            "title": "Ok",
+            "type": "movie",
+            "status": "planned",
+            "createdAt": "2026-01-01T00:00:00.000Z",
+            "updatedAt": "2026-01-02T00:00:00.000Z"
+          }
+        ],
+        "collections": [
+          {
+            "_id": "c2",
+            "name": "Named",
+            "createdAt": "2026-01-01T00:00:00.000Z",
+            "updatedAt": "2026-01-02T00:00:00.000Z"
+          }
+        ],
+        "settings": {
+          "openDefaults": null,
+          "searchSources": [
+            "tmdb"
+          ],
+          "pluginPlacements": {},
+          "tmdbApiKey": "",
+          "updatedAt": null
+        },
+        "deleted": {}
+      },
+      "fingerprint": "ok@2026-01-02T00:00:00.000Z|c2@2026-01-02T00:00:00.000Z|null|0",
+      "normalizedA": {
+        "items": [
+          {
+            "_id": "ok",
+            "title": "Ok",
+            "type": "movie",
+            "status": "planned",
+            "createdAt": "2026-01-01T00:00:00.000Z",
+            "updatedAt": "2026-01-02T00:00:00.000Z"
+          }
+        ],
+        "collections": [],
+        "settings": {
+          "openDefaults": null,
+          "searchSources": [
+            "tmdb"
+          ],
+          "pluginPlacements": {},
+          "tmdbApiKey": "",
+          "updatedAt": null
+        },
+        "deleted": {}
+      }
+    },
+    "settingsNewerRemote": {
+      "a": {
+        "settings": {
+          "openDefaults": null,
+          "searchSources": [
+            "tmdb"
+          ],
+          "pluginPlacements": {},
+          "tmdbApiKey": "local",
+          "updatedAt": "2026-05-01T00:00:00.000Z"
+        }
+      },
+      "b": {
+        "settings": {
+          "openDefaults": null,
+          "searchSources": [
+            "tmdb"
+          ],
+          "pluginPlacements": {},
+          "tmdbApiKey": "remote",
+          "updatedAt": "2026-06-01T00:00:00.000Z"
+        }
+      },
+      "merged": {
+        "items": [],
+        "collections": [],
+        "settings": {
+          "openDefaults": null,
+          "searchSources": [
+            "tmdb"
+          ],
+          "pluginPlacements": {},
+          "tmdbApiKey": "remote",
+          "updatedAt": "2026-06-01T00:00:00.000Z"
+        },
+        "deleted": {}
+      },
+      "fingerprint": "||2026-06-01T00:00:00.000Z|0",
+      "normalizedA": {
+        "items": [],
+        "collections": [],
+        "settings": {
+          "openDefaults": null,
+          "searchSources": [
+            "tmdb"
+          ],
+          "pluginPlacements": {},
+          "tmdbApiKey": "local",
+          "updatedAt": "2026-05-01T00:00:00.000Z"
+        },
+        "deleted": {}
+      }
+    },
+    "settingsPartialFilled": {
+      "a": {
+        "settings": {
+          "tmdbApiKey": "k"
+        }
+      },
+      "b": {},
+      "merged": {
+        "items": [],
+        "collections": [],
+        "settings": {
+          "openDefaults": null,
+          "searchSources": [
+            "tmdb"
+          ],
+          "pluginPlacements": {},
+          "tmdbApiKey": "k",
+          "updatedAt": null
+        },
+        "deleted": {}
+      },
+      "fingerprint": "||null|0",
+      "normalizedA": {
+        "items": [],
+        "collections": [],
+        "settings": {
+          "openDefaults": null,
+          "searchSources": [
+            "tmdb"
+          ],
+          "pluginPlacements": {},
+          "tmdbApiKey": "k",
+          "updatedAt": null
+        },
+        "deleted": {}
+      }
+    },
+    "unknownFieldsAndStringNumbers": {
+      "a": {
+        "items": [
+          {
+            "_id": "a",
+            "title": "A",
+            "type": "movie",
+            "status": "planned",
+            "createdAt": "2026-01-01T00:00:00.000Z",
+            "updatedAt": "2026-05-01T00:00:00.000Z",
+            "year": "1999",
+            "pluginField": {
+              "nested": [
+                1,
+                2
+              ]
+            },
+            "rating": 7.5
+          }
+        ]
+      },
+      "b": {
+        "collections": [
+          {
+            "_id": "c",
+            "name": "C",
+            "createdAt": "2026-01-01T00:00:00.000Z",
+            "updatedAt": "2026-05-01T00:00:00.000Z",
+            "itemOrder": [
+              "a"
+            ],
+            "kind": "manual"
+          }
+        ]
+      },
+      "merged": {
+        "items": [
+          {
+            "_id": "a",
+            "title": "A",
+            "type": "movie",
+            "status": "planned",
+            "createdAt": "2026-01-01T00:00:00.000Z",
+            "updatedAt": "2026-05-01T00:00:00.000Z",
+            "year": "1999",
+            "pluginField": {
+              "nested": [
+                1,
+                2
+              ]
+            },
+            "rating": 7.5
+          }
+        ],
+        "collections": [
+          {
+            "_id": "c",
+            "name": "C",
+            "createdAt": "2026-01-01T00:00:00.000Z",
+            "updatedAt": "2026-05-01T00:00:00.000Z",
+            "itemOrder": [
+              "a"
+            ],
+            "kind": "manual"
+          }
+        ],
+        "settings": {
+          "openDefaults": null,
+          "searchSources": [
+            "tmdb"
+          ],
+          "pluginPlacements": {},
+          "tmdbApiKey": "",
+          "updatedAt": null
+        },
+        "deleted": {}
+      },
+      "fingerprint": "a@2026-05-01T00:00:00.000Z|c@2026-05-01T00:00:00.000Z|null|0",
+      "normalizedA": {
+        "items": [
+          {
+            "_id": "a",
+            "title": "A",
+            "type": "movie",
+            "status": "planned",
+            "createdAt": "2026-01-01T00:00:00.000Z",
+            "updatedAt": "2026-05-01T00:00:00.000Z",
+            "year": "1999",
+            "pluginField": {
+              "nested": [
+                1,
+                2
+              ]
+            },
+            "rating": 7.5
+          }
+        ],
+        "collections": [],
+        "settings": {
+          "openDefaults": null,
+          "searchSources": [
+            "tmdb"
+          ],
+          "pluginPlacements": {},
+          "tmdbApiKey": "",
+          "updatedAt": null
+        },
+        "deleted": {}
+      }
+    }
+  }
+}
