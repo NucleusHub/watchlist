@@ -316,7 +316,12 @@ def main():
             "en": {"stringUnit": {"state": "translated", "value": en}, "substitutions": subs("en")},
             "cs": {"stringUnit": {"state": "translated", "value": cs}, "substitutions": subs("cs")},
         }}
-    catalog = {"sourceLanguage": "en", "strings": dict(sorted(strings.items())), "version": "1.0"}
+    # Merge into what Xcode keeps there (its own entries and bookkeeping), replacing only our translations.
+    existing = json.loads(CATALOG.read_text()) if CATALOG.exists() else {}
+    merged = existing.get("strings", {})
+    for key, entry in strings.items():
+        merged[key] = {**merged.get(key, {}), **entry}
+    catalog = {**existing, "sourceLanguage": "en", "strings": dict(sorted(merged.items())), "version": existing.get("version", "1.0")}
     CATALOG.write_text(json.dumps(catalog, ensure_ascii=False, indent=2, separators=(",", " : "), sort_keys=True) + "\n")
     print(f"{len(strings)} strings → {CATALOG.relative_to(Path.cwd()) if CATALOG.is_relative_to(Path.cwd()) else CATALOG}")
 

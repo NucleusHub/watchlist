@@ -8,9 +8,9 @@ options:
   developmentLanguage: en
 
 packages:
-  # Switches to https://github.com/NucleusHub/nucleus-ui once that repo is published.
   NucleusUI:
-    path: ../../../nucleus-ui
+    url: https://github.com/NucleusHub/nucleus-native-ui
+    from: 0.1.0
 
 settings:
   base:

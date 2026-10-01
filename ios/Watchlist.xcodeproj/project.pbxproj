@@ -149,7 +149,6 @@
 		8EFC147A284684CD995BE071 /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
 		93CBAFB0796D693992D3CA96 /* Records.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Records.swift; sourceTree = "<group>"; };
 		96C4EF013BC8EA896463FF0B /* Poster.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Poster.swift; sourceTree = "<group>"; };
-		97FC0BE0D53AC29D2193ACA8 /* nucleus-ui */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "nucleus-ui"; path = "../../../nucleus-ui"; sourceTree = SOURCE_ROOT; };
 		9B0170EC69B7A212C5005E0A /* ItemDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemDetailView.swift; sourceTree = "<group>"; };
 		9B720071CF863755DA85BA42 /* GestureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GestureTests.swift; sourceTree = "<group>"; };
 		A1F59D83FD2435E02B944284 /* StoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreTests.swift; sourceTree = "<group>"; };
@@ -353,7 +352,6 @@
 		89ACF035640268850B2C3EC9 = {
 			isa = PBXGroup;
 			children = (
-				A49C7CBA8B9A70C398884E07 /* Packages */,
 				7F970194209225C612E70793 /* Watchlist */,
 				CA8D0CBB127692B2CE51599B /* WatchlistTests */,
 				A2896BFDA25C15DF82AF5E5B /* WatchlistUITests */,
@@ -388,14 +386,6 @@
 				834348AF8E735D00207B6493 /* NucleusSession.swift */,
 			);
 			path = Account;
-			sourceTree = "<group>";
-		};
-		A49C7CBA8B9A70C398884E07 /* Packages */ = {
-			isa = PBXGroup;
-			children = (
-				97FC0BE0D53AC29D2193ACA8 /* nucleus-ui */,
-			);
-			name = Packages;
 			sourceTree = "<group>";
 		};
 		A8E2457D6074FF4F94DF57D7 /* Stats */ = {
@@ -577,7 +567,7 @@
 			mainGroup = 89ACF035640268850B2C3EC9;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				DDE225DDA3CD1F8CDA209D4C /* XCLocalSwiftPackageReference "../../../nucleus-ui" */,
+				0E1933D4311ABD8E6BB2C5A7 /* XCRemoteSwiftPackageReference "nucleus-native-ui" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 69FE105B955E31AB1ACF305B /* Products */;
@@ -1064,16 +1054,21 @@
 		};
 /* End XCConfigurationList section */
 
-/* Begin XCLocalSwiftPackageReference section */
-		DDE225DDA3CD1F8CDA209D4C /* XCLocalSwiftPackageReference "../../../nucleus-ui" */ = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = "../../../nucleus-ui";
+/* Begin XCRemoteSwiftPackageReference section */
+		0E1933D4311ABD8E6BB2C5A7 /* XCRemoteSwiftPackageReference "nucleus-native-ui" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/NucleusHub/nucleus-native-ui";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.1.0;
+			};
 		};
-/* End XCLocalSwiftPackageReference section */
+/* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
 		62F9957BE986BA28A0D02E42 /* NucleusUI */ = {
 			isa = XCSwiftPackageProductDependency;
+			package = 0E1933D4311ABD8E6BB2C5A7 /* XCRemoteSwiftPackageReference "nucleus-native-ui" */;
 			productName = NucleusUI;
 		};
 /* End XCSwiftPackageProductDependency section */

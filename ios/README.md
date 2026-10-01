@@ -12,8 +12,8 @@ open Watchlist.xcodeproj
 ```
 
 Run the **Watchlist** scheme on an iPhone, or **WatchlistWatch** on a watch simulator paired with that iPhone.
-The UI uses [NucleusUI](https://github.com/NucleusHub/nucleus-ui), the design system shared with Shell
-(for now from `../../../nucleus-ui`, see `project.yml`).
+The UI uses [NucleusUI](https://github.com/NucleusHub/nucleus-native-ui), the design system shared with Shell.
+To work on it alongside the app, point `NucleusUI` in `project.yml` at a local checkout with `path:`.
 
 ## Layout
 

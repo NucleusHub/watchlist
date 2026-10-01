@@ -1,6 +1,7 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "" : {},
     "%@ left" : {
       "localizations" : {
         "cs" : {
@@ -11,6 +12,7 @@
         }
       }
     },
+    "%lld" : {},
     "%lld / %lld" : {
       "localizations" : {
         "cs" : {
@@ -1055,6 +1057,7 @@
         }
       }
     },
+    "Clear" : {},
     "Clear filters" : {
       "localizations" : {
         "cs" : {
@@ -1166,6 +1169,7 @@
       }
     },
     "Dark" : {
+      "extractionState" : "stale",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -1485,6 +1489,7 @@
         }
       }
     },
+    "Get a free key" : {},
     "Group titles into lists like “Weekend picks” or “Christmas”." : {
       "localizations" : {
         "cs" : {
@@ -1648,6 +1653,7 @@
       }
     },
     "Light" : {
+      "extractionState" : "stale",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -1857,6 +1863,7 @@
         }
       }
     },
+    "Not set" : {},
     "Not synced yet" : {
       "localizations" : {
         "cs" : {
@@ -2007,6 +2014,7 @@
         }
       }
     },
+    "Paste your key" : {},
     "Pick titles" : {
       "localizations" : {
         "cs" : {
@@ -2229,6 +2237,7 @@
         }
       }
     },
+    "Remove key" : {},
     "Remove photo" : {
       "localizations" : {
         "cs" : {
@@ -2680,6 +2689,7 @@
       }
     },
     "System" : {
+      "extractionState" : "stale",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -2719,6 +2729,7 @@
         }
       }
     },
+    "TMDb didn't accept this key. Check you copied all of it." : {},
     "TMDb rates it %@." : {
       "localizations" : {
         "cs" : {
@@ -2789,6 +2800,7 @@
         }
       }
     },
+    "The “API Key” from your TMDb account settings, not the read access token." : {},
     "This device has %lld titles and %lld collections. Merge them into your account, or replace them with the account's copy?" : {
       "localizations" : {
         "cs" : {
@@ -3233,6 +3245,8 @@
         }
       }
     },
+    "https://" : {},
+    "https://example.com/search?q={title}" : {},
     "your link" : {
       "localizations" : {
         "cs" : {
@@ -3252,7 +3266,8 @@
           }
         }
       }
-    }
+    },
+    "—" : {}
   },
   "version" : "1.0"
 }
