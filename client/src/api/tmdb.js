@@ -1,7 +1,7 @@
 const BASE = 'https://api.themoviedb.org/3'
 export const KEY_STORAGE_KEY = 'watchlist-tmdb-api-key'
 
-function getKey() {
+export function getKey() {
   try {
     const stored = localStorage.getItem(KEY_STORAGE_KEY)
     if (stored) return stored

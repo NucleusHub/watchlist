@@ -1,8 +1,13 @@
+import * as Vue from 'vue'
+import { Capacitor } from '@capacitor/core'
 import { ref, readonly } from 'vue'
 import { readJson, writeJson, remove } from '@/storage/persist.js'
 import { sha256Hex } from '@/auth/pkce.js'
 import { NUCLEUS_ID_ORIGIN } from '@/auth/nucleusId.js'
 import { addRuntimeSources, removeRuntimeSources } from '@/api/sources.js'
+import { addRuntimeSurface, removeRuntimeSurface } from '@/utils/pluginSurfaces.js'
+import { createItem, updateItem } from '@/api/watchlist.js'
+import { getKey as tmdbKey } from '@/api/tmdb.js'
 
 // Plugins installed from the Nucleus Marketplace at runtime — the iOS app's
 // counterpart to a self-hosted Nucleus cloning a plugin into plugins/. The
@@ -11,6 +16,8 @@ import { addRuntimeSources, removeRuntimeSources } from '@/api/sources.js'
 // listing's SHA-256, kept on the device, and imported from a blob on launch.
 const MARKETPLACE = `${NUCLEUS_ID_ORIGIN}/api/v1/native`
 const TARGET = 'watchlist'
+// The marketplace serves each OS the bundle from the branch the listing names for it.
+const PLATFORM = Capacitor.getPlatform() === 'android' ? 'android' : 'ios'
 const INDEX_KEY = 'watchlist-plugins'
 const codeKey = (id, extension) => `watchlist-plugin:${id}:${extension}`
 
@@ -18,10 +25,19 @@ const codeKey = (id, extension) => `watchlist-plugin:${id}:${extension}`
 // with NATIVE_EXTENSIONS in nucleus-web's lib/native.js.
 const EXTENSIONS = {
   watchlistSources: (pluginId, exported) => addRuntimeSources(pluginId, exported),
+  watchlistSurface: (pluginId, exported) => {
+    exported?.connect?.({ createItem, updateItem, tmdbKey })
+    addRuntimeSurface(pluginId, exported)
+  },
 }
 const RELEASE = {
   watchlistSources: (pluginId) => removeRuntimeSources(pluginId),
+  watchlistSurface: (pluginId) => removeRuntimeSurface(pluginId),
 }
+
+// A surface bundle renders with the app's own Vue — a second copy couldn't
+// mount into this app — so it reads it from here instead of importing it.
+globalThis.__nucleusVue = Vue
 
 const installed = ref([]) // [{ id, name, tagline, version, iconSvg, author, bundles: [{ extension, sha256 }], installedAt }]
 const problems = ref({}) // id → why it didn't load
@@ -69,7 +85,7 @@ export async function initNativePlugins() {
 
 /** What the marketplace offers this app. */
 export async function fetchCatalogue() {
-  const res = await fetch(`${MARKETPLACE}/plugins?target=${TARGET}`)
+  const res = await fetch(`${MARKETPLACE}/plugins?target=${TARGET}&platform=${PLATFORM}`)
   if (!res.ok) throw new Error(`Marketplace ${res.status}`)
   const { plugins } = await res.json()
   return plugins.filter((p) => supported(p).length)
@@ -87,7 +103,7 @@ export async function install(listing) {
   // failed update leaves the working version in place.
   const downloaded = []
   for (const b of bundles) {
-    const res = await fetch(`${MARKETPLACE}/plugins/${encodeURIComponent(listing.id)}/${b.extension}`)
+    const res = await fetch(`${MARKETPLACE}/plugins/${encodeURIComponent(listing.id)}/${b.extension}?platform=${PLATFORM}`)
     if (!res.ok) throw new Error(`Download failed (${res.status})`)
     const code = await res.text()
     if ((await sha256Hex(code)) !== b.sha256) throw new Error('The download did not match the marketplace listing.')
