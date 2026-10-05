@@ -21,6 +21,8 @@ struct RootView: View {
                     case .settings: SettingsView()
                     case .stats: StatsView()
                     case .openDefaults: OpenDefaultsView()
+                    case .searchSources: SearchSourcesView()
+                    case .plugins: PluginsView()
                     }
                 }
         }

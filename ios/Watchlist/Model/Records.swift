@@ -239,6 +239,12 @@ struct Item: JSONRecord {
         set { set("openTarget", newValue?.json ?? .null) }
     }
 
+    /// The plugin source the title came from, e.g. `kitsu-anime`; nil for TMDb and typed-in titles.
+    var source: String? {
+        get { string("source").flatMap { $0.isEmpty ? nil : $0 } }
+        set { set("source", JSONValue(newValue)) }
+    }
+
     /// The last page the in-app browser was on, video or not.
     var lastPage: String? {
         get { string("lastPage").flatMap { $0.isEmpty ? nil : $0 } }

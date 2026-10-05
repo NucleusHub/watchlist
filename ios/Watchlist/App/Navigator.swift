@@ -7,6 +7,8 @@ enum Route: Hashable {
     case settings
     case stats
     case openDefaults
+    case searchSources
+    case plugins
 }
 
 /// A page for the in-app browser; a saved playback of the item reopens instead of `home`.

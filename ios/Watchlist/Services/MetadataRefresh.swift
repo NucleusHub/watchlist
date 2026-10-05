@@ -26,7 +26,8 @@ final class MetadataRefresh {
         task = Task {
             for id in ids {
                 if Task.isCancelled { break }
-                if var item = store.item(id) {
+                // TMDb would only guess at titles that came from another source.
+                if var item = store.item(id), item.source == nil {
                     let before = item.raw
                     do {
                         if try await tmdb.refresh(&item) {

@@ -11,6 +11,13 @@ packages:
   NucleusUI:
     url: https://github.com/NucleusHub/nucleus-native-ui
     from: 0.1.0
+  # Siblings in the Nucleus monorepo: the plugin loader, Watchlist's plugin contract and the anime plugin.
+  NucleusPlugins:
+    path: ../../../nucleus-native-plugins
+  WatchlistPluginKit:
+    path: ../plugin-kit
+  AnimeSourcePlugin:
+    path: ../../../plugins/anime-source
 
 settings:
   base:
@@ -28,6 +35,9 @@ targets:
       - path: Watchlist
     dependencies:
       - package: NucleusUI
+      - package: NucleusPlugins
+      - package: WatchlistPluginKit
+      - package: AnimeSourcePlugin
       - target: WatchlistWatch
     settings:
       base:
@@ -91,6 +101,8 @@ targets:
       - path: WatchlistWatch/Model.swift
     dependencies:
       - target: Watchlist
+      - package: NucleusPlugins
+      - package: WatchlistPluginKit
     settings:
       base:
         GENERATE_INFOPLIST_FILE: YES

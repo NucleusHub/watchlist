@@ -15,6 +15,13 @@ Run the **Watchlist** scheme on an iPhone, or **WatchlistWatch** on a watch simu
 The UI uses [NucleusUI](https://github.com/NucleusHub/nucleus-native-ui), the design system shared with Shell.
 To work on it alongside the app, point `NucleusUI` in `project.yml` at a local checkout with `path:`.
 
+## Plugins
+
+Search sources are plugins. `NucleusPlugins` (`nucleus-native-plugins`) is the shared loader, `WatchlistPluginKit`
+(`../plugin-kit`) is Watchlist's contract (`SearchSource`, `HomeSection`), and the anime source is `plugins/anime-source`.
+All are local packages in `project.yml`. `WatchlistApp` installs plugins; Settings → Plugins switches them, Settings → Search sources
+picks which sources the add screen searches.
+
 ## Layout
 
 | Folder | What's in it |
@@ -22,7 +29,7 @@ To work on it alongside the app, point `NucleusUI` in `project.yml` at a local c
 | `Watchlist/Model` | The document, items, collections, settings, and the merge |
 | `Watchlist/Store` | The on-device store, backups, Keychain, preferences, and the one-time migration from the Capacitor app |
 | `Watchlist/Account` | Nucleus ID sign-in (PKCE) and cloud sync (`/api/v1/app-data/watchlist`) |
-| `Watchlist/Services` | TMDb, "Open on" links, watching progress, image helpers |
+| `Watchlist/Services` | TMDb, search sources (`Sources.swift`), "Open on" links, watching progress, image helpers |
 | `Watchlist/Features` | The screens |
 | `Watchlist/Watch` | The phone's side of WatchConnectivity |
 | `WatchlistWatch` | The watch app |
@@ -45,5 +52,5 @@ English strings are in the Swift code. Czech is in `design/cs.py`; edit it and r
 ## Debug launch arguments
 
 `-resetAll`, `-sampleData`, `-skipWelcome`, `-appearance light|dark`, `-grid list|big|small`,
-`-route settings|stats|item|collection|add|edit|seasons`. `ScreenshotTests` uses them to capture every screen
+`-animeSource` (search Kitsu too), `-route settings|sources|plugins|stats|item|collection|add|edit|seasons`. `ScreenshotTests` uses them to capture every screen
 (set `TEST_RUNNER_SHOT_DIR` to keep the images).

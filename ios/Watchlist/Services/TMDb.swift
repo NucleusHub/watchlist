@@ -16,7 +16,7 @@ struct TMDb {
         }
     }
 
-    struct SearchResult: Identifiable, Hashable, Sendable {
+    struct SearchResult: Identifiable, Hashable, Sendable, Codable {
         let id: Int
         let type: ItemType
         let title: String

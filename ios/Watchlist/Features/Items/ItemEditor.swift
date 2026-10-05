@@ -1,17 +1,19 @@
+import NucleusPlugins
 import NucleusUI
 import PhotosUI
 import SwiftUI
 
-/// Add or edit a title. Typing a title searches TMDb; picking a result fills in the rest.
+/// Add or edit a title. Typing a title searches the chosen sources; picking a result fills in the rest.
 struct ItemEditor: View {
     let itemID: String?
     var collectionID: String? = nil
     @Environment(WatchlistStore.self) private var store
+    @Environment(PluginRegistry.self) private var registry
     @Environment(\.dismiss) private var dismiss
 
     @State private var draft = Item(title: "", type: .movie)
     @State private var loaded = false
-    @State private var results: [TMDb.SearchResult] = []
+    @State private var results: [SourceHit] = []
     @State private var searchError: String?
     @State private var searching = false
     @State private var filling = false
@@ -28,7 +30,7 @@ struct ItemEditor: View {
 
     private var isNew: Bool { itemID == nil }
     private var canSave: Bool { !draft.title.trimmingCharacters(in: .whitespaces).isEmpty && !filling }
-    private var tmdb: TMDb { TMDb(apiKey: store.settings.tmdbApiKey) }
+    private var catalog: SourceCatalog { SourceCatalog(registry: registry, settings: store.settings) }
 
     var body: some View {
         NucleusSheetPage(isNew ? "Add title" : "Edit title", confirmTitle: isNew ? "Add" : "Save", canConfirm: canSave,
@@ -98,7 +100,7 @@ struct ItemEditor: View {
         NucleusSection(footer: searchFooter) {
             HStack(spacing: 10) {
                 Image(systemName: "magnifyingglass").foregroundStyle(Nucleus.secondaryText)
-                TextField("Title, or search TMDb", text: Binding(get: { draft.title }, set: { draft.title = $0; picked = false }))
+                TextField(onlyTMDb ? LocalizedStringKey("Title, or search TMDb") : LocalizedStringKey("Title, or search"), text: Binding(get: { draft.title }, set: { draft.title = $0; picked = false }))
                     .font(.system(size: 17, weight: .medium))
                     .focused($titleFocused)
                     .submitLabel(.done)
@@ -110,14 +112,15 @@ struct ItemEditor: View {
                 ForEach(results) { r in
                     Button { pick(r) } label: {
                         HStack(spacing: 12) {
-                            AsyncImage(url: r.thumbURL) { $0.resizable().scaledToFill() } placeholder: { Nucleus.well }
+                            AsyncImage(url: r.thumbnail) { $0.resizable().scaledToFill() } placeholder: { Nucleus.well }
                                 .frame(width: 36, height: 54)
                                 .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(verbatim: r.title).font(.system(size: 15, weight: .medium)).foregroundStyle(Nucleus.primaryText).lineLimit(2)
                                 HStack(spacing: 4) {
                                     Text(r.type.title)
-                                    if !r.year.isEmpty { Text(verbatim: "· \(r.year)") }
+                                    if !r.detail.isEmpty { Text(verbatim: "· \(r.detail)") }
+                                    if catalog.active.count > 1 { Text(verbatim: "· \(r.sourceName)") }
                                 }
                                 .font(.system(size: 12)).foregroundStyle(Nucleus.secondaryText)
                             }
@@ -134,9 +137,13 @@ struct ItemEditor: View {
 
     private var searchFooter: Text? {
         if let searchError { return Text(verbatim: searchError) }
-        if store.settings.tmdbApiKey.isEmpty { return Text("Add a TMDb API key in Settings to search and fill in details automatically.") }
+        if catalog.active.isEmpty, store.settings.searchSources.contains(TMDbSource.id) {
+            return Text("Add a TMDb API key in Settings to search and fill in details automatically.")
+        }
         return nil
     }
+
+    private var onlyTMDb: Bool { catalog.active.map(\.id) == [TMDbSource.id] || catalog.active.isEmpty }
 
     private var posterSection: some View {
         NucleusSection("Poster") {
@@ -285,7 +292,8 @@ struct ItemEditor: View {
 
     private func search() async {
         let q = searchKey
-        guard q.count >= 2, !store.settings.tmdbApiKey.isEmpty, titleFocused || isNew else {
+        let sources = catalog.active
+        guard q.count >= 2, !sources.isEmpty, titleFocused || isNew else {
             results = []
             return
         }
@@ -293,31 +301,43 @@ struct ItemEditor: View {
         guard !Task.isCancelled else { return }
         searching = true
         defer { searching = false }
-        do {
-            results = try await tmdb.search(q)
-            searchError = nil
-        } catch is CancellationError {
-        } catch {
-            if (error as? URLError)?.code == .cancelled { return }
-            results = []
-            searchError = error.localizedDescription
+        // One source failing (no network, a bad key) shouldn't hide what the others found.
+        let outcomes = await withTaskGroup(of: (Int, Result<[SourceHit], Error>).self) { group in
+            for (i, source) in sources.enumerated() {
+                group.addTask {
+                    do { return (i, .success(try await source.search(q))) } catch { return (i, .failure(error)) }
+                }
+            }
+            var all: [(Int, Result<[SourceHit], Error>)] = []
+            for await outcome in group { all.append(outcome) }
+            return all.sorted { $0.0 < $1.0 }
         }
+        guard !Task.isCancelled else { return }
+        let perSource = sources.count > 1 ? 5 : 7
+        results = outcomes.flatMap { (try? $0.1.get().prefix(perSource)).map(Array.init) ?? [] }
+        let failure = outcomes.compactMap { outcome -> Error? in
+            if case .failure(let error) = outcome.1, (error as? URLError)?.code != .cancelled, !(error is CancellationError) { return error }
+            return nil
+        }.first
+        searchError = results.isEmpty ? failure?.localizedDescription : nil
     }
 
-    private func pick(_ result: TMDb.SearchResult) {
+    private func pick(_ hit: SourceHit) {
         Haptics.tap()
         picked = true
         titleFocused = false
         results = []
         filling = true
+        let source = catalog.source(hit.sourceID)
         Task {
             var next = draft
             do {
-                try await tmdb.fill(&next, from: result)
+                guard let source else { throw URLError(.unsupportedURL) }
+                try await source.fill(&next, from: hit)
                 draft = next
             } catch {
-                draft.title = result.title
-                draft.type = result.type
+                draft.title = hit.title
+                draft.type = hit.type
                 searchError = error.localizedDescription
             }
             filling = false

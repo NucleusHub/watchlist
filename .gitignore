@@ -11,3 +11,4 @@ build/
 
 # Fixture generator (node)
 node_modules/
+.build/

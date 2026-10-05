@@ -1,3 +1,4 @@
+import NucleusPlugins
 import NucleusUI
 import SwiftUI
 import UniformTypeIdentifiers
@@ -8,6 +9,7 @@ struct SettingsView: View {
     @Environment(NucleusID.self) private var auth
     @Environment(CloudSync.self) private var sync
     @Environment(Navigator.self) private var navigator
+    @Environment(PluginRegistry.self) private var registry
     @Environment(\.openURL) private var openURL
 
     @State private var askingSignIn = false
@@ -194,6 +196,14 @@ struct SettingsView: View {
                            icon: IconTile("arrow.up.right.square", tint: .violet)) { Chevron() }
             }
             .buttonStyle(NucleusRowButtonStyle())
+            Button { navigator.open(.searchSources) } label: {
+                NucleusRow("Search sources", subtitle: Text(verbatim: searchSourcesSummary), icon: IconTile("magnifyingglass", tint: .blue)) { Chevron() }
+            }
+            .buttonStyle(NucleusRowButtonStyle())
+            Button { navigator.open(.plugins) } label: {
+                NucleusRow("Plugins", subtitle: Text("\(registry.plugins.count) installed"), icon: IconTile("puzzlepiece.extension.fill", tint: .indigo)) { Chevron() }
+            }
+            .buttonStyle(NucleusRowButtonStyle())
             Toggle(isOn: Binding(get: { preferences.inAppBrowser }, set: { preferences.inAppBrowser = $0 })) {
                 Label { Text("Open links in the app") } icon: { IconTile("play.rectangle.fill", tint: .sky) }
             }
@@ -208,6 +218,11 @@ struct SettingsView: View {
             }
             .buttonStyle(NucleusRowButtonStyle())
         }
+    }
+
+    private var searchSourcesSummary: String {
+        let chosen = Set(store.settings.searchSources)
+        return SourceCatalog(registry: registry, settings: store.settings).available.filter { chosen.contains($0.id) }.map(\.name).joined(separator: " · ")
     }
 
     private var keySummary: Text {

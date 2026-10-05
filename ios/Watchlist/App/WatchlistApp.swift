@@ -1,3 +1,5 @@
+import AnimeSourcePlugin
+import NucleusPlugins
 import NucleusUI
 import SwiftUI
 
@@ -9,6 +11,7 @@ struct WatchlistApp: App {
     @State private var auth: NucleusID
     @State private var sync: CloudSync
     @State private var navigator = Navigator()
+    @State private var plugins: PluginRegistry
     private let watch: PhoneWatchBridge
 
     init() {
@@ -21,6 +24,10 @@ struct WatchlistApp: App {
         _preferences = State(initialValue: preferences)
         _auth = State(initialValue: auth)
         _sync = State(initialValue: CloudSync(store: store, auth: auth))
+        // Plugins are compiled in; the registry checks them and honours the person's switches.
+        let plugins = PluginRegistry(app: "watchlist")
+        plugins.install(AnimeSourcePlugin())
+        _plugins = State(initialValue: plugins)
         watch = PhoneWatchBridge(store: store)
         Haptics.warmUp()
     }
@@ -33,6 +40,7 @@ struct WatchlistApp: App {
                 .environment(auth)
                 .environment(sync)
                 .environment(navigator)
+                .environment(plugins)
                 .preferredColorScheme(preferences.appearance.colorScheme)
                 .tint(Nucleus.accent)
         }
@@ -64,6 +72,7 @@ enum DebugLaunch {
         if args.contains("-sampleData"), store.document.isEmpty {
             store.replace(with: SampleData.document, silent: true)
         }
+        if args.contains("-animeSource") { store.updateSettings { $0.searchSources = ["tmdb", "kitsu-anime"] } }
         if let i = args.firstIndex(of: "-appearance"), i + 1 < args.count {
             preferences.appearance = AppearanceMode(rawValue: args[i + 1]) ?? .dark
         }
@@ -81,6 +90,8 @@ enum DebugLaunch {
         switch args[i + 1] {
         case "settings": navigator.path = [.settings]
         case "stats": navigator.path = [.stats]
+        case "sources": navigator.path = [.settings, .searchSources]
+        case "plugins": navigator.path = [.settings, .plugins]
         case "item": if let first = store.items.first { navigator.path = [.item(first.id)] }
         case "collection": if let first = store.collections.first { navigator.path = [.collection(first.id)] }
         case "add": navigator.sheet = .newItem(collectionID: nil)
