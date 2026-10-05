@@ -10,7 +10,7 @@ struct ItemCard: View {
     @State private var confirmingDelete = false
 
     var body: some View {
-        Button { navigator.open(.item(item.id)) } label: {
+        SwipeSafeButton { navigator.open(.item(item.id)) } label: {
             VStack(alignment: .leading, spacing: 8) {
                 Poster(url: item.posterUrl, type: item.type, cornerRadius: compact ? 14 : 18)
                     .aspectRatio(2 / 3, contentMode: .fit)

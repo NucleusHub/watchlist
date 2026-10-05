@@ -41,7 +41,36 @@ final class GestureTests: XCTestCase {
         let from = app.staticTexts["The Bear"].coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5))
         from.press(forDuration: 0.01, thenDragTo: from.withOffset(CGVector(dx: -250, dy: 0)), withVelocity: .fast, thenHoldForDuration: 0)
         XCTAssertTrue(app.staticTexts["Weekend picks"].waitForExistence(timeout: 3), "swiping the page goes to collections")
+        XCTAssertFalse(app.buttons["Back"].exists, "and the title under the finger wasn't opened")
         shoot("collections-list")
+    }
+
+    /// Swiping back over a collection card used to open that collection: a Button fires when the finger
+    /// lifts anywhere inside it, however far it travelled.
+    func testSwipingBackOverACollectionGoesToTheWatchlistWithoutOpeningIt() {
+        for (name, velocity, hold) in [("fast", XCUIGestureVelocity.fast, 0.01), ("default", .default, 0.05), ("slow", .slow, 0.1)] {
+            launch(["-grid", "big"])
+            app.buttons["Collections"].firstMatch.tap()
+            let card = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Weekend picks")).firstMatch
+            XCTAssertTrue(card.waitForExistence(timeout: 3), name)
+            let from = card.coordinate(withNormalizedOffset: CGVector(dx: 0.25, dy: 0.4))
+            from.press(forDuration: hold, thenDragTo: from.withOffset(CGVector(dx: 220, dy: 0)), withVelocity: velocity, thenHoldForDuration: 0)
+            Thread.sleep(forTimeInterval: 1)
+            shoot("swipe-back-\(name)")
+            XCTAssertFalse(app.staticTexts["Weekend picks"].exists && app.buttons["Back"].exists || app.buttons["Add titles"].exists, "\(name): a collection was opened")
+            XCTAssertTrue(onWatchlist, "\(name): swiping right goes back to the watchlist")
+            app.terminate()
+        }
+    }
+
+    func testTappingCardsStillOpensThem() {
+        launch(["-grid", "big"])
+        app.staticTexts["The Bear"].tap()
+        XCTAssertTrue(app.buttons["Back"].waitForExistence(timeout: 3), "a tap opens the title")
+        app.buttons["Back"].tap()
+        app.buttons["Collections"].firstMatch.tap()
+        app.staticTexts["Weekend picks"].tap()
+        XCTAssertTrue(app.buttons["Back"].waitForExistence(timeout: 3), "a tap opens the collection")
     }
 
     func testMarkingWatchedCelebrates() {

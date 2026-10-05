@@ -70,6 +70,7 @@
 		E644C65F8AD5D11D677DAD66 /* WatchStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B3C034F2D6FFEE38AC124AF /* WatchStore.swift */; };
 		E66535CDEC7BDBB758C99AEF /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 2B9FC2A62C431ABB9ADCA37B /* InfoPlist.xcstrings */; };
 		E6D3CDDC522F5C6B198A23B9 /* CollectionDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA2A11DCDF0F8826E4696F17 /* CollectionDetailView.swift */; };
+		F4B2AE50CCFE46BC0FBF99F2 /* SwipeSafeButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12AC2E9A07769C764D39AF79 /* SwipeSafeButton.swift */; };
 		F500414CD71E9B2B50AA1B4F /* Navigator.swift in Sources */ = {isa = PBXBuildFile; fileRef = B223D804092629A7BA877C37 /* Navigator.swift */; };
 		F9D15A83D3F8F122D1EF1AC0 /* WatchlistWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = C79D52B546CA93260B81B668 /* WatchlistWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		FA3DAD57C946C413237D4272 /* MergeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 004A8A8B22FD3CFCCBCCDD41 /* MergeTests.swift */; };
@@ -123,6 +124,7 @@
 		0ED7F4B3E143D47F3783C79C /* TMDbKeySheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMDbKeySheet.swift; sourceTree = "<group>"; };
 		108CE153C65192DCBBE1D4AF /* WatchSnapshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchSnapshotTests.swift; sourceTree = "<group>"; };
 		1144C650A6AA60F75EAD9716 /* OpenLinks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenLinks.swift; sourceTree = "<group>"; };
+		12AC2E9A07769C764D39AF79 /* SwipeSafeButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwipeSafeButton.swift; sourceTree = "<group>"; };
 		145382C999F393369407024C /* WatchlistUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = WatchlistUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		15A719DC2D707383805CAFE5 /* Migration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Migration.swift; sourceTree = "<group>"; };
 		1F0B5E18E364C5296BD47DCA /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
@@ -447,6 +449,7 @@
 				A5EB45909D8A2D6ECFBBF1CB /* Confetti.swift */,
 				96C4EF013BC8EA896463FF0B /* Poster.swift */,
 				A9A1DCF816DAA3F9FE7CF121 /* RatingControl.swift */,
+				12AC2E9A07769C764D39AF79 /* SwipeSafeButton.swift */,
 			);
 			path = Common;
 			sourceTree = "<group>";
@@ -688,6 +691,7 @@
 				D60B961D3E1FC96665564F00 /* SeasonProgressSheet.swift in Sources */,
 				6EC625A92274DB445A38F497 /* SettingsView.swift in Sources */,
 				8FA319301F9B7748946F6B7B /* StatsView.swift in Sources */,
+				F4B2AE50CCFE46BC0FBF99F2 /* SwipeSafeButton.swift in Sources */,
 				7E1AB45FFCBBD14E233FBBD0 /* TMDb.swift in Sources */,
 				7C266F088E141D30C2D42960 /* TMDbKeySheet.swift in Sources */,
 				B14466FC3DE9E3652861FC07 /* VideoTracker.swift in Sources */,

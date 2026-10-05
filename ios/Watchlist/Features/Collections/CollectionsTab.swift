@@ -24,7 +24,7 @@ struct CollectionsTab: View {
                     ForEach(Array(store.collections.enumerated()), id: \.element.id) { index, col in
                         CollectionCard(collection: col).nucleusAppear(min(index, 8))
                     }
-                    Button { navigator.present(.newCollection) } label: {
+                    SwipeSafeButton { navigator.present(.newCollection) } label: {
                         Label("New collection", systemImage: "plus")
                             .font(.system(size: 15, weight: .semibold))
                             .foregroundStyle(Nucleus.accent)
@@ -51,7 +51,7 @@ struct CollectionCard: View {
     @State private var confirmingDelete = false
 
     var body: some View {
-        Button { navigator.open(.collection(collection.id)) } label: {
+        SwipeSafeButton { navigator.open(.collection(collection.id)) } label: {
             CollectionCover(collection: collection)
                 .aspectRatio(16 / 10, contentMode: .fit)
                 .overlay(alignment: .bottomLeading) {
