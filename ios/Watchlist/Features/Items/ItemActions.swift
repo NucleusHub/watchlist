@@ -61,6 +61,27 @@ struct DeleteItemDialog: ViewModifier {
     }
 }
 
+/// "Reset progress" with the options that fit the title: a movie's time, or a show's episode, season or everything.
+struct ResetProgressDialog: ViewModifier {
+    let item: Item
+    @Binding var isPresented: Bool
+    @Environment(WatchlistStore.self) private var store
+
+    func body(content: Content) -> some View {
+        content.confirmationDialog(Text("Reset progress"), isPresented: $isPresented, titleVisibility: .visible) {
+            ForEach(item.resetActions) { action in
+                Button(action.title, role: action.isDestructive ? .destructive : nil) {
+                    Haptics.warning()
+                    withAnimation(NucleusMotion.quick) { store.resetProgress(item.id, ProgressReset(rawValue: action.id) ?? .current) }
+                }
+            }
+        } message: {
+            Text(item.isShow ? "Resetting a season or the whole show also clears the episodes you've marked watched."
+                             : "Clears the saved time and takes it out of Jump back in.")
+        }
+    }
+}
+
 /// Round "mark watched" button: empty ring when planned, clock while watching, green check when done.
 struct WatchedButton: View {
     let item: Item

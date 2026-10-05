@@ -108,10 +108,7 @@ final class BrowserModel: NSObject {
         resume = nil
         hasPlayback = false
         pageTask?.cancel()
-        store?.updateItem(itemID) {
-            $0.playback = nil
-            $0.lastPage = nil
-        }
+        store?.resetProgress(itemID, .current)
     }
 
     func markMovieWatched() {

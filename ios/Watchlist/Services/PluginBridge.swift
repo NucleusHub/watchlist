@@ -1,5 +1,6 @@
 import Foundation
 import NucleusPlugins
+import NucleusUI
 import SwiftUI
 import WatchlistPluginKit
 
@@ -21,6 +22,20 @@ extension Item {
     }
 }
 
+extension Item {
+    /// The ways to take back progress on this title, named for the person.
+    var resetActions: [TitleAction] {
+        guard hasProgress else { return [] }
+        guard isShow else { return [TitleAction(id: ProgressReset.current.rawValue, title: String(localized: "Reset progress"))] }
+        var actions = [TitleAction(id: ProgressReset.current.rawValue, title: String(localized: "Reset this episode"))]
+        if seasonProgress?.isEmpty == false {
+            actions.append(TitleAction(id: ProgressReset.season.rawValue, title: String(localized: "Reset this season"), isDestructive: true))
+        }
+        actions.append(TitleAction(id: ProgressReset.show.rawValue, title: String(localized: "Reset the whole show"), isDestructive: true))
+        return actions
+    }
+}
+
 /// The sections plugins put at the top of the Watchlist.
 struct HomeSections: View {
     @Environment(WatchlistStore.self) private var store
@@ -34,6 +49,11 @@ struct HomeSections: View {
             let context = HomeSectionContext(titles: store.items.map(\.pluginTitle), canResume: preferences.inAppBrowser) { id in
                 guard let item = store.item(id), let page = item.jumpURL else { return }
                 navigator.browse(OpenLinks.url(for: item, settings: store.settings) ?? page, item: item)
+            } resetActions: { id in
+                store.item(id)?.resetActions ?? []
+            } perform: { id, action in
+                Haptics.warning()
+                store.resetProgress(id, ProgressReset(rawValue: action) ?? .current)
             }
             ForEach(Array(sections.enumerated()), id: \.offset) { $0.element.value.view(context) }
         }

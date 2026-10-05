@@ -22,6 +22,24 @@ extension Item {
     var watchedMinutes: Int { Int((Double(totalMinutes) * watchedFraction).rounded()) }
     var remainingMinutes: Int { totalMinutes - watchedMinutes }
 
+    /// The season being watched: the first one not finished, or the last once all are.
+    var currentSeasonIndex: Int? {
+        guard let seasons = seasonProgress, !seasons.isEmpty else { return nil }
+        return seasons.firstIndex { $0.watched < $0.episodeCount } ?? seasons.count - 1
+    }
+
+    /// Anything a reset would clear: saved time, a remembered page, or watched episodes.
+    var hasProgress: Bool {
+        playback != nil || lastPage != nil || lastWatchedAt != nil || episodeTotals.watched > 0
+    }
+
+    /// Forgets where you were: the saved time, the page, and the spot in "Jump back in".
+    mutating func clearWatchHistory() {
+        playback = nil
+        lastPage = nil
+        set("lastWatchedAt", .null)
+    }
+
     /// The episode a tracked show is on next: the first one not watched yet.
     var nextEpisode: (season: Int, episode: Int)? {
         guard let s = seasonProgress?.first(where: { $0.watched < $0.episodeCount }) else { return nil }

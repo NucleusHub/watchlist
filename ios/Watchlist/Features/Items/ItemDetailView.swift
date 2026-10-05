@@ -9,6 +9,7 @@ struct ItemDetailView: View {
     @Environment(\.openURL) private var openURL
     @Environment(\.dismiss) private var dismiss
     @State private var confirmingDelete = false
+    @State private var confirmingReset = false
 
     var body: some View {
         if let item = store.item(itemID) {
@@ -28,6 +29,7 @@ struct ItemDetailView: View {
                 content(item)
             }
             .modifier(DeleteItemDialog(item: item, isPresented: $confirmingDelete))
+            .modifier(ResetProgressDialog(item: item, isPresented: $confirmingReset))
         } else {
             NucleusPage {
                 NucleusEmptyState("film", title: "Title not found", message: "It may have been deleted on another device.")
@@ -179,6 +181,12 @@ struct ItemDetailView: View {
                 Button { open(url, item) } label: {
                     NucleusRow("Open on \(OpenLinks.target(for: item, settings: store.settings).type.label)",
                                icon: IconTile("arrow.up.right.square", tint: .sky))
+                }
+                .buttonStyle(NucleusRowButtonStyle())
+            }
+            if item.hasProgress {
+                Button { confirmingReset = true } label: {
+                    NucleusRow("Reset progress", icon: IconTile("arrow.counterclockwise", tint: .amber))
                 }
                 .buttonStyle(NucleusRowButtonStyle())
             }

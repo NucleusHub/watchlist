@@ -53,6 +53,20 @@ public struct PluginTitle: Identifiable, Hashable, Sendable {
     }
 }
 
+/// Something the app can do to a title on a plugin's behalf, already named in the person's language.
+public struct TitleAction: Identifiable, Hashable, Sendable {
+    public let id: String
+    public let title: String
+    /// Takes something away; the plugin should ask first.
+    public let isDestructive: Bool
+
+    public init(id: String, title: String, isDestructive: Bool = false) {
+        self.id = id
+        self.title = title
+        self.isDestructive = isDestructive
+    }
+}
+
 /// What the app hands a home section each time it draws.
 @MainActor
 public struct HomeSectionContext {
@@ -61,11 +75,19 @@ public struct HomeSectionContext {
     public let canResume: Bool
     /// Opens the title in the app's browser where it was left.
     public let resume: @MainActor (String) -> Void
+    /// The ways to reset a title's progress: one for a movie, a few for a show.
+    public let resetActions: @MainActor (String) -> [TitleAction]
+    /// Runs one of `resetActions` on a title.
+    public let perform: @MainActor (_ titleID: String, _ actionID: String) -> Void
 
-    public init(titles: [PluginTitle], canResume: Bool, resume: @escaping @MainActor (String) -> Void) {
+    public init(titles: [PluginTitle], canResume: Bool, resume: @escaping @MainActor (String) -> Void,
+                resetActions: @escaping @MainActor (String) -> [TitleAction] = { _ in [] },
+                perform: @escaping @MainActor (String, String) -> Void = { _, _ in }) {
         self.titles = titles
         self.canResume = canResume
         self.resume = resume
+        self.resetActions = resetActions
+        self.perform = perform
     }
 }
 

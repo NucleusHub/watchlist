@@ -4,6 +4,10 @@ import Observation
 /// The watchlist on this device: one JSON document in Application Support, written shortly
 /// after each change. Every write keeps the rules synced documents rely on (timestamps,
 /// tombstones, completedAt), so copies on different devices merge cleanly.
+enum ProgressReset: String, CaseIterable {
+    case current, season, show
+}
+
 @MainActor
 @Observable
 final class WatchlistStore {
@@ -140,6 +144,27 @@ final class WatchlistStore {
             item.lastPage = nil
             if item.isShow, let progress = item.seasonProgress, !progress.isEmpty {
                 item.seasonProgress = progress.map { var s = $0; s.watched = s.episodeCount; return s }
+            }
+        }
+    }
+
+    /// Takes back watching progress. `.current` forgets the saved time and page (a movie's whole progress, or the
+    /// episode in progress); `.season` also unwatches the season being watched; `.show` unwatches everything.
+    func resetProgress(_ id: String, _ scope: ProgressReset) {
+        updateItem(id) { item in
+            item.clearWatchHistory()
+            guard item.isShow, scope != .current else { return }
+            if var seasons = item.seasonProgress, !seasons.isEmpty {
+                if scope == .show {
+                    seasons = seasons.map { var s = $0; s.watched = 0; return s }
+                } else if let i = item.currentSeasonIndex {
+                    seasons[i].watched = 0
+                }
+                item.seasonProgress = seasons
+                let totals = item.episodeTotals
+                item.status = Item.status(watched: totals.watched, total: totals.total)
+            } else if scope == .show {
+                item.status = .planned
             }
         }
     }
