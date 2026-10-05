@@ -1128,6 +1128,16 @@
         }
       }
     },
+    "Couldn't check the marketplace." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Marketplace se nepodařilo zkontrolovat."
+          }
+        }
+      }
+    },
     "Couldn't load the page" : {
       "localizations" : {
         "cs" : {
@@ -1990,6 +2000,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Žádné"
+          }
+        }
+      }
+    },
+    "Not in this version" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Není v této verzi"
+          }
+        }
+      }
+    },
+    "Not included in this version of the app. Update the app or contact the developer." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "V této verzi aplikace není. Aktualizujte aplikaci nebo kontaktujte vývojáře."
           }
         }
       }
@@ -3362,6 +3392,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Verze %@"
+          }
+        }
+      }
+    },
+    "Version %@ is out. Update the app to get it." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je venku verze %@. Aktualizujte aplikaci."
           }
         }
       }
