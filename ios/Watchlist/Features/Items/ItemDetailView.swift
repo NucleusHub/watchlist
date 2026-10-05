@@ -5,6 +5,7 @@ struct ItemDetailView: View {
     let itemID: String
     @Environment(WatchlistStore.self) private var store
     @Environment(Navigator.self) private var navigator
+    @Environment(Preferences.self) private var preferences
     @Environment(\.openURL) private var openURL
     @Environment(\.dismiss) private var dismiss
     @State private var confirmingDelete = false
@@ -43,7 +44,7 @@ struct ItemDetailView: View {
                 .aspectRatio(2 / 3, contentMode: .fit)
                 .frame(maxWidth: 220)
                 .shadow(color: .black.opacity(0.35), radius: 24, y: 14)
-                .onTapGesture { if let url = OpenLinks.url(for: item, settings: store.settings) { openURL(url) } }
+                .onTapGesture { if let url = OpenLinks.url(for: item, settings: store.settings) { open(url, item) } }
             Text(verbatim: item.title)
                 .font(.system(size: 26, weight: .bold))
                 .tracking(-0.4)
@@ -154,8 +155,28 @@ struct ItemDetailView: View {
         }
 
         NucleusSection {
+            if let page = item.lastPage ?? item.playback?.url, let url = URL(string: page), preferences.inAppBrowser {
+                Button { navigator.browse(url, item: item) } label: {
+                    VStack(alignment: .leading, spacing: 10) {
+                        HStack {
+                            Text("Continue watching").font(.system(size: 16)).foregroundStyle(Nucleus.primaryText)
+                            Spacer()
+                            if let playback = item.playback {
+                                Text(verbatim: "\(PlaybackTime.clock(playback.position)) / \(PlaybackTime.clock(playback.duration))")
+                                    .font(.system(size: 14).monospacedDigit()).foregroundStyle(Nucleus.secondaryText)
+                            } else {
+                                Text(verbatim: url.host?.replacingOccurrences(of: "www.", with: "") ?? "")
+                                    .font(.system(size: 14)).foregroundStyle(Nucleus.secondaryText)
+                            }
+                        }
+                        if let playback = item.playback { ProgressView(value: playback.fraction).tint(WatchStatus.watching.color) }
+                    }
+                    .padding(.horizontal, 16).padding(.vertical, 14).contentShape(Rectangle())
+                }
+                .buttonStyle(NucleusRowButtonStyle())
+            }
             if let url = OpenLinks.url(for: item, settings: store.settings) {
-                Button { openURL(url) } label: {
+                Button { open(url, item) } label: {
                     NucleusRow("Open on \(OpenLinks.target(for: item, settings: store.settings).type.label)",
                                icon: IconTile("arrow.up.right.square", tint: .sky))
                 }
@@ -164,6 +185,10 @@ struct ItemDetailView: View {
             Button { confirmingDelete = true } label: { NucleusRow("Delete", titleColor: Nucleus.danger) }
                 .buttonStyle(NucleusRowButtonStyle())
         }
+    }
+
+    private func open(_ url: URL, _ item: Item) {
+        if preferences.inAppBrowser { navigator.browse(url, item: item) } else { openURL(url) }
     }
 
     @ViewBuilder

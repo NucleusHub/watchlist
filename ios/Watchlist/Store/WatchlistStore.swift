@@ -136,9 +136,19 @@ final class WatchlistStore {
     func markWatched(_ id: String) {
         updateItem(id) { item in
             item.status = .completed
+            item.playback = nil
+            item.lastPage = nil
             if item.isShow, let progress = item.seasonProgress, !progress.isEmpty {
                 item.seasonProgress = progress.map { var s = $0; s.watched = s.episodeCount; return s }
             }
+        }
+    }
+
+    /// One more episode of a tracked show; the saved playback is spent either way.
+    func markEpisodeWatched(_ id: String) {
+        updateItem(id) { item in
+            item.watchNextEpisode()
+            item.playback = nil
         }
     }
 

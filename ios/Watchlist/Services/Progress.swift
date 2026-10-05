@@ -22,9 +22,34 @@ extension Item {
     var watchedMinutes: Int { Int((Double(totalMinutes) * watchedFraction).rounded()) }
     var remainingMinutes: Int { totalMinutes - watchedMinutes }
 
+    /// The episode a tracked show is on next: the first one not watched yet.
+    var nextEpisode: (season: Int, episode: Int)? {
+        guard let s = seasonProgress?.first(where: { $0.watched < $0.episodeCount }) else { return nil }
+        return (s.seasonNumber, s.watched + 1)
+    }
+
+    /// Counts one more episode as watched, in the first season that isn't finished.
+    mutating func watchNextEpisode() {
+        guard var progress = seasonProgress, let i = progress.firstIndex(where: { $0.watched < $0.episodeCount }) else { return }
+        progress[i].watched += 1
+        seasonProgress = progress
+        let t = episodeTotals
+        status = Item.status(watched: t.watched, total: t.total)
+    }
+
     static func status(watched: Int, total: Int) -> WatchStatus {
         if total > 0, watched >= total { return .completed }
         return watched > 0 ? .watching : .planned
+    }
+}
+
+enum PlaybackTime {
+    /// "23:41", or "1:52:10" past an hour.
+    static func clock(_ seconds: Double) -> String {
+        let s = max(0, Int(seconds))
+        return s >= 3600
+            ? String(format: "%d:%02d:%02d", s / 3600, (s % 3600) / 60, s % 60)
+            : String(format: "%d:%02d", s / 60, s % 60)
     }
 }
 

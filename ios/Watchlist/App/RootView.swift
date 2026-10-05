@@ -29,6 +29,7 @@ struct RootView: View {
                 .overlay { Confetti(trigger: store.celebrations) }
         }
         .overlay { Confetti(trigger: store.celebrations) }
+        .fullScreenCover(item: $navigator.browser) { BrowserView(request: $0) }
         .sheet(isPresented: $showWelcome) {
             WelcomeView()
                 .interactiveDismissDisabled()

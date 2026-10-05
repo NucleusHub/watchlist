@@ -3,6 +3,7 @@ import SwiftUI
 
 @main
 struct WatchlistApp: App {
+    @UIApplicationDelegateAdaptor private var delegate: AppDelegate
     @State private var store: WatchlistStore
     @State private var preferences: Preferences
     @State private var auth: NucleusID

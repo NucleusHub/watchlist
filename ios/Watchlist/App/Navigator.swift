@@ -9,6 +9,13 @@ enum Route: Hashable {
     case openDefaults
 }
 
+/// A page for the in-app browser; a saved playback of the item reopens instead of `home`.
+struct BrowserRequest: Identifiable {
+    let id = UUID()
+    let home: URL
+    let itemID: String?
+}
+
 /// A sheet over everything else. One at a time, as iOS presents them.
 enum Sheet: Identifiable, Hashable {
     case newItem(collectionID: String?)
@@ -30,7 +37,9 @@ enum Sheet: Identifiable, Hashable {
 final class Navigator {
     var path: [Route] = []
     var sheet: Sheet?
+    var browser: BrowserRequest?
 
     func open(_ route: Route) { path.append(route) }
     func present(_ sheet: Sheet) { self.sheet = sheet }
+    func browse(_ url: URL, item: Item? = nil) { browser = BrowserRequest(home: url, itemID: item?.id) }
 }

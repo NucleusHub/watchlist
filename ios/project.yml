@@ -54,6 +54,8 @@ targets:
           UIApplicationSupportsMultipleScenes: false
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
         UIRequiredDeviceCapabilities: [arm64]
         NSCameraUsageDescription: Take a photo for a poster, a collection cover or a problem report.
         CFBundleURLTypes:

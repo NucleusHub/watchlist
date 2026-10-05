@@ -76,4 +76,33 @@ final class StoreTests: XCTestCase {
         XCTAssertNotNil(s.settings.updatedAt)
         XCTAssertEqual(pushes, 1)
     }
+
+    func testPlaybackRoundTripsAndMarkingWatchedClearsIt() throws {
+        let s = store()
+        let id = try XCTUnwrap(s.createItem(Item(title: "A", type: .movie))).id
+        s.updateItem(id) { $0.playback = Playback(url: "https://example.com/v", position: 1234.4, duration: 6000) }
+        let saved = try XCTUnwrap(s.item(id)?.playback)
+        XCTAssertEqual(saved.url, "https://example.com/v")
+        XCTAssertEqual(saved.position, 1234)
+        XCTAssertEqual(saved.fraction, 1234.0 / 6000, accuracy: 0.001)
+        s.markWatched(id)
+        XCTAssertNil(s.item(id)?.playback)
+    }
+
+    func testMarkEpisodeWatchedAdvancesThroughSeasons() throws {
+        let s = store()
+        var show = Item(title: "S", type: .show)
+        show.seasonProgress = [SeasonProgress(seasonNumber: 1, name: "S1", episodeCount: 1, watched: 0),
+                               SeasonProgress(seasonNumber: 2, name: "S2", episodeCount: 2, watched: 0)]
+        let id = try XCTUnwrap(s.createItem(show)).id
+        s.updateItem(id) { $0.playback = Playback(url: "https://example.com/e1", position: 900, duration: 1000) }
+        s.markEpisodeWatched(id)
+        XCTAssertEqual(s.item(id)?.seasonProgress?.map(\.watched), [1, 0])
+        XCTAssertEqual(s.item(id)?.status, .watching)
+        XCTAssertNil(s.item(id)?.playback)
+        s.markEpisodeWatched(id)
+        s.markEpisodeWatched(id)
+        XCTAssertEqual(s.item(id)?.seasonProgress?.map(\.watched), [1, 2])
+        XCTAssertEqual(s.item(id)?.status, .completed)
+    }
 }

@@ -194,6 +194,11 @@ struct SettingsView: View {
                            icon: IconTile("arrow.up.right.square", tint: .violet)) { Chevron() }
             }
             .buttonStyle(NucleusRowButtonStyle())
+            Toggle(isOn: Binding(get: { preferences.inAppBrowser }, set: { preferences.inAppBrowser = $0 })) {
+                Label { Text("Open links in the app") } icon: { IconTile("play.rectangle.fill", tint: .sky) }
+            }
+            .tint(Color(hex: 0x34C759))
+            .padding(.horizontal, 16).frame(minHeight: 52)
             Button { editingKey = true } label: {
                 NucleusRow("TMDb API key", subtitle: keySummary, icon: IconTile("key.fill", tint: .amber)) { Chevron() }
             }

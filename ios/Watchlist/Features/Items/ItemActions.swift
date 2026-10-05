@@ -8,6 +8,7 @@ struct ItemMenu: View {
     let onDelete: () -> Void
     @Environment(WatchlistStore.self) private var store
     @Environment(Navigator.self) private var navigator
+    @Environment(Preferences.self) private var preferences
     @Environment(\.openURL) private var openURL
 
     var body: some View {
@@ -30,7 +31,7 @@ struct ItemMenu: View {
             }
         } label: { Label("Status", systemImage: "circle.dashed") }
         if let url = OpenLinks.url(for: item, settings: store.settings) {
-            Button { openURL(url) } label: { Label("Open", systemImage: "arrow.up.right.square") }
+            Button { preferences.inAppBrowser ? navigator.browse(url, item: item) : openURL(url) } label: { Label("Open", systemImage: "arrow.up.right.square") }
         }
         if let collectionID {
             Button { store.updateItem(item.id) { $0.collectionIds.removeAll { $0 == collectionID } } } label: {

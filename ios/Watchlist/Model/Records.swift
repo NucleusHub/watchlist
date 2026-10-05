@@ -65,6 +65,31 @@ struct SeasonProgress: Hashable, Codable, Identifiable, Sendable {
     }
 }
 
+/// Where the in-app browser left off: the page and the position in its video.
+struct Playback: Hashable, Sendable {
+    var url: String
+    var position: Double
+    var duration: Double
+
+    init(url: String, position: Double, duration: Double) {
+        self.url = url
+        self.position = position
+        self.duration = duration
+    }
+
+    init?(_ value: JSONValue?) {
+        guard let o = value?.object, let url = o["url"]?.string, !url.isEmpty,
+              let position = o["position"]?.double, let duration = o["duration"]?.double, duration > 0 else { return nil }
+        self.init(url: url, position: position, duration: duration)
+    }
+
+    var fraction: Double { min(1, max(0, position / duration)) }
+
+    var json: JSONValue {
+        ["url": .string(url), "position": .number(position.rounded()), "duration": .number(duration.rounded())]
+    }
+}
+
 /// Where tapping a title opens it.
 struct OpenTarget: Hashable, Codable, Sendable {
     enum Kind: String, CaseIterable, Codable, Sendable { case tmdb, csfd, google, custom }
@@ -212,6 +237,17 @@ struct Item: JSONRecord {
     var openTarget: OpenTarget? {
         get { OpenTarget(raw["openTarget"]) }
         set { set("openTarget", newValue?.json ?? .null) }
+    }
+
+    /// The last page the in-app browser was on, video or not.
+    var lastPage: String? {
+        get { string("lastPage").flatMap { $0.isEmpty ? nil : $0 } }
+        set { set("lastPage", JSONValue(newValue)) }
+    }
+
+    var playback: Playback? {
+        get { Playback(raw["playback"]) }
+        set { set("playback", newValue?.json ?? .null) }
     }
 
     var seasonProgress: [SeasonProgress]? {
