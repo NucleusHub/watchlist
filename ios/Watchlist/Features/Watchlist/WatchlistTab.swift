@@ -119,6 +119,7 @@ struct WatchlistTab: View {
             }
         } else {
             ItemGrid(items: filtered, style: preferences.gridStyle) {
+                HomeSections()
                 filters
                 if filtered.isEmpty {
                     VStack(spacing: 12) {

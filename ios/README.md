@@ -17,9 +17,9 @@ To work on it alongside the app, point `NucleusUI` in `project.yml` at a local c
 
 ## Plugins
 
-Search sources are plugins. `NucleusPlugins` (`nucleus-native-plugins`) is the shared loader, `WatchlistPluginKit`
-(`../plugin-kit`) is Watchlist's contract (`SearchSource`, `HomeSection`), and the anime source is `plugins/anime-source`.
-All are local packages in `project.yml`. `WatchlistApp` installs plugins; Settings → Plugins switches them, Settings → Search sources
+Search sources and the "Jump back in" section are plugins. `NucleusPlugins` (`nucleus-native-plugins`) is the shared
+loader, `WatchlistPluginKit` (`../plugin-kit`) is Watchlist's contract (`SearchSource`, `HomeSection`), and the plugins are
+`plugins/anime-source` and `plugins/jump-back-in`. All are local packages in `project.yml`. `WatchlistApp` installs plugins; Settings → Plugins switches them, Settings → Search sources
 picks which sources the add screen searches.
 
 ## Layout
@@ -51,6 +51,6 @@ English strings are in the Swift code. Czech is in `design/cs.py`; edit it and r
 
 ## Debug launch arguments
 
-`-resetAll`, `-sampleData`, `-skipWelcome`, `-appearance light|dark`, `-grid list|big|small`,
+`-resetAll`, `-sampleData`, `-sampleJump` (three titles to jump back into), `-skipWelcome`, `-appearance light|dark`, `-grid list|big|small`,
 `-animeSource` (search Kitsu too), `-route settings|sources|plugins|stats|item|collection|add|edit|seasons`. `ScreenshotTests` uses them to capture every screen
 (set `TEST_RUNNER_SHOT_DIR` to keep the images).

@@ -1128,6 +1128,17 @@
         }
       }
     },
+    "Continue watching %@" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pokračovat ve sledování: %@"
+          }
+        }
+      }
+    },
     "Couldn't check the marketplace." : {
       "localizations" : {
         "cs" : {
@@ -1709,6 +1720,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zmizí z watchlistu i ze všech kolekcí."
+          }
+        }
+      }
+    },
+    "Jump back in" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vrátit se ke sledování"
           }
         }
       }

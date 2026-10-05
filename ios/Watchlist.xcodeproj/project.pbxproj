@@ -15,6 +15,7 @@
 		152428ADA47510ACD478A1A6 /* ItemActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F6B878E177482751036C587 /* ItemActions.swift */; };
 		15D1C78A7D481FEAD0DD0802 /* ItemCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2FABD36AB7B739C1C8E99C0 /* ItemCard.swift */; };
 		1F616C9CC4DE506C2B61A417 /* LaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 842382CE951FC81521433BF1 /* LaunchTests.swift */; };
+		200F6B95D7CD4684895ED8D1 /* HomeSectionsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7227E5F713E452DC0FCE1C98 /* HomeSectionsTests.swift */; };
 		20BED0BB42196927F1A91390 /* merge-cases.json in Resources */ = {isa = PBXBuildFile; fileRef = A82F3F8CD10D1CB27ECE1934 /* merge-cases.json */; };
 		214BFBD571B617B1286CD525 /* NucleusPlugins in Frameworks */ = {isa = PBXBuildFile; productRef = 7AC0CA5ABF4C1E6DA0CF6E88 /* NucleusPlugins */; };
 		231428BA65A6AD177E9ED390 /* Keychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB0E63C0858E88F288D8C09C /* Keychain.swift */; };
@@ -28,6 +29,7 @@
 		3A34F54958572720E5E481C8 /* WatchlistPluginKit in Frameworks */ = {isa = PBXBuildFile; productRef = E01E0344CF0608D36B18DC32 /* WatchlistPluginKit */; };
 		442D245CB868A062FE079BAB /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 620D44117F0591875C634E89 /* RootView.swift */; };
 		48260A5F21303680FD793026 /* CloudSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = 721A30750EE12E43016BB2F5 /* CloudSync.swift */; };
+		48E53476E1232E4746CF922B /* JumpBackInPlugin in Frameworks */ = {isa = PBXBuildFile; productRef = A58FD08A060BD26B1F964D06 /* JumpBackInPlugin */; };
 		54BA0AB745FE1676955F5283 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 32651D0640A759ED5E3B995F /* PrivacyInfo.xcprivacy */; };
 		55D6AE7048C903DB813C94ED /* StoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F59D83FD2435E02B944284 /* StoreTests.swift */; };
 		58D0154A9F6849DD462DE8D7 /* WatchlistDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8FD043F4FFBAFDFD77EC380 /* WatchlistDocument.swift */; };
@@ -72,11 +74,13 @@
 		DD4BEC20844C7C26852B981E /* Preferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 095B673D22785F70FE53380F /* Preferences.swift */; };
 		DE77F7027BE9056CEAD73B63 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = A972988F4294D53D49213735 /* Localizable.xcstrings */; };
 		DF9C57FBEAD2325D128D5EF7 /* BrowserModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54C3AA466B360A53B82B6044 /* BrowserModel.swift */; };
+		E0B1C4048EC9A32A5EA0CF88 /* JumpBackInPlugin in Frameworks */ = {isa = PBXBuildFile; productRef = 2715822B4C8A388CB3648FDA /* JumpBackInPlugin */; };
 		E0D745569A30CD20CA1C6A49 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4AD907947477C7B7EF4FAEEC /* Assets.xcassets */; };
 		E644C65F8AD5D11D677DAD66 /* WatchStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B3C034F2D6FFEE38AC124AF /* WatchStore.swift */; };
 		E66535CDEC7BDBB758C99AEF /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 2B9FC2A62C431ABB9ADCA37B /* InfoPlist.xcstrings */; };
 		E6D3CDDC522F5C6B198A23B9 /* CollectionDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA2A11DCDF0F8826E4696F17 /* CollectionDetailView.swift */; };
 		EC8360988119B757716CC2B7 /* WatchlistPluginKit in Frameworks */ = {isa = PBXBuildFile; productRef = D0A6FA6FC91DD0B9B7D1B94C /* WatchlistPluginKit */; };
+		EEC5486153C5103398C2F93F /* PluginBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA8EFB6A6FC251B39A5686A0 /* PluginBridge.swift */; };
 		F4B2AE50CCFE46BC0FBF99F2 /* SwipeSafeButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12AC2E9A07769C764D39AF79 /* SwipeSafeButton.swift */; };
 		F500414CD71E9B2B50AA1B4F /* Navigator.swift in Sources */ = {isa = PBXBuildFile; fileRef = B223D804092629A7BA877C37 /* Navigator.swift */; };
 		F88C3F8E841F908F8A29A43A /* SearchSourcesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3169B2B0FC860F2710B81A35 /* SearchSourcesView.swift */; };
@@ -158,8 +162,10 @@
 		6355A9A3EA8B834CB6F791D2 /* Backup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Backup.swift; sourceTree = "<group>"; };
 		66749D624D7509DC53899623 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		6B3C034F2D6FFEE38AC124AF /* WatchStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchStore.swift; sourceTree = "<group>"; };
+		6BCA606866B7F4B1FF837155 /* jump-back-in */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "jump-back-in"; path = "../../../plugins/jump-back-in"; sourceTree = SOURCE_ROOT; };
 		6F6B878E177482751036C587 /* ItemActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemActions.swift; sourceTree = "<group>"; };
 		721A30750EE12E43016BB2F5 /* CloudSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSync.swift; sourceTree = "<group>"; };
+		7227E5F713E452DC0FCE1C98 /* HomeSectionsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeSectionsTests.swift; sourceTree = "<group>"; };
 		764A78DA67F19491BC7861A9 /* OpenDefaultsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenDefaultsView.swift; sourceTree = "<group>"; };
 		7BBF97885F76F0BB3E8C78AF /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		834348AF8E735D00207B6493 /* NucleusSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NucleusSession.swift; sourceTree = "<group>"; };
@@ -186,6 +192,7 @@
 		B223D804092629A7BA877C37 /* Navigator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Navigator.swift; sourceTree = "<group>"; };
 		B386472D2D21C88F1F1EA90C /* Sources.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources.swift; sourceTree = "<group>"; };
 		BA2A11DCDF0F8826E4696F17 /* CollectionDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionDetailView.swift; sourceTree = "<group>"; };
+		BA8EFB6A6FC251B39A5686A0 /* PluginBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginBridge.swift; sourceTree = "<group>"; };
 		C79D52B546CA93260B81B668 /* WatchlistWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WatchlistWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C8FD043F4FFBAFDFD77EC380 /* WatchlistDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchlistDocument.swift; sourceTree = "<group>"; };
 		D004D1DA6EC2F02B1290AFFC /* WatchlistTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = WatchlistTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -215,6 +222,7 @@
 				FE651015B3614B6F6224F445 /* NucleusPlugins in Frameworks */,
 				3A34F54958572720E5E481C8 /* WatchlistPluginKit in Frameworks */,
 				69025E31CC23F26721AAABBD /* AnimeSourcePlugin in Frameworks */,
+				E0B1C4048EC9A32A5EA0CF88 /* JumpBackInPlugin in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -224,6 +232,7 @@
 			files = (
 				214BFBD571B617B1286CD525 /* NucleusPlugins in Frameworks */,
 				EC8360988119B757716CC2B7 /* WatchlistPluginKit in Frameworks */,
+				48E53476E1232E4746CF922B /* JumpBackInPlugin in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -291,6 +300,7 @@
 				A5CB7347888154172C3B6EF5 /* Images.swift */,
 				DCC7C809FA7806FDE0CBDD20 /* MetadataRefresh.swift */,
 				1144C650A6AA60F75EAD9716 /* OpenLinks.swift */,
+				BA8EFB6A6FC251B39A5686A0 /* PluginBridge.swift */,
 				002E43EE1B45FE4C29D953C6 /* Progress.swift */,
 				B386472D2D21C88F1F1EA90C /* Sources.swift */,
 				FE6CB4E5A23B6A6EF846218E /* TMDb.swift */,
@@ -436,6 +446,7 @@
 			isa = PBXGroup;
 			children = (
 				D542687857DE8A3363585BB5 /* anime-source */,
+				6BCA606866B7F4B1FF837155 /* jump-back-in */,
 				F1A1C8FDE995910AE739348D /* nucleus-native-plugins */,
 				57828140C1FD00D05E91838B /* plugin-kit */,
 			);
@@ -475,6 +486,7 @@
 		CA8D0CBB127692B2CE51599B /* WatchlistTests */ = {
 			isa = PBXGroup;
 			children = (
+				7227E5F713E452DC0FCE1C98 /* HomeSectionsTests.swift */,
 				004A8A8B22FD3CFCCBCCDD41 /* MergeTests.swift */,
 				0404A28F09DCACA74E28F41E /* MigrationTests.swift */,
 				2A0B97533ECB27E0E7C85882 /* SourcesTests.swift */,
@@ -552,6 +564,7 @@
 			packageProductDependencies = (
 				7AC0CA5ABF4C1E6DA0CF6E88 /* NucleusPlugins */,
 				D0A6FA6FC91DD0B9B7D1B94C /* WatchlistPluginKit */,
+				A58FD08A060BD26B1F964D06 /* JumpBackInPlugin */,
 			);
 			productName = WatchlistTests;
 			productReference = D004D1DA6EC2F02B1290AFFC /* WatchlistTests.xctest */;
@@ -577,6 +590,7 @@
 				43A8A17CFF0D019CB7268139 /* NucleusPlugins */,
 				E01E0344CF0608D36B18DC32 /* WatchlistPluginKit */,
 				FC208712033A8BA43320BDA7 /* AnimeSourcePlugin */,
+				2715822B4C8A388CB3648FDA /* JumpBackInPlugin */,
 			);
 			productName = Watchlist;
 			productReference = FDB89E4BC7167E564BDFE575 /* Watchlist.app */;
@@ -641,6 +655,7 @@
 			packageReferences = (
 				0E1933D4311ABD8E6BB2C5A7 /* XCRemoteSwiftPackageReference "nucleus-native-ui" */,
 				B602EDF5FEFF5ECF922D5A5A /* XCLocalSwiftPackageReference "../../../plugins/anime-source" */,
+				922A011C5DE0A6D830352584 /* XCLocalSwiftPackageReference "../../../plugins/jump-back-in" */,
 				D56F51C343ABB7A3484C6C3A /* XCLocalSwiftPackageReference "../../../nucleus-native-plugins" */,
 				2F688C0CB8440B90B72395B8 /* XCLocalSwiftPackageReference "../plugin-kit" */,
 			);
@@ -694,6 +709,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				200F6B95D7CD4684895ED8D1 /* HomeSectionsTests.swift in Sources */,
 				FA3DAD57C946C413237D4272 /* MergeTests.swift in Sources */,
 				685F2909B01CB0CB839527D6 /* MigrationTests.swift in Sources */,
 				2FB154ABA52516F1543243F8 /* Model.swift in Sources */,
@@ -733,6 +749,7 @@
 				CCF21172F1CE8A1EE659DC91 /* OpenDefaultsView.swift in Sources */,
 				AE844A53C343A604B09A3AD6 /* OpenLinks.swift in Sources */,
 				D91173B8809CF19B4D06E7D4 /* PhoneWatchBridge.swift in Sources */,
+				EEC5486153C5103398C2F93F /* PluginBridge.swift in Sources */,
 				B0566006DCB6618EB805176F /* PluginsView.swift in Sources */,
 				33AE42E75F22EA867B5C4A06 /* Poster.swift in Sources */,
 				DD4BEC20844C7C26852B981E /* Preferences.swift in Sources */,
@@ -1143,6 +1160,10 @@
 			isa = XCLocalSwiftPackageReference;
 			relativePath = "../plugin-kit";
 		};
+		922A011C5DE0A6D830352584 /* XCLocalSwiftPackageReference "../../../plugins/jump-back-in" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "../../../plugins/jump-back-in";
+		};
 		B602EDF5FEFF5ECF922D5A5A /* XCLocalSwiftPackageReference "../../../plugins/anime-source" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = "../../../plugins/anime-source";
@@ -1165,6 +1186,10 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		2715822B4C8A388CB3648FDA /* JumpBackInPlugin */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = JumpBackInPlugin;
+		};
 		43A8A17CFF0D019CB7268139 /* NucleusPlugins */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = NucleusPlugins;
@@ -1177,6 +1202,10 @@
 		7AC0CA5ABF4C1E6DA0CF6E88 /* NucleusPlugins */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = NucleusPlugins;
+		};
+		A58FD08A060BD26B1F964D06 /* JumpBackInPlugin */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = JumpBackInPlugin;
 		};
 		D0A6FA6FC91DD0B9B7D1B94C /* WatchlistPluginKit */ = {
 			isa = XCSwiftPackageProductDependency;

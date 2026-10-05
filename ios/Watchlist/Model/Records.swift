@@ -251,6 +251,9 @@ struct Item: JSONRecord {
         set { set("lastPage", JSONValue(newValue)) }
     }
 
+    /// When the browser last saved a video position for this title; what "Jump back in" sorts by.
+    var lastWatchedAt: String? { string("lastWatchedAt") }
+
     var playback: Playback? {
         get { Playback(raw["playback"]) }
         set { set("playback", newValue?.json ?? .null) }

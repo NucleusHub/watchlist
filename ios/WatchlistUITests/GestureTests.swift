@@ -28,6 +28,18 @@ final class GestureTests: XCTestCase {
         XCTAssertTrue(onWatchlist, "still on the watchlist")
     }
 
+    func testSwipingJumpBackInSnapsToTheNextCardWithoutChangingTab() {
+        launch(["-grid", "list", "-sampleJump"])
+        let first = app.buttons["Continue watching Dune: Part Two"]
+        XCTAssertTrue(first.waitForExistence(timeout: 5))
+        XCTAssertTrue(first.isHittable)
+        first.swipeLeft()
+        Thread.sleep(forTimeInterval: 2)
+        shoot("jump-swiped")
+        XCTAssertTrue(onWatchlist, "still on the watchlist")
+        XCTAssertTrue(app.buttons["Continue watching Severance"].isHittable, "snapped to the second card")
+    }
+
     func testScrollingGenresDoesNotChangeTab() {
         launch(["-grid", "list"])
         let chip = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Drama")).firstMatch.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))

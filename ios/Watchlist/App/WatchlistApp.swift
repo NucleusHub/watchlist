@@ -1,4 +1,5 @@
 import AnimeSourcePlugin
+import JumpBackInPlugin
 import NucleusPlugins
 import NucleusUI
 import SwiftUI
@@ -27,6 +28,7 @@ struct WatchlistApp: App {
         // Plugins are compiled in; the registry checks them and honours the person's switches.
         let plugins = PluginRegistry(app: "watchlist")
         plugins.install(AnimeSourcePlugin())
+        plugins.install(JumpBackInPlugin())
         _plugins = State(initialValue: plugins)
         watch = PhoneWatchBridge(store: store)
         Haptics.warmUp()
@@ -73,6 +75,14 @@ enum DebugLaunch {
             store.replace(with: SampleData.document, silent: true)
         }
         if args.contains("-animeSource") { store.updateSettings { $0.searchSources = ["tmdb", "kitsu-anime"] } }
+        if args.contains("-sampleJump") {
+            for (n, item) in store.items.filter({ !$0.isCompleted }).prefix(3).enumerated() {
+                store.updateItem(item.id) {
+                    $0.playback = Playback(url: "https://example.com/watch/\(n)", position: Double(900 + n * 1500), duration: 6000)
+                    $0.set("lastWatchedAt", .string(Timestamp.string(Date().addingTimeInterval(Double(-n * 3600)))))
+                }
+            }
+        }
         if let i = args.firstIndex(of: "-appearance"), i + 1 < args.count {
             preferences.appearance = AppearanceMode(rawValue: args[i + 1]) ?? .dark
         }

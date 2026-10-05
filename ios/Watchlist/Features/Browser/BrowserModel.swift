@@ -231,6 +231,7 @@ final class BrowserModel: NSObject {
         hasPlayback = true
         store.updateItem(itemID) { item in
             item.playback = latest
+            item.set("lastWatchedAt", .string(Timestamp.now()))
             if item.status == .planned { item.status = .watching }
         }
     }

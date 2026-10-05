@@ -18,6 +18,8 @@ packages:
     path: ../plugin-kit
   AnimeSourcePlugin:
     path: ../../../plugins/anime-source
+  JumpBackInPlugin:
+    path: ../../../plugins/jump-back-in
 
 settings:
   base:
@@ -38,6 +40,7 @@ targets:
       - package: NucleusPlugins
       - package: WatchlistPluginKit
       - package: AnimeSourcePlugin
+      - package: JumpBackInPlugin
       - target: WatchlistWatch
     settings:
       base:
@@ -103,6 +106,7 @@ targets:
       - target: Watchlist
       - package: NucleusPlugins
       - package: WatchlistPluginKit
+      - package: JumpBackInPlugin
     settings:
       base:
         GENERATE_INFOPLIST_FILE: YES
