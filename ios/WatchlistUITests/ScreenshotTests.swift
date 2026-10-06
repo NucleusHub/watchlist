@@ -68,4 +68,21 @@ final class ScreenshotTests: XCTestCase {
         Thread.sleep(forTimeInterval: 3)
         shoot("welcome")
     }
+
+    /// Start on Welcome leads into the tour; every page, then Done closes it.
+    func testTour() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-resetAll"]
+        app.launch()
+        XCTAssertTrue(app.buttons["Start"].waitForExistence(timeout: 5))
+        app.buttons["Start"].tap()
+        let next = app.buttons["tourNext"]
+        XCTAssertTrue(next.waitForExistence(timeout: 5), "tour opens after Welcome")
+        for page in 1...8 {
+            Thread.sleep(forTimeInterval: 2.2)
+            shoot("tour-\(page)")
+            next.tap()
+        }
+        XCTAssertTrue(next.waitForNonExistence(timeout: 3), "Done closes the tour")
+    }
 }

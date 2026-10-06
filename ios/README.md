@@ -52,5 +52,5 @@ English strings are in the Swift code. Czech is in `design/cs.py`; edit it and r
 ## Debug launch arguments
 
 `-resetAll`, `-sampleData`, `-sampleJump` (three titles to jump back into), `-skipWelcome`, `-appearance light|dark`, `-grid list|big|small`,
-`-animeSource` (search Kitsu too), `-route settings|sources|plugins|stats|item|collection|add|edit|seasons`. `ScreenshotTests` uses them to capture every screen
+`-animeSource` (search Kitsu too), `-route settings|sources|plugins|stats|item|collection|add|edit|seasons|tour`. `ScreenshotTests` uses them to capture every screen
 (set `TEST_RUNNER_SHOT_DIR` to keep the images).

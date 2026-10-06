@@ -5,6 +5,8 @@ struct WelcomeView: View {
     @Environment(Preferences.self) private var preferences
     @Environment(NucleusID.self) private var auth
     @Environment(\.dismiss) private var dismiss
+    /// Start, not the sign-in button, goes on to the tour.
+    var onStart: () -> Void = {}
 
     var body: some View {
         NucleusWelcome(
@@ -16,7 +18,10 @@ struct WelcomeView: View {
                 WelcomePoint("arrow.triangle.2.circlepath", tint: .violet, title: "Or sync it", message: "Sign in with Nucleus ID to keep all your devices in step."),
             ],
             primary: "Start",
-            onStart: finish,
+            onStart: {
+                onStart()
+                finish()
+            },
             hero: {
                 Image("Splash").resizable().scaledToFit().frame(width: 110, height: 110)
                     .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))

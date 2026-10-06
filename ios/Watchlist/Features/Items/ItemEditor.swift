@@ -124,23 +124,8 @@ struct ItemEditor: View {
             if !picked {
                 ForEach(results) { r in
                     Button { pick(r) } label: {
-                        HStack(spacing: 12) {
-                            AsyncImage(url: r.thumbnail) { $0.resizable().scaledToFill() } placeholder: { Nucleus.well }
-                                .frame(width: 36, height: 54)
-                                .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(verbatim: r.title).font(.system(size: 15, weight: .medium)).foregroundStyle(Nucleus.primaryText).lineLimit(2)
-                                HStack(spacing: 4) {
-                                    Text(r.type.title)
-                                    if !r.detail.isEmpty { Text(verbatim: "· \(r.detail)") }
-                                    if catalog.active.count > 1 { Text(verbatim: "· \(r.sourceName)") }
-                                }
-                                .font(.system(size: 12)).foregroundStyle(Nucleus.secondaryText)
-                            }
-                            Spacer()
-                            Image(systemName: "plus.circle.fill").font(.system(size: 20)).foregroundStyle(Nucleus.accent)
-                        }
-                        .padding(.horizontal, 16).padding(.vertical, 8).contentShape(Rectangle())
+                        SearchHitRow(thumbnail: r.thumbnail, title: r.title, type: r.type, detail: r.detail,
+                                     source: catalog.active.count > 1 ? r.sourceName : nil)
                     }
                     .buttonStyle(NucleusRowButtonStyle())
                 }
@@ -474,5 +459,34 @@ struct CameraPicker: UIViewControllerRepresentable {
         }
 
         func imagePickerControllerDidCancel(_ picker: UIImagePickerController) { parent.dismiss() }
+    }
+}
+
+/// A search result with its poster and an add button. The tour shows it too.
+struct SearchHitRow: View {
+    let thumbnail: URL?
+    let title: String
+    let type: ItemType
+    let detail: String
+    var source: String? = nil
+
+    var body: some View {
+        HStack(spacing: 12) {
+            AsyncImage(url: thumbnail) { $0.resizable().scaledToFill() } placeholder: { Nucleus.well }
+                .frame(width: 36, height: 54)
+                .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+            VStack(alignment: .leading, spacing: 2) {
+                Text(verbatim: title).font(.system(size: 15, weight: .medium)).foregroundStyle(Nucleus.primaryText).lineLimit(2)
+                HStack(spacing: 4) {
+                    Text(type.title)
+                    if !detail.isEmpty { Text(verbatim: "· \(detail)") }
+                    if let source { Text(verbatim: "· \(source)") }
+                }
+                .font(.system(size: 12)).foregroundStyle(Nucleus.secondaryText)
+            }
+            Spacer()
+            Image(systemName: "plus.circle.fill").font(.system(size: 20)).foregroundStyle(Nucleus.accent)
+        }
+        .padding(.horizontal, 16).padding(.vertical, 8).contentShape(Rectangle())
     }
 }

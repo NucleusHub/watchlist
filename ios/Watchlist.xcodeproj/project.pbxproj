@@ -50,6 +50,7 @@
 		6C2B067F25F934871AFBFC2C /* SourcesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A0B97533ECB27E0E7C85882 /* SourcesTests.swift */; };
 		6EC625A92274DB445A38F497 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 215A6E6B4B12FACEE60571D2 /* SettingsView.swift */; };
 		6F80E39777DA7F9A9EB8E42D /* MovieDNATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C744A2903363574CB079BC79 /* MovieDNATests.swift */; };
+		71E22B26962E6A1E738C5AFD /* DNAGlyph.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72728892F5D6B904B9EC0A68 /* DNAGlyph.swift */; };
 		7204ECD79F3B02950CC05F37 /* CollectionsTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3BB0199E4C3329D831CFC4F /* CollectionsTab.swift */; };
 		7A85DEEC1B0E102B09A9BA42 /* NucleusUI in Frameworks */ = {isa = PBXBuildFile; productRef = 62F9957BE986BA28A0D02E42 /* NucleusUI */; };
 		7BF94958EC9DF9BB109D470D /* CastAndCrewPlugin in Frameworks */ = {isa = PBXBuildFile; productRef = 4D8A1194D350A7A344CA666B /* CastAndCrewPlugin */; };
@@ -61,6 +62,7 @@
 		84F20C933EB96323D9ED5007 /* TMDbExtras.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56CDB40970557F915AF5F1D9 /* TMDbExtras.swift */; };
 		878FBABB8EA6046BE684B1D1 /* FrameMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3694D4CB87248FBF4D9971E /* FrameMonitor.swift */; };
 		89121C29683982842D6AB51A /* JSONValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9EB5302BC832B2C1E5AEE20 /* JSONValue.swift */; };
+		891F58746EFC2EDAA0F590B5 /* TourView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7F26CDC1678024AA4866601 /* TourView.swift */; };
 		8B7E468AA432810B22573378 /* MovieDNAView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19E5D584949826117C479250 /* MovieDNAView.swift */; };
 		8BA171FEC663874CC926EE45 /* NucleusID.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C4566E5271D96AA2FFDCFCF /* NucleusID.swift */; };
 		8C75DE39168543917A55753B /* Progress.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002E43EE1B45FE4C29D953C6 /* Progress.swift */; };
@@ -197,6 +199,7 @@
 		6F6B878E177482751036C587 /* ItemActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemActions.swift; sourceTree = "<group>"; };
 		721A30750EE12E43016BB2F5 /* CloudSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSync.swift; sourceTree = "<group>"; };
 		7227E5F713E452DC0FCE1C98 /* HomeSectionsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeSectionsTests.swift; sourceTree = "<group>"; };
+		72728892F5D6B904B9EC0A68 /* DNAGlyph.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DNAGlyph.swift; sourceTree = "<group>"; };
 		764A78DA67F19491BC7861A9 /* OpenDefaultsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenDefaultsView.swift; sourceTree = "<group>"; };
 		7BBF97885F76F0BB3E8C78AF /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		834348AF8E735D00207B6493 /* NucleusSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NucleusSession.swift; sourceTree = "<group>"; };
@@ -249,6 +252,7 @@
 		F177D9AC222EFC5336BBCC55 /* CollectionCover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionCover.swift; sourceTree = "<group>"; };
 		F1A1C8FDE995910AE739348D /* nucleus-native-plugins */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "nucleus-native-plugins"; path = "../../../nucleus-native-plugins"; sourceTree = SOURCE_ROOT; };
 		F3BB0199E4C3329D831CFC4F /* CollectionsTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionsTab.swift; sourceTree = "<group>"; };
+		F7F26CDC1678024AA4866601 /* TourView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TourView.swift; sourceTree = "<group>"; };
 		FDB89E4BC7167E564BDFE575 /* Watchlist.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Watchlist.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FDCA2AB9B47FCD5DBCCD5F44 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		FE6CB4E5A23B6A6EF846218E /* TMDb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMDb.swift; sourceTree = "<group>"; };
@@ -305,6 +309,14 @@
 			path = Model;
 			sourceTree = "<group>";
 		};
+		1CB9B72449F5D3B3B59479AB /* Tour */ = {
+			isa = PBXGroup;
+			children = (
+				F7F26CDC1678024AA4866601 /* TourView.swift */,
+			);
+			path = Tour;
+			sourceTree = "<group>";
+		};
 		27958069625E4728CD5F2695 /* Store */ = {
 			isa = PBXGroup;
 			children = (
@@ -337,6 +349,7 @@
 				B7FDEF8DB3E2F156DD23654A /* Report */,
 				5AEA42C7952127C61A929265 /* Settings */,
 				A8E2457D6074FF4F94DF57D7 /* Stats */,
+				1CB9B72449F5D3B3B59479AB /* Tour */,
 				024A380F30891B12310947EB /* Watchlist */,
 				92AC562BB172C1A63565BF95 /* Welcome */,
 			);
@@ -569,6 +582,7 @@
 			children = (
 				45BBCE343170D4ED9B9113DB /* BakedShadow.swift */,
 				A5EB45909D8A2D6ECFBBF1CB /* Confetti.swift */,
+				72728892F5D6B904B9EC0A68 /* DNAGlyph.swift */,
 				96C4EF013BC8EA896463FF0B /* Poster.swift */,
 				A9A1DCF816DAA3F9FE7CF121 /* RatingControl.swift */,
 			);
@@ -816,6 +830,7 @@
 				7204ECD79F3B02950CC05F37 /* CollectionsTab.swift in Sources */,
 				5910CCA91EB07612807DDC34 /* Confetti.swift in Sources */,
 				0C529283CFF2FC703E78AEDE /* CustomCreditsEditor.swift in Sources */,
+				71E22B26962E6A1E738C5AFD /* DNAGlyph.swift in Sources */,
 				878FBABB8EA6046BE684B1D1 /* FrameMonitor.swift in Sources */,
 				B34E268D1EBDEEBFC711DEB7 /* HomeView.swift in Sources */,
 				A368D5F479BD7441EE28BD47 /* Images.swift in Sources */,
@@ -855,6 +870,7 @@
 				84F20C933EB96323D9ED5007 /* TMDbExtras.swift in Sources */,
 				7C266F088E141D30C2D42960 /* TMDbKeySheet.swift in Sources */,
 				8CD76D0507E55AEEA4E1688C /* TitlePreviewView.swift in Sources */,
+				891F58746EFC2EDAA0F590B5 /* TourView.swift in Sources */,
 				3CB76E0057377C458EEAD336 /* TrailerPlayer.swift in Sources */,
 				14499CDAF0DEBE33E8ED3025 /* TrailersSection.swift in Sources */,
 				B14466FC3DE9E3652861FC07 /* VideoTracker.swift in Sources */,

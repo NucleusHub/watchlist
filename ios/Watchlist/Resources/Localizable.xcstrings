@@ -875,6 +875,16 @@
         }
       }
     },
+    "Add anything" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Přidejte cokoli"
+          }
+        }
+      }
+    },
     "Add movies and shows you want to see. Search TMDb or type a title." : {
       "localizations" : {
         "cs" : {
@@ -1192,7 +1202,6 @@
       }
     },
     "Because you liked %@" : {
-      "extractionState" : "stale",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -1689,6 +1698,16 @@
         }
       }
     },
+    "Date night" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rande"
+          }
+        }
+      }
+    },
     "Default" : {
       "localizations" : {
         "cs" : {
@@ -1832,7 +1851,6 @@
       }
     },
     "Discover" : {
-      "extractionState" : "stale",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -1849,6 +1867,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Objevování potřebuje klíč k TMDb"
+          }
+        }
+      }
+    },
+    "Discover suggests titles, MovieDNA learns what you like, Cast & Crew shows who made them and News follows your titles." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Objevovat navrhuje tituly, MovieDNA se učí, co máte rádi, Herci a štáb ukáže, kdo za nimi stojí, a Novinky sledují vaše tituly."
           }
         }
       }
@@ -2077,6 +2105,16 @@
         }
       }
     },
+    "Find what's next" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Najděte, co dál"
+          }
+        }
+      }
+    },
     "Finished watching?" : {
       "localizations" : {
         "cs" : {
@@ -2172,7 +2210,6 @@
       }
     },
     "From your MovieDNA" : {
-      "extractionState" : "stale",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -2225,6 +2262,16 @@
         }
       }
     },
+    "Group titles for date night, a marathon or a friend's recommendations, each with its own cover and order." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seskupte tituly na rande, maraton nebo doporučení od kamaráda, každou kolekci s vlastním obalem a pořadím."
+          }
+        }
+      }
+    },
     "Group titles into lists like “Weekend picks” or “Christmas”." : {
       "localizations" : {
         "cs" : {
@@ -2262,6 +2309,27 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vysoce hodnocené, z žánrů, které jste ještě nezkusili"
+          }
+        }
+      }
+    },
+    "Home slides between your Watchlist, Collections and the pages plugins add, like Discover." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Domovská obrazovka přejíždí mezi Watchlistem, Kolekcemi a stránkami z pluginů, jako je Objevovat."
+          }
+        }
+      }
+    },
+    "hours watched" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "hodin sledování"
           }
         }
       }
@@ -2603,6 +2671,26 @@
         }
       }
     },
+    "Lord of the Rings marathon" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maraton Pána prstenů"
+          }
+        }
+      }
+    },
+    "Make collections" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vytvářejte kolekce"
+          }
+        }
+      }
+    },
     "Mark all" : {
       "localizations" : {
         "cs" : {
@@ -2629,6 +2717,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Označit díl jako zhlédnutý"
+          }
+        }
+      }
+    },
+    "Mark it, love it" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Označte si to, oblibte si to"
           }
         }
       }
@@ -2805,6 +2903,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Novinky"
+          }
+        }
+      }
+    },
+    "Next" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Další"
           }
         }
       }
@@ -3269,8 +3377,17 @@
         }
       }
     },
+    "Pick up where you left off" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pokračujte, kde jste skončili"
+          }
+        }
+      }
+    },
     "Picked for you" : {
-      "extractionState" : "stale",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -3922,6 +4039,16 @@
         }
       }
     },
+    "See your numbers" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Podívejte se na čísla"
+          }
+        }
+      }
+    },
     "Send" : {
       "localizations" : {
         "cs" : {
@@ -4073,6 +4200,16 @@
         }
       }
     },
+    "Sign in with Nucleus ID to sync, or export a backup any time. You can replay this tour from Settings." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Přihlaste se přes Nucleus ID a synchronizujte, nebo si kdykoli exportujte zálohu. Prohlídku si můžete znovu pustit v Nastavení."
+          }
+        }
+      }
+    },
     "Sign out" : {
       "localizations" : {
         "cs" : {
@@ -4099,6 +4236,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Přihlášení selhalo: %@"
+          }
+        }
+      }
+    },
+    "Skip" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Přeskočit"
           }
         }
       }
@@ -4265,6 +4412,16 @@
         }
       }
     },
+    "Swipe between pages" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Přejíždějte mezi stránkami"
+          }
+        }
+      }
+    },
     "Sync now" : {
       "localizations" : {
         "cs" : {
@@ -4336,6 +4493,36 @@
         }
       }
     },
+    "Take the tour" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prohlídka aplikace"
+          }
+        }
+      }
+    },
+    "Tap + to add a movie or show. With a TMDb key, search fills in the poster, cast and where to watch." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klepnutím na + přidáte film nebo seriál. S klíčem k TMDb hledání doplní plakát, herce i kde se dá sledovat."
+          }
+        }
+      }
+    },
+    "Tap the check when you've seen something and the heart for favorites. Press and hold a title for everything else." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Když něco dokoukáte, klepněte na fajfku, oblíbené označte srdíčkem. Podržením titulu najdete všechno ostatní."
+          }
+        }
+      }
+    },
     "Thanks for letting us know." : {
       "localizations" : {
         "cs" : {
@@ -4388,6 +4575,16 @@
     },
     "The “API Key” from your TMDb account settings, not the read access token." : {
 
+    },
+    "The chart button on Home shows how much you've watched, what's left and how you rate things." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tlačítko s grafem na domovské obrazovce ukáže, kolik jste toho viděli, co vám zbývá a jak hodnotíte."
+          }
+        }
+      }
     },
     "The titles stay on your watchlist." : {
       "localizations" : {
@@ -4540,6 +4737,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tento produkt používá TMDB API, ale není TMDB podporován ani certifikován."
+          }
+        }
+      }
+    },
+    "Tick off episodes season by season. Links open in the app and remember where you stopped, so Jump back in takes you straight there." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odškrtávejte díly sezónu po sezóně. Odkazy se otevírají v aplikaci a pamatují si, kde jste přestali, takže vás Vrátit se ke sledování vezme přesně tam."
           }
         }
       }
@@ -5131,6 +5338,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "vaše"
+          }
+        }
+      }
+    },
+    "Yours on every device" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Na všech vašich zařízeních"
           }
         }
       }

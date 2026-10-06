@@ -151,7 +151,10 @@ struct SettingsView: View {
     private var dataSection: some View {
         NucleusSection("Data", footer: Text(flash.map { LocalizedStringKey($0) } ?? "\(store.document.items.count) titles and \(store.document.collections.count) collections on this device.")) {
             Button { navigator.open(.movieDNA) } label: {
-                NucleusRow("MovieDNA", subtitle: movieDNASummary, icon: IconTile("atom", tint: .rose)) { Chevron() }
+                // NucleusRow only takes SF Symbol tiles; this sits where its tile would.
+                NucleusRow("MovieDNA", subtitle: movieDNASummary) { Chevron() }
+                    .padding(.leading, 42)
+                    .overlay(alignment: .leading) { DNATile().padding(.leading, 16) }
             }
             .buttonStyle(NucleusRowButtonStyle())
             ShareLink(item: BackupFile(document: store.document), preview: SharePreview(Backup.fileName())) {
@@ -244,6 +247,10 @@ struct SettingsView: View {
 
     private var helpSection: some View {
         NucleusSection("Help") {
+            Button { navigator.present(.tour) } label: {
+                NucleusRow("Take the tour", icon: IconTile("map.fill", tint: .violet)) { Chevron() }
+            }
+            .buttonStyle(NucleusRowButtonStyle())
             Button { navigator.present(.report) } label: {
                 NucleusRow("Report a problem", icon: IconTile("ladybug.fill", tint: .rose)) { Chevron() }
             }

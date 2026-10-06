@@ -109,6 +109,7 @@ enum DebugLaunch {
         if args.contains("-resetAll") {
             store.replace(with: WatchlistDocument(), silent: true)
             preferences.hasSeenWelcome = false
+            preferences.hasSeenTour = false
             preferences.appearance = .dark
             preferences.gridStyle = .small
             NucleusSession.clear()
@@ -155,6 +156,7 @@ enum DebugLaunch {
         case "add": navigator.sheet = .newItem(collectionID: nil)
         case "edit": if let first = store.items.first { navigator.sheet = .editItem(first.id) }
         case "seasons": if let show = store.items.first(where: \.isShow) { navigator.sheet = .seasons(show.id) }
+        case "tour": navigator.sheet = .tour
         default: break
         }
         #endif

@@ -11,22 +11,9 @@ struct StatsView: View {
 
     var body: some View {
         let items = store.document.items
-        let byStatus = Dictionary(grouping: items, by: \.status)
         NucleusPage("Statistics") {
-            hero(items, byStatus: byStatus)
-
-            HStack(spacing: 12) {
-                tile("In progress", minutes: (byStatus[.watching] ?? []).reduce(0) { $0 + $1.remainingMinutes },
-                     count: (byStatus[.watching] ?? []).count, detail: { String(localized: "\($0) titles left") }, tint: WatchStatus.watching.color)
-                tile("Planned", minutes: (byStatus[.planned] ?? []).reduce(0) { $0 + $1.remainingMinutes },
-                     count: (byStatus[.planned] ?? []).count, detail: { String(localized: "\($0) titles left") }, tint: WatchStatus.planned.color)
-            }
-            .padding(.bottom, 12)
-            HStack(spacing: 12) {
-                tile("Total", minutes: items.reduce(0) { $0 + $1.totalMinutes }, count: items.count, detail: { String(localized: "\($0) titles") }, tint: Nucleus.accent)
-                ratingsTile(items)
-            }
-            .padding(.bottom, 28)
+            StatsOverview(items: items, shown: shown)
+                .padding(.bottom, 28)
 
             NucleusSection("By type") {
                 ForEach(ItemType.allCases, id: \.self) { type in
@@ -60,7 +47,57 @@ struct StatsView: View {
         }
     }
 
-    private func hero(_ items: [Item], byStatus: [WatchStatus: [Item]]) -> some View {
+    private func top(_ values: [String]) -> [(String, Int)] {
+        Dictionary(values.map { ($0, 1) }, uniquingKeysWith: +).sorted { $0.value != $1.value ? $0.value > $1.value : $0.key < $1.key }
+            .prefix(5).map { ($0.key, $0.value) }
+    }
+
+    private func bars(_ rows: [(String, Int)]) -> some View {
+        let most = rows.map(\.1).max() ?? 1
+        return VStack(spacing: 12) {
+            ForEach(rows, id: \.0) { name, count in
+                HStack(spacing: 10) {
+                    Text(verbatim: name).font(.system(size: 14)).foregroundStyle(Nucleus.primaryText).frame(width: 110, alignment: .leading).lineLimit(1)
+                    GeometryReader { geo in
+                        Capsule().fill(Nucleus.primaryGradient)
+                            .frame(width: max(geo.size.width * 0.04, geo.size.width * CGFloat(count) / CGFloat(most)) * shown)
+                    }
+                    .frame(height: 10)
+                    Counting(value: Double(count), progress: shown) { "\(Int($0.rounded()))" }
+                        .font(.system(size: 13).monospacedDigit()).foregroundStyle(Nucleus.secondaryText).frame(width: 28, alignment: .trailing)
+                }
+            }
+        }
+        .padding(16)
+    }
+}
+
+/// Text showing `value × progress`, so it counts up as `progress` animates to 1.
+/// Time watched by status, then what's left, the total and ratings. The tour shows it too.
+struct StatsOverview: View {
+    let items: [Item]
+    /// 0 → 1 as the numbers count up.
+    let shown: Double
+
+    var body: some View {
+        let byStatus = Dictionary(grouping: items, by: \.status)
+        VStack(spacing: 0) {
+            hero(byStatus: byStatus)
+            HStack(spacing: 12) {
+                tile("In progress", minutes: (byStatus[.watching] ?? []).reduce(0) { $0 + $1.remainingMinutes },
+                     count: (byStatus[.watching] ?? []).count, detail: { String(localized: "\($0) titles left") }, tint: WatchStatus.watching.color)
+                tile("Planned", minutes: (byStatus[.planned] ?? []).reduce(0) { $0 + $1.remainingMinutes },
+                     count: (byStatus[.planned] ?? []).count, detail: { String(localized: "\($0) titles left") }, tint: WatchStatus.planned.color)
+            }
+            .padding(.bottom, 12)
+            HStack(spacing: 12) {
+                tile("Total", minutes: items.reduce(0) { $0 + $1.totalMinutes }, count: items.count, detail: { String(localized: "\($0) titles") }, tint: Nucleus.accent)
+                ratingsTile(items)
+            }
+        }
+    }
+
+    private func hero(byStatus: [WatchStatus: [Item]]) -> some View {
         VStack(alignment: .leading, spacing: 14) {
             Text("Watched").font(.system(size: 13, weight: .semibold)).textCase(.uppercase).tracking(0.5).foregroundStyle(Nucleus.secondaryText)
             Counting(value: Double(items.reduce(0) { $0 + $1.watchedMinutes }), progress: shown) { Self.runtime($0) }
@@ -132,33 +169,8 @@ struct StatsView: View {
     private static func runtime(_ minutes: Double) -> String {
         RuntimeText.short(minutes > 0 ? max(1, Int(minutes.rounded())) : 0)
     }
-
-    private func top(_ values: [String]) -> [(String, Int)] {
-        Dictionary(values.map { ($0, 1) }, uniquingKeysWith: +).sorted { $0.value != $1.value ? $0.value > $1.value : $0.key < $1.key }
-            .prefix(5).map { ($0.key, $0.value) }
-    }
-
-    private func bars(_ rows: [(String, Int)]) -> some View {
-        let most = rows.map(\.1).max() ?? 1
-        return VStack(spacing: 12) {
-            ForEach(rows, id: \.0) { name, count in
-                HStack(spacing: 10) {
-                    Text(verbatim: name).font(.system(size: 14)).foregroundStyle(Nucleus.primaryText).frame(width: 110, alignment: .leading).lineLimit(1)
-                    GeometryReader { geo in
-                        Capsule().fill(Nucleus.primaryGradient)
-                            .frame(width: max(geo.size.width * 0.04, geo.size.width * CGFloat(count) / CGFloat(most)) * shown)
-                    }
-                    .frame(height: 10)
-                    Counting(value: Double(count), progress: shown) { "\(Int($0.rounded()))" }
-                        .font(.system(size: 13).monospacedDigit()).foregroundStyle(Nucleus.secondaryText).frame(width: 28, alignment: .trailing)
-                }
-            }
-        }
-        .padding(16)
-    }
 }
 
-/// Text showing `value × progress`, so it counts up as `progress` animates to 1.
 private struct Counting: View, Animatable {
     let value: Double
     var progress: Double

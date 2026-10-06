@@ -17,6 +17,7 @@ final class Preferences {
     var shakeToReport: Bool { didSet { defaults.set(shakeToReport, forKey: "shakeToReport") } }
     var inAppBrowser: Bool { didSet { defaults.set(inAppBrowser, forKey: "inAppBrowser") } }
     var hasSeenWelcome: Bool { didSet { defaults.set(hasSeenWelcome, forKey: "hasSeenWelcome") } }
+    var hasSeenTour: Bool { didSet { defaults.set(hasSeenTour, forKey: "hasSeenTour") } }
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
@@ -26,11 +27,13 @@ final class Preferences {
             "shakeToReport": true,
             "inAppBrowser": true,
             "hasSeenWelcome": false,
+            "hasSeenTour": false,
         ])
         appearance = AppearanceMode(rawValue: defaults.string(forKey: "appearance") ?? "") ?? .dark
         gridStyle = GridStyle(rawValue: defaults.string(forKey: "gridStyle") ?? "") ?? .small
         shakeToReport = defaults.bool(forKey: "shakeToReport")
         inAppBrowser = defaults.bool(forKey: "inAppBrowser")
         hasSeenWelcome = defaults.bool(forKey: "hasSeenWelcome")
+        hasSeenTour = defaults.bool(forKey: "hasSeenTour")
     }
 }

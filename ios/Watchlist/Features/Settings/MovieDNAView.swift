@@ -34,7 +34,7 @@ struct MovieDNAView: View {
             NucleusSection(footer: enabled ? Text("Learned from your ratings, favorites, watchlist and Interested presses. It syncs with your Nucleus ID account.")
                                            : Text("Nothing is learned or used while it's off. What you set by hand is kept for when you turn it back on.")) {
                 Toggle(isOn: Binding(get: { enabled }, set: { Haptics.selection(); store.setMovieDNAEnabled($0) })) {
-                    Label { Text("Build my MovieDNA") } icon: { IconTile("atom", tint: .rose) }
+                    Label { Text("Build my MovieDNA") } icon: { DNATile() }
                 }
                 .tint(Color(hex: 0x34C759))
                 .padding(.horizontal, 16).frame(minHeight: 52)
@@ -44,7 +44,7 @@ struct MovieDNAView: View {
                 if !uses.isEmpty { usedBy(uses) }
                 howItWorks
                 if dna.traits.isEmpty {
-                    NucleusEmptyState("atom", title: "Nothing learned yet", message: "Rate titles, mark favorites or press Interested and your MovieDNA fills in.")
+                    DNAEmptyState()
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 24)
                 }
@@ -400,5 +400,28 @@ struct DNAAddSheet: View {
         try? await Task.sleep(for: .milliseconds(350))
         guard !Task.isCancelled else { return }
         tmdbResults = (try? await TMDb(apiKey: store.settings.tmdbApiKey).search(needle)) ?? []
+    }
+}
+
+/// `NucleusEmptyState` with the DNA glyph, which isn't an SF Symbol.
+private struct DNAEmptyState: View {
+    var body: some View {
+        VStack(spacing: 12) {
+            DNAGlyph()
+                .foregroundStyle(Nucleus.accent)
+                .frame(width: 32, height: 32)
+                .frame(width: 68, height: 68)
+                .nucleusGlass(in: Circle())
+            Text("Nothing learned yet")
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundStyle(Nucleus.primaryText)
+            Text("Rate titles, mark favorites or press Interested and your MovieDNA fills in.")
+                .font(.system(size: 14))
+                .multilineTextAlignment(.center)
+                .foregroundStyle(Nucleus.secondaryText)
+                .frame(maxWidth: 300)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 48)
     }
 }

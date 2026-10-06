@@ -34,6 +34,7 @@ enum Sheet: Identifiable, Hashable {
     case addItems(String)
     case reorder(String)
     case report
+    case tour
 
     var id: Self { self }
 }

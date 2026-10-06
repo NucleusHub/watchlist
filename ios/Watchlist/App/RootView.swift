@@ -10,6 +10,7 @@ struct RootView: View {
     @Environment(AppHost.self) private var host
     @Environment(\.scenePhase) private var scenePhase
     @State private var showWelcome = false
+    @State private var tourAfterWelcome = false
 
     var body: some View {
         @Bindable var navigator = navigator
@@ -38,8 +39,10 @@ struct RootView: View {
         }
         .overlay { Confetti(trigger: store.celebrations) }
         .fullScreenCover(item: $navigator.browser) { BrowserView(request: $0) }
-        .sheet(isPresented: $showWelcome) {
-            WelcomeView()
+        .sheet(isPresented: $showWelcome, onDismiss: {
+            if tourAfterWelcome && !preferences.hasSeenTour { navigator.present(.tour) }
+        }) {
+            WelcomeView { tourAfterWelcome = true }
                 .interactiveDismissDisabled()
                 .presentationDragIndicator(.hidden)
         }
@@ -80,6 +83,7 @@ struct RootView: View {
         case .addItems(let id): AddItemsSheet(collectionID: id)
         case .reorder(let id): ReorderSheet(collectionID: id)
         case .report: ReportSheet()
+        case .tour: TourView().presentationDragIndicator(.hidden)
         }
     }
 }
