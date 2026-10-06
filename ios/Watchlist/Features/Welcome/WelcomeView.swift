@@ -5,8 +5,8 @@ struct WelcomeView: View {
     @Environment(Preferences.self) private var preferences
     @Environment(NucleusID.self) private var auth
     @Environment(\.dismiss) private var dismiss
-    /// Start, not the sign-in button, goes on to the tour.
-    var onStart: () -> Void = {}
+    /// Opens the tour once Welcome is gone; skipping and signing in don't.
+    var onTour: () -> Void = {}
 
     var body: some View {
         NucleusWelcome(
@@ -17,9 +17,9 @@ struct WelcomeView: View {
                 WelcomePoint("square.and.arrow.up", tint: .teal, title: "Back it up", message: "Export to a file and bring it to another device any time."),
                 WelcomePoint("arrow.triangle.2.circlepath", tint: .violet, title: "Or sync it", message: "Sign in with Nucleus ID to keep all your devices in step."),
             ],
-            primary: "Start",
+            primary: "Show me around",
             onStart: {
-                onStart()
+                onTour()
                 finish()
             },
             hero: {
@@ -28,6 +28,8 @@ struct WelcomeView: View {
                     .shadow(color: Nucleus.accent.opacity(0.4), radius: 30)
             },
             footer: {
+                Button("Skip the tour", action: finish)
+                    .buttonStyle(NucleusSecondaryButtonStyle())
                 Button("Sync with Nucleus ID") {
                     finish()
                     Task { await auth.signIn(mode: .keep) }

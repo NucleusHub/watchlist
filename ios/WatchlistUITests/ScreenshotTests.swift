@@ -74,8 +74,8 @@ final class ScreenshotTests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = ["-resetAll"]
         app.launch()
-        XCTAssertTrue(app.buttons["Start"].waitForExistence(timeout: 5))
-        app.buttons["Start"].tap()
+        XCTAssertTrue(app.buttons["Show me around"].waitForExistence(timeout: 5))
+        app.buttons["Show me around"].tap()
         let next = app.buttons["tourNext"]
         XCTAssertTrue(next.waitForExistence(timeout: 5), "tour opens after Welcome")
         for page in 1...8 {
@@ -84,5 +84,14 @@ final class ScreenshotTests: XCTestCase {
             next.tap()
         }
         XCTAssertTrue(next.waitForNonExistence(timeout: 3), "Done closes the tour")
+    }
+
+    func testSkippingTheTour() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-resetAll"]
+        app.launch()
+        XCTAssertTrue(app.buttons["Skip the tour"].waitForExistence(timeout: 5))
+        app.buttons["Skip the tour"].tap()
+        XCTAssertFalse(app.buttons["tourNext"].waitForExistence(timeout: 2), "no tour after skipping")
     }
 }

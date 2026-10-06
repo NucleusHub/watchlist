@@ -215,7 +215,6 @@ CS = {
     "Small posters": "Malé plakáty",
     "Sort": "Řazení",
     "Sort by": "Řadit podle",
-    "Start": "Začít",
     "Start clean": "Začít načisto",
     "Statistics": "Statistiky",
     "Status": "Stav",
@@ -434,6 +433,8 @@ CS = {
     "Lord of the Rings marathon": "Maraton Pána prstenů",
     "hours watched": "hodin sledování",
     "Take the tour": "Prohlídka aplikace",
+    "Show me around": "Provést aplikací",
+    "Skip the tour": "Přeskočit prohlídku",
 }
 
 # Strings with one count: key -> (English one, English other, Czech one, Czech few, Czech other).
