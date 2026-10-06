@@ -34,4 +34,29 @@ final class MigrationTests: XCTestCase {
         Migration.run(store: store, preferences: prefs, defaults: defaults)
         XCTAssertNil(store.item("a"))
     }
+
+    func testReinstallDropsTheLeftoverSignIn() throws {
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: "ReinstallTests"))
+        defaults.removePersistentDomain(forName: "ReinstallTests")
+        defer { defaults.removePersistentDomain(forName: "ReinstallTests"); NucleusSession.clear() }
+        let store = WatchlistStore(fileURL: nil, document: WatchlistDocument())
+        let session = NucleusSession(accessToken: "at", refreshToken: "rt", expiresAt: 0, user: .init(sub: "u1", handle: "ema", name: "Ema", email: nil))
+
+        // A fresh install with a sign-in only in the keychain: a deleted copy left it.
+        session.save()
+        Migration.dropLeftoverSession(store: store, defaults: defaults)
+        XCTAssertNil(NucleusSession.load())
+
+        // The app ran here before: an update keeps the sign-in.
+        Migration.run(store: store, preferences: Preferences(defaults: defaults), defaults: defaults)
+        session.save()
+        Migration.dropLeftoverSession(store: store, defaults: defaults)
+        XCTAssertEqual(NucleusSession.load()?.user.handle, "ema")
+
+        // So does coming from the Capacitor app, which hasn't run the migration yet.
+        defaults.removePersistentDomain(forName: "ReinstallTests")
+        defaults.set("{}", forKey: "CapacitorStorage.watchlist-sync")
+        Migration.dropLeftoverSession(store: store, defaults: defaults)
+        XCTAssertNotNil(NucleusSession.load())
+    }
 }

@@ -22,6 +22,7 @@ struct WatchlistApp: App {
     init() {
         let store = WatchlistStore()
         let preferences = Preferences()
+        Migration.dropLeftoverSession(store: store)
         Migration.run(store: store, preferences: preferences)
         DebugLaunch.prepare(store: store, preferences: preferences)
         let auth = NucleusID()

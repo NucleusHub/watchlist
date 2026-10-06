@@ -7,6 +7,14 @@ enum Migration {
     private static let doneKey = "migratedFromCapacitor"
     private static func key(_ name: String) -> String { "CapacitorStorage.\(name)" }
 
+    /// The keychain outlives a deleted app. A sign-in on an install with no trace of an earlier one was left
+    /// behind by a deleted copy, so it's dropped and a reinstall starts fresh, Welcome and tour included.
+    static func dropLeftoverSession(store: WatchlistStore, defaults: UserDefaults = .standard) {
+        let earlierInstall = defaults.object(forKey: doneKey) != nil || store.hasSavedFile
+            || defaults.dictionaryRepresentation().keys.contains { $0.hasPrefix(key("")) }
+        if !earlierInstall { NucleusSession.clear() }
+    }
+
     static func run(store: WatchlistStore, preferences: Preferences, defaults: UserDefaults = .standard) {
         guard !defaults.bool(forKey: doneKey) else { return }
         defer { defaults.set(true, forKey: doneKey) }
