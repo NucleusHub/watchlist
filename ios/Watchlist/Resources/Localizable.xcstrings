@@ -27,9 +27,6 @@
         }
       }
     },
-    "%lld" : {
-
-    },
     "%lld / %lld" : {
       "localizations" : {
         "cs" : {

@@ -5,6 +5,9 @@ import SwiftUI
 /// How much you've watched, and what's left.
 struct StatsView: View {
     @Environment(WatchlistStore.self) private var store
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// 0 → 1 once the page opens; every number and bar is drawn at this share of its value.
+    @State private var shown: Double = 0
 
     var body: some View {
         let items = store.document.items
@@ -14,13 +17,13 @@ struct StatsView: View {
 
             HStack(spacing: 12) {
                 tile("In progress", minutes: (byStatus[.watching] ?? []).reduce(0) { $0 + $1.remainingMinutes },
-                     detail: Text("\((byStatus[.watching] ?? []).count) titles left"), tint: WatchStatus.watching.color)
+                     count: (byStatus[.watching] ?? []).count, detail: { String(localized: "\($0) titles left") }, tint: WatchStatus.watching.color)
                 tile("Planned", minutes: (byStatus[.planned] ?? []).reduce(0) { $0 + $1.remainingMinutes },
-                     detail: Text("\((byStatus[.planned] ?? []).count) titles left"), tint: WatchStatus.planned.color)
+                     count: (byStatus[.planned] ?? []).count, detail: { String(localized: "\($0) titles left") }, tint: WatchStatus.planned.color)
             }
             .padding(.bottom, 12)
             HStack(spacing: 12) {
-                tile("Total", minutes: items.reduce(0) { $0 + $1.totalMinutes }, detail: Text("\(items.count) titles"), tint: Nucleus.accent)
+                tile("Total", minutes: items.reduce(0) { $0 + $1.totalMinutes }, count: items.count, detail: { String(localized: "\($0) titles") }, tint: Nucleus.accent)
                 ratingsTile(items)
             }
             .padding(.bottom, 28)
@@ -33,9 +36,10 @@ struct StatsView: View {
                         HStack {
                             Label(type == .movie ? "Movies" : "Shows", systemImage: type.symbol).font(.system(size: 15, weight: .semibold))
                             Spacer()
-                            Text("\(done) of \(all.count) watched").font(.system(size: 13)).foregroundStyle(Nucleus.secondaryText)
+                            Counting(value: Double(done), progress: shown) { String(localized: "\(Int($0.rounded())) of \(all.count) watched") }
+                                .font(.system(size: 13).monospacedDigit()).foregroundStyle(Nucleus.secondaryText)
                         }
-                        ProgressView(value: all.isEmpty ? 0 : Double(done) / Double(all.count)).tint(WatchStatus.completed.color)
+                        Meter(fraction: all.isEmpty ? 0 : Double(done) / Double(all.count) * shown, tint: WatchStatus.completed.color)
                     }
                     .padding(16)
                 }
@@ -50,13 +54,17 @@ struct StatsView: View {
                 NucleusSection("Top years") { bars(years) }
             }
         }
+        .onAppear {
+            guard shown == 0 else { return }
+            if reduceMotion { shown = 1 } else { withAnimation(.easeOut(duration: 0.8)) { shown = 1 } }
+        }
     }
 
     private func hero(_ items: [Item], byStatus: [WatchStatus: [Item]]) -> some View {
         VStack(alignment: .leading, spacing: 14) {
             Text("Watched").font(.system(size: 13, weight: .semibold)).textCase(.uppercase).tracking(0.5).foregroundStyle(Nucleus.secondaryText)
-            Text(verbatim: RuntimeText.short(items.reduce(0) { $0 + $1.watchedMinutes }))
-                .font(.system(size: 44, weight: .bold, design: .rounded))
+            Counting(value: Double(items.reduce(0) { $0 + $1.watchedMinutes }), progress: shown) { Self.runtime($0) }
+                .font(.system(size: 44, weight: .bold, design: .rounded).monospacedDigit())
                 .foregroundStyle(Nucleus.primaryText)
             Chart([WatchStatus.completed, .watching, .planned], id: \.self) { status in
                 BarMark(x: .value("Titles", byStatus[status]?.count ?? 0), stacking: .normalized)
@@ -64,13 +72,17 @@ struct StatsView: View {
             }
             .chartXAxis(.hidden)
             .frame(height: 14)
-            .clipShape(Capsule())
+            // Grows in from the left with the numbers.
+            .mask(alignment: .leading) {
+                GeometryReader { geo in Capsule().frame(width: geo.size.width * shown) }
+            }
             HStack(spacing: 14) {
                 ForEach([WatchStatus.completed, .watching, .planned], id: \.self) { s in
                     HStack(spacing: 6) {
                         Circle().fill(s.color).frame(width: 8, height: 8)
                         Text(s.title).foregroundStyle(Nucleus.glyph)
-                        Text("\(byStatus[s]?.count ?? 0)").foregroundStyle(Nucleus.secondaryText)
+                        Counting(value: Double(byStatus[s]?.count ?? 0), progress: shown) { "\(Int($0.rounded()))" }
+                            .monospacedDigit().foregroundStyle(Nucleus.secondaryText)
                     }
                     .font(.system(size: 13))
                 }
@@ -82,11 +94,13 @@ struct StatsView: View {
         .padding(.bottom, 12)
     }
 
-    private func tile(_ title: LocalizedStringKey, minutes: Int, detail: Text, tint: Color) -> some View {
+    private func tile(_ title: LocalizedStringKey, minutes: Int, count: Int, detail: @escaping (Int) -> String, tint: Color) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(title).font(.system(size: 13, weight: .semibold)).foregroundStyle(tint)
-            Text(verbatim: RuntimeText.short(minutes)).font(.system(size: 24, weight: .bold, design: .rounded)).foregroundStyle(Nucleus.primaryText)
-            detail.font(.system(size: 12)).foregroundStyle(Nucleus.secondaryText)
+            Counting(value: Double(minutes), progress: shown) { Self.runtime($0) }
+                .font(.system(size: 24, weight: .bold, design: .rounded).monospacedDigit()).foregroundStyle(Nucleus.primaryText)
+            Counting(value: Double(count), progress: shown) { detail(Int($0.rounded())) }
+                .font(.system(size: 12).monospacedDigit()).foregroundStyle(Nucleus.secondaryText)
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -96,18 +110,27 @@ struct StatsView: View {
     private func ratingsTile(_ items: [Item]) -> some View {
         let mine = items.compactMap(\.rating)
         let tmdb = items.compactMap(\.tmdbRating)
-        func avg(_ v: [Double]) -> String { v.isEmpty ? "—" : String(format: "%.1f", v.reduce(0, +) / Double(v.count)) }
+        func avg(_ v: [Double]) -> Double? { v.isEmpty ? nil : v.reduce(0, +) / Double(v.count) }
+        let yours = avg(mine), theirs = avg(tmdb)
+        func text(_ v: Double, of average: Double?) -> String { average == nil ? "—" : String(format: "%.1f", v) }
         return VStack(alignment: .leading, spacing: 6) {
             Text("Ratings").font(.system(size: 13, weight: .semibold)).foregroundStyle(Color(hex: 0xFBBF24))
             HStack(alignment: .firstTextBaseline, spacing: 4) {
-                Text(verbatim: avg(mine)).font(.system(size: 24, weight: .bold, design: .rounded)).foregroundStyle(Nucleus.primaryText)
+                Counting(value: yours ?? 0, progress: shown) { text($0, of: yours) }
+                    .font(.system(size: 24, weight: .bold, design: .rounded).monospacedDigit()).foregroundStyle(Nucleus.primaryText)
                 Text("yours").font(.system(size: 12)).foregroundStyle(Nucleus.secondaryText)
             }
-            Text("TMDb \(avg(tmdb))").font(.system(size: 12)).foregroundStyle(Nucleus.secondaryText)
+            Counting(value: theirs ?? 0, progress: shown) { String(localized: "TMDb \(text($0, of: theirs))") }
+                .font(.system(size: 12).monospacedDigit()).foregroundStyle(Nucleus.secondaryText)
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
         .nucleusGlass(cornerRadius: 22)
+    }
+
+    /// Counting time starts at 1m rather than "—", which stays for nothing at all.
+    private static func runtime(_ minutes: Double) -> String {
+        RuntimeText.short(minutes > 0 ? max(1, Int(minutes.rounded())) : 0)
     }
 
     private func top(_ values: [String]) -> [(String, Int)] {
@@ -122,13 +145,45 @@ struct StatsView: View {
                 HStack(spacing: 10) {
                     Text(verbatim: name).font(.system(size: 14)).foregroundStyle(Nucleus.primaryText).frame(width: 110, alignment: .leading).lineLimit(1)
                     GeometryReader { geo in
-                        Capsule().fill(Nucleus.primaryGradient).frame(width: max(geo.size.width * 0.04, geo.size.width * CGFloat(count) / CGFloat(most)))
+                        Capsule().fill(Nucleus.primaryGradient)
+                            .frame(width: max(geo.size.width * 0.04, geo.size.width * CGFloat(count) / CGFloat(most)) * shown)
                     }
                     .frame(height: 10)
-                    Text("\(count)").font(.system(size: 13).monospacedDigit()).foregroundStyle(Nucleus.secondaryText).frame(width: 28, alignment: .trailing)
+                    Counting(value: Double(count), progress: shown) { "\(Int($0.rounded()))" }
+                        .font(.system(size: 13).monospacedDigit()).foregroundStyle(Nucleus.secondaryText).frame(width: 28, alignment: .trailing)
                 }
             }
         }
         .padding(16)
+    }
+}
+
+/// Text showing `value × progress`, so it counts up as `progress` animates to 1.
+private struct Counting: View, Animatable {
+    let value: Double
+    var progress: Double
+    let format: (Double) -> String
+
+    var animatableData: Double {
+        get { progress }
+        set { progress = newValue }
+    }
+
+    var body: some View { Text(verbatim: format(value * progress)) }
+}
+
+/// A thin progress bar whose width animates, unlike `ProgressView`'s.
+private struct Meter: View {
+    let fraction: Double
+    let tint: Color
+
+    var body: some View {
+        GeometryReader { geo in
+            ZStack(alignment: .leading) {
+                Capsule().fill(Nucleus.well)
+                Capsule().fill(tint).frame(width: geo.size.width * min(1, max(0, fraction)))
+            }
+        }
+        .frame(height: 6)
     }
 }
