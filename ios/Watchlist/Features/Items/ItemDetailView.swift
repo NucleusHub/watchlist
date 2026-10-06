@@ -1,15 +1,20 @@
+import NucleusPlugins
 import NucleusUI
 import SwiftUI
+import WatchlistPluginKit
 
 struct ItemDetailView: View {
     let itemID: String
     @Environment(WatchlistStore.self) private var store
     @Environment(Navigator.self) private var navigator
     @Environment(Preferences.self) private var preferences
+    @Environment(PluginRegistry.self) private var registry
     @Environment(\.openURL) private var openURL
     @Environment(\.dismiss) private var dismiss
     @State private var confirmingDelete = false
     @State private var confirmingReset = false
+    @State private var extras: TMDb.Extras?
+    @State private var trailers = TrailerPlayer()
 
     var body: some View {
         if let item = store.item(itemID) {
@@ -30,6 +35,15 @@ struct ItemDetailView: View {
             }
             .modifier(DeleteItemDialog(item: item, isPresented: $confirmingDelete))
             .modifier(ResetProgressDialog(item: item, isPresented: $confirmingReset))
+            .task(id: "\(item.type.rawValue):\(item.tmdbId ?? 0):\(store.settings.tmdbApiKey):\(item.trailerUrl ?? "")") { await loadExtras(item) }
+            .background {
+                TrailerPlayerHost(player: trailers).frame(width: 2, height: 2).opacity(0.01).accessibilityHidden(true)
+            }
+            .onAppear {
+                trailers.onFailure = { key in
+                    if let url = URL(string: "https://www.youtube.com/watch?v=\(key)") { openURL(url) }
+                }
+            }
         } else {
             NucleusPage {
                 NucleusEmptyState("film", title: "Title not found", message: "It may have been deleted on another device.")
@@ -84,12 +98,34 @@ struct ItemDetailView: View {
                 } label: { Label("Mark as watched", systemImage: "checkmark") }
                     .buttonStyle(NucleusPrimaryButtonStyle())
             }
+            if store.movieDNASettings.enabled { InterestedButton(item: item) }
             FavoriteButton(item: item, size: 52, onPoster: false)
         }
-        .padding(.bottom, 24)
+        .padding(.bottom, store.interestCount(item) > 0 ? 10 : 24)
+
+        if store.movieDNASettings.enabled, store.interestCount(item) > 0 {
+            interestNote(item)
+        }
 
         if item.isShow {
             showProgress(item)
+        }
+
+        if let overview = Self.overview(item, extras), !overview.isEmpty {
+            NucleusSection("Overview") {
+                Text(verbatim: overview)
+                    .font(.system(size: 15))
+                    .foregroundStyle(Nucleus.primaryText)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(16)
+            }
+        }
+
+        if case let videos = Self.videos(item, extras), !videos.isEmpty {
+            TrailersSection(videos: videos, loadingKey: trailers.loadingKey) { video in
+                Haptics.tap()
+                trailers.play(video.key)
+            }
         }
 
         NucleusSection("Your rating") {
@@ -130,6 +166,12 @@ struct ItemDetailView: View {
                 .padding(14)
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
+        }
+
+        if let tmdbID = item.tmdbId, !store.settings.tmdbApiKey.isEmpty {
+            PluginItemSections(type: item.type, tmdbID: tmdbID, title: item.title)
+        } else if item.tmdbId == nil, !item.customCredits.isEmpty {
+            PluginItemSections(type: item.type, tmdbID: nil, title: item.title, credits: item.customCredits)
         }
 
         let collections = store.collections.filter { item.isIn($0.id) }
@@ -193,6 +235,63 @@ struct ItemDetailView: View {
             Button { confirmingDelete = true } label: { NucleusRow("Delete", titleColor: Nucleus.danger) }
                 .buttonStyle(NucleusRowButtonStyle())
         }
+    }
+
+    /// What the presses did, and a heads-up while no plugin uses MovieDNA, so the button doesn't look broken.
+    private func interestNote(_ item: Item) -> some View {
+        Button { navigator.open(.movieDNA) } label: {
+            HStack(spacing: 6) {
+                Image(systemName: registry.contributions(to: .movieDNAUses).isEmpty ? "info.circle" : "flame.fill")
+                if registry.contributions(to: .movieDNAUses).isEmpty {
+                    Text("Boosted \(store.interestCount(item))× in your MovieDNA. No plugin uses it yet.")
+                } else {
+                    Text("Boosted \(store.interestCount(item))× in your MovieDNA")
+                }
+            }
+            .font(.system(size: 13))
+            .foregroundStyle(Nucleus.secondaryText)
+            .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.plain)
+        .padding(.bottom, 24)
+    }
+
+    /// Trailers and credits from TMDb; nothing without a TMDb id or key.
+    private func loadExtras(_ item: Item) async {
+        #if DEBUG
+        if let key = DebugLaunch.playTrailer {
+            extras = TMDb.Extras(videos: [TMDb.Video(key: key, name: "Debug trailer", kind: "Trailer", official: true, publishedAt: nil)])
+            trailers.prepare(key)
+            try? await Task.sleep(for: .seconds(6))
+            trailers.play(key)
+            return
+        }
+        #endif
+        let key = store.settings.tmdbApiKey
+        guard let id = item.tmdbId, !key.isEmpty else {
+            extras = nil
+            if let first = Self.videos(item, nil).first { trailers.prepare(first.key) }
+            return
+        }
+        extras = TMDbExtrasCache.shared.cached(id, type: item.type)
+        if extras == nil { extras = try? await TMDbExtrasCache.shared.extras(id, type: item.type, apiKey: key) }
+        // Ready before the tap, so the trailer opens straight in the full-screen player.
+        if let first = Self.videos(item, extras).first { trailers.prepare(first.key) }
+    }
+
+    /// TMDb's description, or the one written by hand for titles TMDb doesn't have.
+    static func overview(_ item: Item, _ extras: TMDb.Extras?) -> String? {
+        if let tmdb = extras?.overview, !tmdb.isEmpty { return tmdb }
+        return item.overview.isEmpty ? nil : item.overview
+    }
+
+    /// A pasted trailer goes first; it's the one the person picked.
+    static func videos(_ item: Item, _ extras: TMDb.Extras?) -> [TMDb.Video] {
+        let own = item.trailerUrl.flatMap(TMDb.Video.youTubeKey).map {
+            TMDb.Video(key: $0, name: String(localized: "Trailer"), kind: "Trailer", official: false, publishedAt: nil)
+        }
+        let tmdb = extras?.videos ?? []
+        return (own.map { [$0] } ?? []) + tmdb.filter { $0.key != own?.key }
     }
 
     private func open(_ url: URL, _ item: Item) {

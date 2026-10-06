@@ -59,3 +59,51 @@ struct HomeSections: View {
         }
     }
 }
+
+/// The sections plugins add to a TMDb title's page (cast and crew, ...).
+struct PluginItemSections: View {
+    let type: ItemType
+    let tmdbID: Int?
+    let title: String
+    /// Hand-entered people, for titles TMDb doesn't have.
+    var credits: [CustomCredit] = []
+    var canNavigate = true
+    @Environment(PluginRegistry.self) private var registry
+    @Environment(AppHost.self) private var host
+
+    var body: some View {
+        let given = tmdbID == nil ? PluginCredits(custom: credits) : nil
+        let context = ItemSectionContext(kind: type.mediaKind, tmdbID: tmdbID, title: title, host: host, canNavigate: canNavigate, credits: given)
+        ForEach(registry.contributions(to: .itemSections), id: \.id) { $0.value.view(context) }
+    }
+}
+
+/// A page a plugin contributed; says so when the plugin was turned off while it was open.
+struct PluginPageView: View {
+    let id: String
+    let argument: String
+    @Environment(PluginRegistry.self) private var registry
+    @Environment(AppHost.self) private var host
+
+    var body: some View {
+        if let page = registry.contributions(to: .pages).first(where: { $0.id == id }) {
+            page.value.view(argument: argument, host: host)
+        } else {
+            NucleusPage {
+                NucleusEmptyState("puzzlepiece.extension", title: "Plugin turned off", message: "Turn it back on in Settings → Plugins to see this page.")
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 60)
+            }
+        }
+    }
+}
+
+extension PluginCredits {
+    init(custom: [CustomCredit]) {
+        func credit(_ c: CustomCredit) -> PluginCredit {
+            PluginCredit(personID: c.personID ?? 0, name: c.name, role: c.role, department: c.department,
+                         photoURL: c.photo.flatMap { URL(string: $0) })
+        }
+        self.init(cast: custom.filter(\.isCast).map(credit), crew: custom.filter { !$0.isCast }.map(credit))
+    }
+}

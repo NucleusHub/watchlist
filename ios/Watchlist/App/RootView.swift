@@ -7,6 +7,7 @@ struct RootView: View {
     @Environment(NucleusID.self) private var auth
     @Environment(CloudSync.self) private var sync
     @Environment(Navigator.self) private var navigator
+    @Environment(AppHost.self) private var host
     @Environment(\.scenePhase) private var scenePhase
     @State private var showWelcome = false
 
@@ -23,12 +24,19 @@ struct RootView: View {
                     case .openDefaults: OpenDefaultsView()
                     case .searchSources: SearchSourcesView()
                     case .plugins: PluginsView()
+                    case .movieDNA: MovieDNAView()
+                    case .preview(let type, let id): TitlePreviewView(type: type, tmdbID: id)
+                    case .pluginPage(let id, let argument): PluginPageView(id: id, argument: argument)
                     }
                 }
         }
         .sheet(item: $navigator.sheet) { sheet in
             sheetView(sheet)
                 .overlay { Confetti(trigger: store.celebrations) }
+        .background {
+            // Plugins' trailers play through this hidden player.
+            TrailerPlayerHost(player: host.trailers).frame(width: 2, height: 2).opacity(0.01).accessibilityHidden(true)
+        }
         }
         .overlay { Confetti(trigger: store.celebrations) }
         .fullScreenCover(item: $navigator.browser) { BrowserView(request: $0) }

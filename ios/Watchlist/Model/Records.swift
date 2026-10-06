@@ -117,6 +117,59 @@ struct OpenTarget: Hashable, Codable, Sendable {
     }
 }
 
+/// Someone added by hand to a title TMDb doesn't have.
+struct CustomCredit: Hashable, Sendable {
+    enum Job: String, CaseIterable, Sendable {
+        case director = "Director", creator = "Creator", writer = "Writer", producer = "Producer",
+             composer = "Composer", cinematographer = "Cinematographer", editor = "Editor"
+
+        var department: String {
+            switch self {
+            case .director: "Directing"
+            case .creator, .writer: "Writing"
+            case .producer: "Production"
+            case .composer: "Sound"
+            case .cinematographer: "Camera"
+            case .editor: "Editing"
+            }
+        }
+    }
+
+    var name: String
+    /// The character for cast, the job for crew.
+    var role: String
+    var isCast: Bool
+    /// Set when picked from TMDb, so their page opens.
+    var personID: Int?
+    var photo: String?
+
+    init(name: String, role: String, isCast: Bool, personID: Int? = nil, photo: String? = nil) {
+        self.name = name
+        self.role = role
+        self.isCast = isCast
+        self.personID = personID
+        self.photo = photo
+    }
+
+    init?(_ value: JSONValue) {
+        guard let o = value.object, let name = o["name"]?.string, !name.isEmpty else { return nil }
+        self.name = name
+        role = o["role"]?.string ?? ""
+        isCast = o["cast"]?.bool ?? true
+        personID = o["personId"]?.int
+        photo = o["photo"]?.string
+    }
+
+    var json: JSONValue {
+        var o: [String: JSONValue] = ["name": .string(name), "role": .string(role), "cast": .bool(isCast)]
+        if let personID { o["personId"] = .number(Double(personID)) }
+        if let photo { o["photo"] = .string(photo) }
+        return .object(o)
+    }
+
+    var department: String { isCast ? "Acting" : Job(rawValue: role)?.department ?? "Crew" }
+}
+
 struct Item: JSONRecord {
     var raw: [String: JSONValue]
 
@@ -232,6 +285,24 @@ struct Item: JSONRecord {
     var notes: String {
         get { string("notes") ?? "" }
         set { set("notes", .string(newValue)) }
+    }
+
+    /// A description written by hand, for titles TMDb doesn't have.
+    var overview: String {
+        get { string("overview") ?? "" }
+        set { set("overview", newValue.isEmpty ? .null : .string(newValue)) }
+    }
+
+    /// A YouTube link pasted by hand, for titles TMDb doesn't have.
+    var trailerUrl: String? {
+        get { string("trailerUrl").flatMap { $0.isEmpty ? nil : $0 } }
+        set { set("trailerUrl", JSONValue(newValue.flatMap { $0.isEmpty ? nil : $0 })) }
+    }
+
+    /// Cast and crew entered by hand, for titles TMDb doesn't have.
+    var customCredits: [CustomCredit] {
+        get { raw["customCredits"]?.array?.compactMap(CustomCredit.init) ?? [] }
+        set { set("customCredits", newValue.isEmpty ? .null : .array(newValue.map(\.json))) }
     }
 
     var openTarget: OpenTarget? {

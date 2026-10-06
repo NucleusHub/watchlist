@@ -9,6 +9,11 @@ enum Route: Hashable {
     case openDefaults
     case searchSources
     case plugins
+    case movieDNA
+    /// A TMDb title that isn't in the library, with a way to add it.
+    case preview(ItemType, Int)
+    /// A page a plugin contributed.
+    case pluginPage(id: String, argument: String)
 }
 
 /// A page for the in-app browser; a saved playback of the item reopens instead of `home`.

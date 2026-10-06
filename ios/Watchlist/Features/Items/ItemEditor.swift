@@ -9,6 +9,7 @@ struct ItemEditor: View {
     var collectionID: String? = nil
     @Environment(WatchlistStore.self) private var store
     @Environment(PluginRegistry.self) private var registry
+    @Environment(AppHost.self) private var host
     @Environment(\.dismiss) private var dismiss
 
     @State private var draft = Item(title: "", type: .movie)
@@ -27,6 +28,9 @@ struct ItemEditor: View {
     @State private var collections: Set<String> = []
     @State private var confirmingDelete = false
     @State private var addedCount = 0
+    @State private var extras: TMDb.Extras?
+    @State private var trailers = TrailerPlayer()
+    @Environment(\.openURL) private var openURL
 
     private var isNew: Bool { itemID == nil }
     private var canSave: Bool { !draft.title.trimmingCharacters(in: .whitespaces).isEmpty && !filling }
@@ -42,11 +46,19 @@ struct ItemEditor: View {
                     .padding(.bottom, 12)
             }
             titleSection
+            if isNew, picked, draft.tmdbId != nil { aboutSection }
             posterSection
             detailsSection
             ratingSection
             genresSection
             NucleusSection("Collections") { CollectionSelect(selection: $collections) }
+            if draft.tmdbId == nil {
+                customAboutSection
+                // Cast belongs to the Cast & Crew plugin; with it off there's nowhere to show it.
+                if host.canOpenPeople {
+                    CustomCreditsSection(credits: Binding(get: { draft.customCredits }, set: { draft.customCredits = $0 }))
+                }
+            }
             linksSection
             NucleusSection("Notes") {
                 TextField("Anything to remember", text: Binding(get: { draft.notes }, set: { draft.notes = $0 }), axis: .vertical)
@@ -68,6 +80,15 @@ struct ItemEditor: View {
         .interactiveDismissDisabled(!isNew && hasChanges)
         .onAppear(perform: load)
         .task(id: searchKey) { await search() }
+        .task(id: isNew && picked ? draft.tmdbId : nil) { await loadExtras() }
+        .background {
+            TrailerPlayerHost(player: trailers).frame(width: 2, height: 2).opacity(0.01).accessibilityHidden(true)
+        }
+        .onAppear {
+            trailers.onFailure = { key in
+                if let url = URL(string: "https://www.youtube.com/watch?v=\(key)") { openURL(url) }
+            }
+        }
         .onChange(of: photo) { _, item in
             Task {
                 guard let data = try? await item?.loadTransferable(type: Data.self) else { return }
@@ -133,6 +154,56 @@ struct ItemEditor: View {
                 }
             }
         }
+    }
+
+    /// What the picked TMDb title is about, so it's easy to tell it's the right one before adding it.
+    @ViewBuilder
+    private var aboutSection: some View {
+        if let extras {
+            if !extras.overview.isEmpty {
+                NucleusSection("Overview") {
+                    Text(verbatim: extras.overview)
+                        .font(.system(size: 15))
+                        .foregroundStyle(Nucleus.primaryText)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(16)
+                }
+            }
+            if !extras.videos.isEmpty {
+                TrailersSection(videos: extras.videos, loadingKey: trailers.loadingKey) { video in
+                    Haptics.tap()
+                    trailers.play(video.key)
+                }
+            }
+            if let tmdbID = draft.tmdbId {
+                PluginItemSections(type: draft.type, tmdbID: tmdbID, title: draft.title, canNavigate: false)
+            }
+        }
+    }
+
+    /// Titles TMDb doesn't have get their description and trailer by hand.
+    private var customAboutSection: some View {
+        let link = draft.trailerUrl ?? ""
+        let badLink = !link.isEmpty && TMDb.Video.youTubeKey(link) == nil
+        return NucleusSection("Description & trailer", footer: badLink ? Text("That doesn't look like a YouTube link.").foregroundStyle(Nucleus.danger) : nil) {
+            TextField("Description", text: Binding(get: { draft.overview }, set: { draft.overview = $0 }), axis: .vertical)
+                .lineLimit(3...10)
+                .padding(16)
+            HStack {
+                Text("Trailer").foregroundStyle(Nucleus.secondaryText)
+                TextField("YouTube link", text: Binding(get: { draft.trailerUrl ?? "" }, set: { draft.trailerUrl = $0 }))
+                    .keyboardType(.URL).textInputAutocapitalization(.never).autocorrectionDisabled()
+                    .multilineTextAlignment(.trailing)
+            }
+            .padding(.horizontal, 16).frame(minHeight: 50)
+        }
+    }
+
+    private func loadExtras() async {
+        let key = store.settings.tmdbApiKey
+        guard isNew, picked, let id = draft.tmdbId, !key.isEmpty else { extras = nil; return }
+        extras = try? await TMDbExtrasCache.shared.extras(id, type: draft.type, apiKey: key)
+        if let first = extras?.videos.first { trailers.prepare(first.key) }
     }
 
     private var searchFooter: Text? {
@@ -381,6 +452,7 @@ struct ItemEditor: View {
         if another {
             addedCount += 1
             draft = Item(title: "", type: draft.type)
+            extras = nil
             results = []
             picked = false
             titleFocused = true
