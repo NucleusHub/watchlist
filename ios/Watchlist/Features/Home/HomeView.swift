@@ -18,8 +18,6 @@ struct HomeView: View {
     @State private var tab: HomeTab = .watchlist
     /// Shared by the pages and the pills, so the pill slides with the finger.
     @State private var progress = CarouselProgress()
-    @State private var headerWidth: CGFloat = 0
-    @State private var pillsWidth: CGFloat = 0
     @State private var query = ""
     @FocusState private var searchFocused: Bool
 
@@ -107,37 +105,20 @@ struct HomeView: View {
         withAnimation(.spring(response: 0.36, dampingFraction: 0.88)) { tab = next }
     }
 
+    /// Buttons on top with the title count between them, the pills below.
     private var header: some View {
         VStack(spacing: 10) {
-            // Everything on one line when it fits; otherwise the buttons go above the pills, with the title
-            // count between them. Decided from widths that don't depend on which layout is showing.
-            if headerWidth == 0 || pillsWidth + leadingWidth * 2 <= headerWidth {
-                HStack(spacing: 0) {
-                    leadingButtons.frame(maxWidth: .infinity, alignment: .leading)
-                    pills.fixedSize()
-                    settingsButton.frame(maxWidth: .infinity, alignment: .trailing)
-                }
-                statsLine
-            } else {
-                HStack(spacing: 8) {
-                    leadingButtons
-                    statsLine.frame(maxWidth: .infinity)
-                    settingsButton.frame(width: leadingWidth, alignment: .trailing)
-                }
-                pills.fixedSize()
+            HStack(spacing: 8) {
+                leadingButtons
+                statsLine.frame(maxWidth: .infinity)
+                // As wide as the buttons on the left, so the count stays centred.
+                settingsButton.frame(width: leadingWidth, alignment: .trailing)
             }
+            pills.fixedSize()
         }
         .padding(.horizontal, 16)
         .padding(.top, 8)
         .padding(.bottom, 10)
-        .background {
-            // A still copy of the pills, measured for their natural width whatever the layout.
-            SlidingSegmented(selection: .constant(tab), items: tabs.map { ($0, label($0)) })
-                .fixedSize()
-                .hidden()
-                .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { pillsWidth = $0 }
-        }
-        .onGeometryChange(for: CGFloat.self) { $0.size.width - 32 } action: { headerWidth = $0 }
     }
 
     private var statsLine: some View {
