@@ -20,6 +20,12 @@ packages:
     path: ../../../plugins/anime-source
   JumpBackInPlugin:
     path: ../../../plugins/jump-back-in
+  CastAndCrewPlugin:
+    path: ../../../plugins/cast-and-crew
+  DiscoverPlugin:
+    path: ../../../plugins/discover
+  NewsPlugin:
+    path: ../../../plugins/news
 
 settings:
   base:
@@ -41,6 +47,9 @@ targets:
       - package: WatchlistPluginKit
       - package: AnimeSourcePlugin
       - package: JumpBackInPlugin
+      - package: CastAndCrewPlugin
+      - package: DiscoverPlugin
+      - package: NewsPlugin
       - target: WatchlistWatch
     settings:
       base:
@@ -107,6 +116,9 @@ targets:
       - package: NucleusPlugins
       - package: WatchlistPluginKit
       - package: JumpBackInPlugin
+      - package: CastAndCrewPlugin
+      - package: DiscoverPlugin
+      - package: NewsPlugin
     settings:
       base:
         GENERATE_INFOPLIST_FILE: YES

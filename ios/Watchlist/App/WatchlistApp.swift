@@ -1,5 +1,8 @@
 import AnimeSourcePlugin
 import JumpBackInPlugin
+import CastAndCrewPlugin
+import DiscoverPlugin
+import NewsPlugin
 import NucleusPlugins
 import NucleusUI
 import SwiftUI
@@ -11,8 +14,9 @@ struct WatchlistApp: App {
     @State private var preferences: Preferences
     @State private var auth: NucleusID
     @State private var sync: CloudSync
-    @State private var navigator = Navigator()
+    @State private var navigator: Navigator
     @State private var plugins: PluginRegistry
+    @State private var host: AppHost
     private let watch: PhoneWatchBridge
 
     init() {
@@ -29,9 +33,16 @@ struct WatchlistApp: App {
         let plugins = PluginRegistry(app: "watchlist")
         plugins.install(AnimeSourcePlugin())
         plugins.install(JumpBackInPlugin())
+        plugins.install(CastAndCrewPlugin())
+        plugins.install(DiscoverPlugin())
+        plugins.install(NewsPlugin())
         _plugins = State(initialValue: plugins)
+        let navigator = Navigator()
+        _navigator = State(initialValue: navigator)
+        _host = State(initialValue: AppHost(store: store, navigator: navigator, registry: plugins))
         watch = PhoneWatchBridge(store: store)
         Haptics.warmUp()
+        FrameMonitor.shared.start()
     }
 
     var body: some Scene {
@@ -43,6 +54,7 @@ struct WatchlistApp: App {
                 .environment(sync)
                 .environment(navigator)
                 .environment(plugins)
+                .environment(host)
                 .preferredColorScheme(preferences.appearance.colorScheme)
                 .tint(Nucleus.accent)
         }
@@ -51,6 +63,37 @@ struct WatchlistApp: App {
 
 /// Launch arguments for UI tests and screenshots. Debug builds only.
 enum DebugLaunch {
+    /// A trailer on every title, started a few seconds after the page opens: `-playTrailer [youtubeKey]`.
+    static var playTrailer: String? {
+        #if DEBUG
+        let args = ProcessInfo.processInfo.arguments
+        guard let i = args.firstIndex(of: "-playTrailer") else { return nil }
+        return i + 1 < args.count && !args[i + 1].hasPrefix("-") ? args[i + 1] : "Way9Dexny3w"
+        #else
+        nil
+        #endif
+    }
+
+    /// Canned cast, crew and person pages, without a TMDb key.
+    static var samplePeople: Bool {
+        #if DEBUG
+        ProcessInfo.processInfo.arguments.contains("-samplePeople")
+        #else
+        false
+        #endif
+    }
+
+    /// Opens Home on a plugin's tab: `-tab discover`.
+    static var homeTab: String? {
+        #if DEBUG
+        let args = ProcessInfo.processInfo.arguments
+        guard let i = args.firstIndex(of: "-tab"), i + 1 < args.count else { return nil }
+        return args[i + 1]
+        #else
+        nil
+        #endif
+    }
+
     static var skipWelcome: Bool {
         #if DEBUG
         ProcessInfo.processInfo.arguments.contains("-skipWelcome")
@@ -74,6 +117,8 @@ enum DebugLaunch {
         if args.contains("-sampleData"), store.document.isEmpty {
             store.replace(with: SampleData.document, silent: true)
         }
+        // Plugin sections only show with a key; the canned people don't need a real one.
+        if args.contains("-samplePeople") || args.contains("-sampleDiscover"), store.settings.tmdbApiKey.isEmpty { store.updateSettings { $0.tmdbApiKey = "debug" } }
         if args.contains("-animeSource") { store.updateSettings { $0.searchSources = ["tmdb", "kitsu-anime"] } }
         if args.contains("-sampleJump") {
             for (n, item) in store.items.filter({ !$0.isCompleted }).prefix(3).enumerated() {
@@ -102,6 +147,9 @@ enum DebugLaunch {
         case "stats": navigator.path = [.stats]
         case "sources": navigator.path = [.settings, .searchSources]
         case "plugins": navigator.path = [.settings, .plugins]
+        case "dna": navigator.path = [.settings, .movieDNA]
+        case "news": navigator.path = [.pluginPage(id: "news", argument: "")]
+        case "person": navigator.path = [.pluginPage(id: "person", argument: "137427")]
         case "item": if let first = store.items.first { navigator.path = [.item(first.id)] }
         case "collection": if let first = store.collections.first { navigator.path = [.collection(first.id)] }
         case "add": navigator.sheet = .newItem(collectionID: nil)
