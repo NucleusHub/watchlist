@@ -1,14 +1,20 @@
+#if canImport(UIKit)
 import SwiftUI
 import UIKit
 
 /// A button that ignores the tap when the finger dragged first. A plain `Button` fires wherever the finger
 /// lifts inside it, so flicking across a wide card to change tabs used to open the card.
-struct SwipeSafeButton<Label: View>: View {
+public struct SwipeSafeButton<Label: View>: View {
     let action: () -> Void
-    @ViewBuilder var label: Label
+    let label: Label
     @State private var dragged = false
 
-    var body: some View {
+    public init(action: @escaping () -> Void, @ViewBuilder label: () -> Label) {
+        self.action = action
+        self.label = label()
+    }
+
+    public var body: some View {
         let button = Button { if !dragged { action() } } label: { label }
         if #available(iOS 18, *) {
             button.gesture(MoveWatcher(touched: { dragged = false }, moved: { dragged = true }))
@@ -23,7 +29,7 @@ struct SwipeSafeButton<Label: View>: View {
 /// Notices the finger moving over the view, then steps aside at once. A recognizer that kept tracking would
 /// make the page's swipe wait for the finger to lift; one that has failed holds nothing up.
 @available(iOS 18, *)
-struct MoveWatcher: UIGestureRecognizerRepresentable {
+private struct MoveWatcher: UIGestureRecognizerRepresentable {
     /// A new touch began: the last drag is over.
     let touched: () -> Void
     let moved: () -> Void
@@ -81,3 +87,4 @@ struct MoveWatcher: UIGestureRecognizerRepresentable {
         }
     }
 }
+#endif

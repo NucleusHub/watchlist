@@ -30,7 +30,6 @@ struct ItemEditor: View {
     @State private var addedCount = 0
     @State private var extras: TMDb.Extras?
     @State private var trailers = TrailerPlayer()
-    @Environment(\.openURL) private var openURL
 
     private var isNew: Bool { itemID == nil }
     private var canSave: Bool { !draft.title.trimmingCharacters(in: .whitespaces).isEmpty && !filling }
@@ -81,14 +80,7 @@ struct ItemEditor: View {
         .onAppear(perform: load)
         .task(id: searchKey) { await search() }
         .task(id: isNew && picked ? draft.tmdbId : nil) { await loadExtras() }
-        .background {
-            TrailerPlayerHost(player: trailers).frame(width: 2, height: 2).opacity(0.01).accessibilityHidden(true)
-        }
-        .onAppear {
-            trailers.onFailure = { key in
-                if let url = URL(string: "https://www.youtube.com/watch?v=\(key)") { openURL(url) }
-            }
-        }
+        .trailerHost(trailers)
         .onChange(of: photo) { _, item in
             Task {
                 guard let data = try? await item?.loadTransferable(type: Data.self) else { return }
@@ -161,13 +153,7 @@ struct ItemEditor: View {
     private var aboutSection: some View {
         if let extras {
             if !extras.overview.isEmpty {
-                NucleusSection("Overview") {
-                    Text(verbatim: extras.overview)
-                        .font(.system(size: 15))
-                        .foregroundStyle(Nucleus.primaryText)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(16)
-                }
+                OverviewSection(text: extras.overview)
             }
             if !extras.videos.isEmpty {
                 TrailersSection(videos: extras.videos, loadingKey: trailers.loadingKey) { video in

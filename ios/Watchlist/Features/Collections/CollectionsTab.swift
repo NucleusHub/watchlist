@@ -1,5 +1,6 @@
 import NucleusUI
 import SwiftUI
+import WatchlistPluginKit
 
 struct CollectionsTab: View {
     @Environment(WatchlistStore.self) private var store

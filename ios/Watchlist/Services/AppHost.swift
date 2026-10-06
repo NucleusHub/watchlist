@@ -16,16 +16,13 @@ final class AppHost: WatchlistHost {
     /// Plugins read these in their view bodies, so they're built once per change, not once per redraw.
     @ObservationIgnored private var libraryCache: (revision: Int, value: [PluginLibraryTitle])?
     @ObservationIgnored private var dnaCache: (revision: Int, value: PluginMovieDNA)?
-    /// The hidden player plugins' trailers play through; RootView keeps it in the window.
+    /// The hidden player plugins' trailers play through; RootView keeps it in the window and handles failures.
     let trailers = TrailerPlayer()
 
     init(store: WatchlistStore, navigator: Navigator, registry: PluginRegistry) {
         self.store = store
         self.navigator = navigator
         self.registry = registry
-        trailers.onFailure = { key in
-            if let url = URL(string: "https://www.youtube.com/watch?v=\(key)") { UIApplication.shared.open(url) }
-        }
     }
 
     private var apiKey: String { store.settings.tmdbApiKey }
@@ -100,7 +97,6 @@ final class AppHost: WatchlistHost {
     private func makeMovieDNA() -> PluginMovieDNA {
         let settings = store.movieDNASettings
         let dna = store.movieDNA
-        func strength(_ t: DNATrait) -> Double { t.strength }
         let titles = dna.traits(.title).compactMap { t -> PluginTitleTrait? in
             let parts = t.key.split(separator: ":")
             guard parts.count == 2, let id = Int(parts[1]), let kind = MediaKind(rawValue: String(parts[0])) else { return nil }

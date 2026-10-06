@@ -301,7 +301,7 @@ CS = {
     "Start over": "Začít znovu",
     "Your edits, removals and Interested presses are forgotten. People you follow stay.": "Vaše úpravy, odebrání a stisknutí Zajímá mě se zapomenou. Sledovaní lidé zůstanou.",
     "Learned from your ratings, favorites, watchlist and Interested presses. It syncs with your Nucleus ID account.": "Učí se z vašeho hodnocení, oblíbených, watchlistu a stisknutí Zajímá mě. Synchronizuje se s vaším účtem Nucleus ID.",
-    "Used for: %@. It syncs with your Nucleus ID account.": "Používá se pro: %@. Synchronizuje se s vaším účtem Nucleus ID.",
+    "Used by": "Používají ho",
     "How it learns": "Jak se učí",
     "Rating a title high pulls it and its genres up; rating it low pushes them down.": "Vysoké hodnocení titul i jeho žánry posílí, nízké je oslabí.",
     "Favorites count for a lot, for as long as they stay favorites.": "Oblíbené mají velkou váhu, dokud zůstanou oblíbené.",

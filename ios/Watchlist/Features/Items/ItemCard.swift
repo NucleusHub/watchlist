@@ -1,5 +1,6 @@
 import NucleusUI
 import SwiftUI
+import WatchlistPluginKit
 
 /// A title as a poster card (grid layouts).
 struct ItemCard: View {

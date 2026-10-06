@@ -36,14 +36,7 @@ struct ItemDetailView: View {
             .modifier(DeleteItemDialog(item: item, isPresented: $confirmingDelete))
             .modifier(ResetProgressDialog(item: item, isPresented: $confirmingReset))
             .task(id: "\(item.type.rawValue):\(item.tmdbId ?? 0):\(store.settings.tmdbApiKey):\(item.trailerUrl ?? "")") { await loadExtras(item) }
-            .background {
-                TrailerPlayerHost(player: trailers).frame(width: 2, height: 2).opacity(0.01).accessibilityHidden(true)
-            }
-            .onAppear {
-                trailers.onFailure = { key in
-                    if let url = URL(string: "https://www.youtube.com/watch?v=\(key)") { openURL(url) }
-                }
-            }
+            .trailerHost(trailers)
         } else {
             NucleusPage {
                 NucleusEmptyState("film", title: "Title not found", message: "It may have been deleted on another device.")
@@ -84,6 +77,8 @@ struct ItemDetailView: View {
         .frame(maxWidth: .infinity)
         .padding(.bottom, 24)
 
+        let dnaOn = store.movieDNASettings.enabled
+        let boosts = dnaOn ? store.interestCount(item) : 0
         HStack(spacing: 10) {
             if item.isCompleted {
                 Label("Watched", systemImage: "checkmark.circle.fill")
@@ -98,13 +93,14 @@ struct ItemDetailView: View {
                 } label: { Label("Mark as watched", systemImage: "checkmark") }
                     .buttonStyle(NucleusPrimaryButtonStyle())
             }
-            if store.movieDNASettings.enabled { InterestedButton(item: item) }
+            if dnaOn { InterestedButton(item: item) }
             FavoriteButton(item: item, size: 52, onPoster: false)
         }
-        .padding(.bottom, store.interestCount(item) > 0 ? 10 : 24)
+        // The note under the buttons belongs to them, so it sits closer than the next section.
+        .padding(.bottom, boosts > 0 ? 10 : 24)
 
-        if store.movieDNASettings.enabled, store.interestCount(item) > 0 {
-            interestNote(item)
+        if boosts > 0 {
+            interestNote(boosts)
         }
 
         if item.isShow {
@@ -112,13 +108,7 @@ struct ItemDetailView: View {
         }
 
         if let overview = Self.overview(item, extras), !overview.isEmpty {
-            NucleusSection("Overview") {
-                Text(verbatim: overview)
-                    .font(.system(size: 15))
-                    .foregroundStyle(Nucleus.primaryText)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(16)
-            }
+            OverviewSection(text: overview)
         }
 
         if case let videos = Self.videos(item, extras), !videos.isEmpty {
@@ -238,15 +228,17 @@ struct ItemDetailView: View {
     }
 
     /// What the presses did, and a heads-up while no plugin uses MovieDNA, so the button doesn't look broken.
-    private func interestNote(_ item: Item) -> some View {
-        Button { navigator.open(.movieDNA) } label: {
-            HStack(spacing: 6) {
-                Image(systemName: registry.contributions(to: .movieDNAUses).isEmpty ? "info.circle" : "flame.fill")
-                if registry.contributions(to: .movieDNAUses).isEmpty {
-                    Text("Boosted \(store.interestCount(item))× in your MovieDNA. No plugin uses it yet.")
+    private func interestNote(_ boosts: Int) -> some View {
+        let unused = registry.contributions(to: .movieDNAUses).isEmpty
+        return Button { navigator.open(.movieDNA) } label: {
+            Label {
+                if unused {
+                    Text("Boosted \(boosts)× in your MovieDNA. No plugin uses it yet.")
                 } else {
-                    Text("Boosted \(store.interestCount(item))× in your MovieDNA")
+                    Text("Boosted \(boosts)× in your MovieDNA")
                 }
+            } icon: {
+                Image(systemName: unused ? "info.circle" : "flame.fill").foregroundStyle(unused ? Nucleus.secondaryText : Color.interest)
             }
             .font(.system(size: 13))
             .foregroundStyle(Nucleus.secondaryText)

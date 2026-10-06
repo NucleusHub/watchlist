@@ -49,6 +49,21 @@ public struct PluginPersonCredit: Identifiable, Hashable, Sendable {
 
     public var id: String { "\(kind.rawValue)-\(titleID)-\(department)-\(role)" }
     public var year: String? { date.flatMap { $0.count >= 4 ? String($0.prefix(4)) : nil } }
+    /// Playing themselves: talk shows, award shows and documentaries.
+    public var isSelf: Bool { department == "Acting" && Self.isSelf(role) }
+
+    public static func isSelf(_ role: String) -> Bool {
+        let r = role.lowercased()
+        return r == "self" || r.hasPrefix("self ") || r.hasPrefix("himself") || r.hasPrefix("herself")
+            || r.hasPrefix("themselves") || r.contains("(uncredited) self")
+    }
+
+    /// TMDb's `yyyy-mm-dd`.
+    nonisolated(unsafe) public static let dateFormat: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withFullDate]
+        return f
+    }()
 
     public init(titleID: Int, kind: MediaKind, title: String, date: String?, posterURL: URL?, role: String, department: String, voteCount: Int) {
         self.titleID = titleID

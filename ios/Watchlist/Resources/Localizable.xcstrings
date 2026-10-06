@@ -4863,7 +4863,18 @@
         }
       }
     },
+    "Used by" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Používají ho"
+          }
+        }
+      }
+    },
     "Used for: %@. It syncs with your Nucleus ID account." : {
+      "extractionState" : "stale",
       "localizations" : {
         "cs" : {
           "stringUnit" : {

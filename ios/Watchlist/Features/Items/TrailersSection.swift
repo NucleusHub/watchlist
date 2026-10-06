@@ -1,6 +1,22 @@
 import NucleusUI
 import SwiftUI
 
+/// What a title is about.
+struct OverviewSection: View {
+    let text: String
+
+    var body: some View {
+        NucleusSection("Overview") {
+            Text(verbatim: text)
+                .font(.system(size: 15))
+                .lineSpacing(2)
+                .foregroundStyle(Nucleus.primaryText)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(16)
+        }
+    }
+}
+
 /// The title's trailers and clips from TMDb. Tapping one plays it full screen; holding offers YouTube.
 struct TrailersSection: View {
     let videos: [TMDb.Video]

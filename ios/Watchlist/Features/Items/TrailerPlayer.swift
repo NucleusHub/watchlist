@@ -129,8 +129,30 @@ final class TrailerPlayer {
     }
 }
 
+extension View {
+    /// Keeps `player` in the window, and sends videos YouTube won't play here to YouTube itself.
+    func trailerHost(_ player: TrailerPlayer) -> some View { modifier(TrailerHostModifier(player: player)) }
+}
+
+private struct TrailerHostModifier: ViewModifier {
+    let player: TrailerPlayer
+    @Environment(\.openURL) private var openURL
+
+    func body(content: Content) -> some View {
+        content
+            .background {
+                TrailerPlayerHost(player: player).frame(width: 2, height: 2).opacity(0.01).accessibilityHidden(true)
+            }
+            .onAppear {
+                player.onFailure = { key in
+                    if let url = URL(string: "https://www.youtube.com/watch?v=\(key)") { openURL(url) }
+                }
+            }
+    }
+}
+
 /// Keeps the hidden player in the window; WebKit only plays videos of web views that are on screen.
-struct TrailerPlayerHost: UIViewRepresentable {
+private struct TrailerPlayerHost: UIViewRepresentable {
     let player: TrailerPlayer
 
     func makeUIView(context: Context) -> UIView {

@@ -1,5 +1,6 @@
 import NucleusUI
 import SwiftUI
+import WatchlistPluginKit
 
 /// Cast and crew typed in for a title TMDb doesn't have, edited in place: one field adds people, rows set their part.
 struct CustomCreditsSection: View {
@@ -36,7 +37,7 @@ struct CustomCreditsSection: View {
             ForEach(results) { person in
                 Button { add(person) } label: {
                     HStack(spacing: 12) {
-                        CreditPhoto(url: person.photoURL, name: person.name).frame(width: 36, height: 36)
+                        PersonPhoto(url: person.photoURL, name: person.name).frame(width: 36, height: 36)
                         VStack(alignment: .leading, spacing: 2) {
                             Text(verbatim: person.name).font(.system(size: 15, weight: .medium)).foregroundStyle(Nucleus.primaryText)
                             if !person.knownFor.isEmpty {
@@ -93,7 +94,7 @@ private struct CustomCreditRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            CreditPhoto(url: credit.photo.flatMap { URL(string: $0) }, name: credit.name).frame(width: 40, height: 40)
+            PersonPhoto(url: credit.photo.flatMap { URL(string: $0) }, name: credit.name).frame(width: 40, height: 40)
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 4) {
                     Text(verbatim: credit.name).font(.system(size: 16)).foregroundStyle(Nucleus.primaryText).lineLimit(1)
@@ -150,30 +151,5 @@ extension CustomCredit.Job {
         case "Editing": self = .editor
         default: return nil
         }
-    }
-}
-
-/// A round photo, with initials when there's none.
-struct CreditPhoto: View {
-    let url: URL?
-    let name: String
-
-    var body: some View {
-        Circle()
-            .fill(Nucleus.well)
-            .overlay {
-                if let url {
-                    AsyncImage(url: url) { $0.resizable().scaledToFill() } placeholder: { initials }
-                } else {
-                    initials
-                }
-            }
-            .clipShape(Circle())
-    }
-
-    private var initials: some View {
-        Text(verbatim: name.split(separator: " ").prefix(2).compactMap(\.first).map(String.init).joined())
-            .font(.system(size: 14, weight: .semibold))
-            .foregroundStyle(Nucleus.secondaryText)
     }
 }

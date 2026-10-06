@@ -31,7 +31,8 @@ struct MovieDNAView: View {
                 }
             }
 
-            NucleusSection(footer: Text(enabled ? usesFooter(uses) : "Nothing is learned or used while it's off. What you set by hand is kept for when you turn it back on.")) {
+            NucleusSection(footer: enabled ? Text("Learned from your ratings, favorites, watchlist and Interested presses. It syncs with your Nucleus ID account.")
+                                           : Text("Nothing is learned or used while it's off. What you set by hand is kept for when you turn it back on.")) {
                 Toggle(isOn: Binding(get: { enabled }, set: { Haptics.selection(); store.setMovieDNAEnabled($0) })) {
                     Label { Text("Build my MovieDNA") } icon: { IconTile("atom", tint: .rose) }
                 }
@@ -40,6 +41,7 @@ struct MovieDNAView: View {
             }
 
             if enabled {
+                if !uses.isEmpty { usedBy(uses) }
                 howItWorks
                 if dna.traits.isEmpty {
                     NucleusEmptyState("atom", title: "Nothing learned yet", message: "Rate titles, mark favorites or press Interested and your MovieDNA fills in.")
@@ -83,9 +85,16 @@ struct MovieDNAView: View {
         trait.kind == .person ? Int(trait.key.dropFirst("person:".count)) : nil
     }
 
-    private func usesFooter(_ uses: [PluginContribution<MovieDNAUse>]) -> LocalizedStringKey {
-        guard !uses.isEmpty else { return "Learned from your ratings, favorites, watchlist and Interested presses. It syncs with your Nucleus ID account." }
-        return "Used for: \(uses.map(\.value.purpose).joined(separator: ", ")). It syncs with your Nucleus ID account."
+    /// What each plugin that reads MovieDNA does with it.
+    private func usedBy(_ uses: [PluginContribution<MovieDNAUse>]) -> some View {
+        NucleusSection("Used by") {
+            ForEach(uses, id: \.id) { use in
+                Label { Text(verbatim: use.value.purpose) } icon: { Image(systemName: "sparkles").foregroundStyle(Color.interest) }
+                    .font(.system(size: 15))
+                    .foregroundStyle(Nucleus.primaryText)
+                    .padding(.horizontal, 16).frame(maxWidth: .infinity, minHeight: 48, alignment: .leading)
+            }
+        }
     }
 
     @ViewBuilder
@@ -146,7 +155,7 @@ struct MovieDNAView: View {
                             Button("Remove from MovieDNA", role: .destructive) { Haptics.warning(); store.removeFromDNA(trait) }
                         }
                 }
-                if more > 0 || showingAllTitles, title == "Titles" {
+                if more > 0 {
                     Button { withAnimation { showingAllTitles.toggle() } } label: {
                         NucleusRow(showingAllTitles ? "Show fewer" : "Show all \(more + Self.titleLimit)")
                     }
@@ -172,11 +181,13 @@ struct DNATraitRow: View {
                 Text(verbatim: trait.name).font(.system(size: 16)).foregroundStyle(Nucleus.primaryText).lineLimit(1)
                 StrengthBar(strength: trait.strength)
             }
-            Spacer(minLength: 12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.trailing, 12)
             VStack(alignment: .trailing, spacing: 2) {
                 Text(verbatim: "\(Int(trait.strength))").font(.system(size: 15, weight: .semibold).monospacedDigit()).foregroundStyle(Nucleus.primaryText)
                 if let note = note { note.font(.system(size: 12)).foregroundStyle(Nucleus.secondaryText) }
             }
+            .frame(minWidth: 44, alignment: .trailing)
         }
         .padding(.horizontal, 16).padding(.vertical, trait.kind == .title ? 8 : 12)
         .contentShape(Rectangle())
@@ -190,7 +201,7 @@ struct DNATraitRow: View {
     }
 }
 
-/// -100…100 as a bar growing left (avoid) or right (into it) from the middle.
+/// -100…100 as a bar growing left (avoid) or right (into it) from a mark in the middle.
 struct StrengthBar: View {
     let strength: Double
 
@@ -199,15 +210,16 @@ struct StrengthBar: View {
             let half = geo.size.width / 2
             let width = half * min(1, abs(strength) / 100)
             ZStack(alignment: .leading) {
-                Capsule().fill(Nucleus.well)
+                Capsule().fill(Nucleus.well).frame(height: 6)
                 Capsule()
-                    .fill(strength >= 0 ? Color(hex: 0xF97316) : Color(hex: 0x64748B))
-                    .frame(width: max(4, width))
+                    .fill(strength >= 0 ? Color.interest : Color(hex: 0x64748B))
+                    .frame(width: max(4, width), height: 6)
                     .offset(x: strength >= 0 ? half : half - width)
+                Capsule().fill(Nucleus.secondaryText.opacity(0.6)).frame(width: 2, height: 10).offset(x: half - 1)
             }
+            .frame(height: geo.size.height)
         }
-        .frame(height: 6)
-        .frame(maxWidth: 180)
+        .frame(height: 10)
         .accessibilityHidden(true)
     }
 }
@@ -228,7 +240,7 @@ struct DNATraitSheet: View {
                         Spacer()
                         Text(verbatim: "\(Int(strength))").font(.system(size: 16, weight: .semibold).monospacedDigit()).foregroundStyle(Nucleus.primaryText)
                     }
-                    Slider(value: $strength, in: -100...100, step: 5).tint(Color(hex: 0xF97316))
+                    Slider(value: $strength, in: -100...100, step: 5).tint(Color.interest)
                 }
                 .padding(16)
             }
@@ -316,7 +328,7 @@ struct DNAAddSheet: View {
                             Spacer()
                             Text(verbatim: "\(Int(strength))").font(.system(size: 16, weight: .semibold).monospacedDigit())
                         }
-                        Slider(value: $strength, in: -100...100, step: 5).tint(Color(hex: 0xF97316))
+                        Slider(value: $strength, in: -100...100, step: 5).tint(Color.interest)
                     }
                     .padding(16)
                 }

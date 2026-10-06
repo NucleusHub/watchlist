@@ -128,7 +128,7 @@ struct InterestedButton: View {
         } label: {
             Image(systemName: count > 0 ? "flame.fill" : "flame")
                 .font(.system(size: size * 0.5, weight: .semibold))
-                .foregroundStyle(count > 0 ? Color(hex: 0xF97316) : Nucleus.glyph)
+                .foregroundStyle(count > 0 ? Color.interest : Nucleus.glyph)
                 .frame(width: size, height: size)
                 .background(Circle().fill(Nucleus.well))
                 .symbolEffect(.bounce, value: count)
@@ -138,6 +138,11 @@ struct InterestedButton: View {
         .accessibilityLabel("Interested")
         .accessibilityHint("Boosts this title and its genres in your MovieDNA. Press again to boost more.")
     }
+}
+
+extension Color {
+    /// MovieDNA's orange: Interested, and how strongly someone is into something.
+    static let interest = Color(hex: 0xF97316)
 }
 
 struct FavoriteButton: View {

@@ -7,7 +7,6 @@ struct TitlePreviewView: View {
     let tmdbID: Int
     @Environment(WatchlistStore.self) private var store
     @Environment(Navigator.self) private var navigator
-    @Environment(\.openURL) private var openURL
     @State private var draft: Item?
     @State private var overview = ""
     @State private var failed = false
@@ -27,14 +26,7 @@ struct TitlePreviewView: View {
             }
         }
         .task(id: tmdbID) { await load() }
-        .background {
-            TrailerPlayerHost(player: trailers).frame(width: 2, height: 2).opacity(0.01).accessibilityHidden(true)
-        }
-        .onAppear {
-            trailers.onFailure = { key in
-                if let url = URL(string: "https://www.youtube.com/watch?v=\(key)") { openURL(url) }
-            }
-        }
+        .trailerHost(trailers)
     }
 
     @ViewBuilder
@@ -67,13 +59,7 @@ struct TitlePreviewView: View {
             .padding(.bottom, 24)
 
         if !overview.isEmpty {
-            NucleusSection("Overview") {
-                Text(verbatim: overview)
-                    .font(.system(size: 15))
-                    .foregroundStyle(Nucleus.primaryText)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(16)
-            }
+            OverviewSection(text: overview)
         }
 
         if let extras, !extras.videos.isEmpty {

@@ -30,13 +30,11 @@ struct RootView: View {
                     }
                 }
         }
+        // Plugins' trailers play through this hidden player.
+        .trailerHost(host.trailers)
         .sheet(item: $navigator.sheet) { sheet in
             sheetView(sheet)
                 .overlay { Confetti(trigger: store.celebrations) }
-        .background {
-            // Plugins' trailers play through this hidden player.
-            TrailerPlayerHost(player: host.trailers).frame(width: 2, height: 2).opacity(0.01).accessibilityHidden(true)
-        }
         }
         .overlay { Confetti(trigger: store.celebrations) }
         .fullScreenCover(item: $navigator.browser) { BrowserView(request: $0) }
