@@ -74,6 +74,7 @@
 		92FEF84548757230CAE8355A /* MovieDNAEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = B516A779095EAE447C6AB869 /* MovieDNAEngine.swift */; };
 		97E8309CDAD7E5E154CC502F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 6FD3D37D5291F44FC35B9DF2 /* LaunchScreen.storyboard */; };
 		99E35CEF165B0FD265616660 /* VideoTrackerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90D4E4CCEF84DCC12F3FB25C /* VideoTrackerTests.swift */; };
+		9BFD607A377FFDA7C2699BA9 /* AccentSetting.swift in Sources */ = {isa = PBXBuildFile; fileRef = E75BA06C107A4093927C1727 /* AccentSetting.swift */; };
 		9C7933C5CF3EB60F35C8BB1A /* SampleData.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD4FEE9F4FEEE15F2F2D5380 /* SampleData.swift */; };
 		A2F89E684FDF041AA50A5DE5 /* WatchlistApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A531BF16D94367443FC00681 /* WatchlistApp.swift */; };
 		A368D5F479BD7441EE28BD47 /* Images.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5CB7347888154172C3B6EF5 /* Images.swift */; };
@@ -246,6 +247,7 @@
 		DCC7C809FA7806FDE0CBDD20 /* MetadataRefresh.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetadataRefresh.swift; sourceTree = "<group>"; };
 		DE491397DB07814E0D52B184 /* ScreenshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotTests.swift; sourceTree = "<group>"; };
 		E6D93C29E0F751FBD2972A03 /* VideoTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoTracker.swift; sourceTree = "<group>"; };
+		E75BA06C107A4093927C1727 /* AccentSetting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccentSetting.swift; sourceTree = "<group>"; };
 		E9EB5302BC832B2C1E5AEE20 /* JSONValue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONValue.swift; sourceTree = "<group>"; };
 		EB0E63C0858E88F288D8C09C /* Keychain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Keychain.swift; sourceTree = "<group>"; };
 		EF8136134B666CA0DC850EAE /* ItemDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemDetailView.swift; sourceTree = "<group>"; };
@@ -301,6 +303,7 @@
 		1A83876386B9668EE3166889 /* Model */ = {
 			isa = PBXGroup;
 			children = (
+				E75BA06C107A4093927C1727 /* AccentSetting.swift */,
 				E9EB5302BC832B2C1E5AEE20 /* JSONValue.swift */,
 				B3DAC0576B39A35F975FC3AE /* MovieDNA.swift */,
 				93CBAFB0796D693992D3CA96 /* Records.swift */,
@@ -818,6 +821,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9BFD607A377FFDA7C2699BA9 /* AccentSetting.swift in Sources */,
 				E66093DA9B75C1BB9F170413 /* AppHost.swift in Sources */,
 				28FE6156462DE79A4502E3F2 /* Backup.swift in Sources */,
 				D87CF30CE8584528739E2B68 /* BakedShadow.swift in Sources */,
@@ -1299,7 +1303,7 @@
 			repositoryURL = "https://github.com/NucleusHub/nucleus-native-ui";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 0.1.0;
+				minimumVersion = 0.2.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */

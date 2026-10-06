@@ -42,6 +42,24 @@ final class MergeTests: XCTestCase {
         XCTAssertEqual(again.items.first?.raw["plugin"], ["x": [1, 2.5, nil]])
     }
 
+    func testAccentMergesOnItsOwnStamp() {
+        var picked = WatchlistDocument.normalize(.object([:]))
+        picked.settings.raw["accent"] = ["id": "ember", "updatedAt": "2026-01-01T00:00:00.000Z"]
+        picked.settings.updatedAt = "2026-01-01T00:00:00.000Z"
+        // Newer settings that never picked an accent must not drop the one picked elsewhere.
+        var fresh = WatchlistDocument.normalize(.object([:]))
+        fresh.settings.updatedAt = "2026-06-01T00:00:00.000Z"
+
+        let merged = WatchlistDocument.merge(fresh, picked)
+        XCTAssertEqual(merged.settings.updatedAt, "2026-06-01T00:00:00.000Z")
+        XCTAssertEqual(merged.settings.raw["accent"]?.object?["id"], "ember")
+        XCTAssertNotEqual(merged.fingerprint, fresh.fingerprint)
+
+        var custom = merged
+        custom.settings.raw["accent"] = ["id": "custom", "custom": "#3366FF", "updatedAt": "2026-07-01T00:00:00.000Z"]
+        XCTAssertEqual(WatchlistDocument.merge(merged, custom).settings.raw["accent"]?.object?["custom"], "#3366FF")
+    }
+
     func testTimestampsMatchJavaScript() {
         let s = Timestamp.string(Date(timeIntervalSince1970: 1_727_784_000.123))
         XCTAssertEqual(s, "2024-10-01T12:00:00.123Z")

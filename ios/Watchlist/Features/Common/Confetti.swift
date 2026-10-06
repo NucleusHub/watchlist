@@ -8,7 +8,7 @@ struct Confetti: View {
     @State private var bursts: [Burst] = []
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    private static let colors: [Color] = [0x6366F1, 0xA78BFA, 0x34D399, 0xFBBF24, 0xF472B6].map { Color(hex: $0) }
+    private static var colors: [Color] { [Nucleus.accent] + [0xA78BFA, 0x34D399, 0xFBBF24, 0xF472B6].map { Color(hex: $0) } }
     private static let lifetime: TimeInterval = 2.4
 
     struct Piece {

@@ -1,6 +1,7 @@
 import AuthenticationServices
 import CryptoKit
 import Foundation
+import NucleusUI
 import Observation
 import UIKit
 
@@ -54,6 +55,7 @@ final class NucleusID: NSObject {
                 s.user = user
                 session = s
                 s.save()
+                Self.applyAppearance(from: data)
             }
         } catch {}
     }
@@ -97,6 +99,7 @@ final class NucleusID: NSObject {
             request.setValue("Bearer \(tokens.accessToken)", forHTTPHeaderField: "Authorization")
             let (data, _) = try await URLSession.shared.data(for: request)
             if let user = Self.user(from: data) { tokens.user = user }
+            Self.applyAppearance(from: data)
             tokens.save()
             session = tokens
             await onSignedIn?(mode)
@@ -116,13 +119,43 @@ final class NucleusID: NSObject {
         NucleusSession.clear()
         session = nil
         refreshing = nil
+        NucleusTheme.shared.account = nil
     }
 
     private func expire() async {
         onExpired?()
         NucleusSession.clear()
         session = nil
+        NucleusTheme.shared.account = nil
         error = .expired
+    }
+
+    // MARK: Account appearance
+
+    /// Sets the theme every Nucleus app wears, or nil to let each app choose. Applied once the account has it.
+    func setAccountAccent(_ accent: NucleusAccent?) async throws {
+        var req = URLRequest(url: Self.origin.appending(path: "api/v1/oauth/appearance"))
+        req.httpMethod = "PUT"
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        let appearance: JSONValue = accent.map { a in
+            .object(a.customHex.map { ["accent": "custom", "customAccent": .string($0)] } ?? ["accent": .string(a.id)])
+        } ?? .null
+        req.httpBody = try JSONEncoder().encode(JSONValue.object(["appearance": appearance]))
+        let (data, response) = try await authorized(req)
+        guard response.statusCode == 200 else { throw Failure.server(Self.message(from: data) ?? "HTTP \(response.statusCode)") }
+        Self.applyAppearance(from: data)
+    }
+
+    /// The `appearance` of a userinfo or appearance response: `{ accent, customAccent? }`, or null for none.
+    private static func applyAppearance(from data: Data) {
+        guard let o = (try? JSONDecoder().decode(JSONValue.self, from: data))?.object, let value = o["appearance"] else { return }
+        let a = value.object
+        NucleusTheme.shared.account = NucleusAccent(id: a?["accent"]?.string, customHex: a?["customAccent"]?.string)
+    }
+
+    private static func message(from data: Data) -> String? {
+        let o = (try? JSONDecoder().decode(JSONValue.self, from: data))?.object
+        return o?["error"]?.object?["message"]?.string ?? o?["message"]?.string
     }
 
     // MARK: Authorized requests

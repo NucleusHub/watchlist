@@ -28,10 +28,15 @@ struct SettingsView: View {
             accountSection
             dataSection
             watchingSection
-            NucleusSection("Appearance") {
+            NucleusSection("Appearance", footer: accountThemeFooter) {
                 NucleusSegmented(selection: Binding(get: { preferences.appearance }, set: { preferences.appearance = $0 }),
                                  items: AppearanceMode.allCases.map { ($0, $0.title) }, fill: true)
                     .padding(12)
+                NucleusAccentPicker(selection: Binding(
+                    get: { store.settings.accent ?? NucleusTheme.shared.app },
+                    set: { accent in store.updateSettings { $0.accent = accent } }
+                ))
+                .opacity(NucleusTheme.shared.account == nil ? 1 : 0.5)
             }
             helpSection
             aboutSection
@@ -97,6 +102,10 @@ struct SettingsView: View {
                     Spacer()
                 }
                 .padding(.horizontal, 16).padding(.vertical, 12)
+                NucleusAccentPicker("Theme for every app", selection: Binding(
+                    get: { NucleusTheme.shared.account },
+                    set: { accent in setAccountAccent(accent) }
+                ), noneTitle: String(localized: "Each app"))
                 Button { Task { await sync.syncNow() } } label: {
                     NucleusRow("Sync now", subtitle: syncStatusText, icon: IconTile("arrow.triangle.2.circlepath", tint: .emerald)) {
                         if sync.status == .syncing { ProgressView().controlSize(.small) }
@@ -188,6 +197,26 @@ struct SettingsView: View {
         store.replace(with: next)
         Haptics.success()
         show(String(localized: "Imported \(preview.document.items.count) titles."))
+    }
+
+    private var accountThemeFooter: Text? {
+        guard let account = NucleusTheme.shared.account else { return nil }
+        return Text("Your account's \(account.name) theme is on in every app. Change it under Account.")
+    }
+
+    /// Shown straight away, saved to the account after; put back if the account refuses it.
+    private func setAccountAccent(_ accent: NucleusAccent?) {
+        let previous = NucleusTheme.shared.account
+        NucleusTheme.shared.account = accent
+        Task {
+            do {
+                try await auth.setAccountAccent(accent)
+            } catch {
+                withAnimation(NucleusMotion.quick) { NucleusTheme.shared.account = previous }
+                Haptics.error()
+                show(String(localized: "Couldn't save the theme to your account."))
+            }
+        }
     }
 
     private func show(_ message: String) {

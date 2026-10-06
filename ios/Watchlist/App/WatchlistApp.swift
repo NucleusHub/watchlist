@@ -57,7 +57,7 @@ struct WatchlistApp: App {
                 .environment(plugins)
                 .environment(host)
                 .preferredColorScheme(preferences.appearance.colorScheme)
-                .tint(Nucleus.accent)
+                .nucleusAccentTint()
         }
     }
 }

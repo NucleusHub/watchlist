@@ -10,7 +10,7 @@ options:
 packages:
   NucleusUI:
     url: https://github.com/NucleusHub/nucleus-native-ui
-    from: 0.1.0
+    from: 0.2.0
   # Siblings in the Nucleus monorepo: the plugin loader, Watchlist's plugin contract and the anime plugin.
   NucleusPlugins:
     path: ../../../nucleus-native-plugins

@@ -119,7 +119,8 @@ extension WatchlistDocument {
         return WatchlistDocument(
             items: mergeRecords(a.items, b.items, deleted: deleted),
             collections: mergeRecords(a.collections, b.collections, deleted: deleted),
-            settings: stamp(b.settings.raw) > stamp(a.settings.raw) ? b.settings : a.settings,
+            settings: WatchlistSettings.withNewerAccent(stamp(b.settings.raw) > stamp(a.settings.raw) ? b.settings : a.settings,
+                                                        a.settings, b.settings),
             deleted: deleted
         )
     }
@@ -132,7 +133,9 @@ extension WatchlistDocument {
                 .joined(separator: ",")
         }
         let settingsStamp = settings.raw["updatedAt"]?.templateString ?? "undefined"
-        return "\(ids(items.map(\.raw)))|\(ids(collections.map(\.raw)))|\(settingsStamp)|\(deleted.count)"
+        // The accent merges on its own (AccentSetting.swift); only appended when set, so it matches the web reference otherwise.
+        let accent = settings.raw["accent"]?.object.map { "|accent@\($0["updatedAt"]?.templateString ?? "undefined")" } ?? ""
+        return "\(ids(items.map(\.raw)))|\(ids(collections.map(\.raw)))|\(settingsStamp)|\(deleted.count)\(accent)"
     }
 
     /// `Array.prototype.sort()` order: by UTF-16 code units.

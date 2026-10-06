@@ -60,9 +60,14 @@ struct RootView: View {
             await auth.validate()
             await sync.syncNow()
         }
+        // The synced accent, from this device or another; a device that never picked one keeps what it shows.
+        .onChange(of: store.settings.accent, initial: true) { _, accent in
+            if let accent { NucleusTheme.shared.app = accent }
+        }
         .onChange(of: scenePhase) { _, phase in
             switch phase {
-            case .active: Task { await sync.syncNow() }
+            // validate() also picks up an account theme changed elsewhere.
+            case .active: Task { await auth.validate(); await sync.syncNow() }
             case .background:
                 store.flush()
                 sync.flushInBackground()
