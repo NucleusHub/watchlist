@@ -37,14 +37,30 @@ struct TMDb {
         path.flatMap { URL(string: "https://image.tmdb.org/t/p/w45\($0)") }
     }
 
-    private func get(_ path: String, _ params: [String: String] = [:]) async throws -> JSONValue {
+    func get(_ path: String, _ params: [String: String] = [:]) async throws -> JSONValue {
+        try JSONDecoder().decode(JSONValue.self, from: try await data(path, params))
+    }
+
+    /// The raw response, for plugins that read TMDb themselves; the key never leaves the app.
+    func data(_ path: String, _ params: [String: String] = [:]) async throws -> Data {
         let key = apiKey.trimmingCharacters(in: .whitespaces)
         guard !key.isEmpty else { throw Failure.noKey }
         var c = URLComponents(string: "https://api.themoviedb.org/3\(path)")!
-        c.queryItems = [URLQueryItem(name: "api_key", value: key)] + params.map { URLQueryItem(name: $0.key, value: $0.value) }
+        c.queryItems = [URLQueryItem(name: "api_key", value: key)] + params.filter { $0.key != "api_key" }.map { URLQueryItem(name: $0.key, value: $0.value) }
         let (data, response) = try await URLSession.shared.data(from: c.url!)
         if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) { throw Failure.http(http.statusCode) }
-        return try JSONDecoder().decode(JSONValue.self, from: data)
+        return data
+    }
+
+    /// A ready-to-add item for a TMDb title, with its description.
+    func draft(_ id: Int, type: ItemType) async throws -> (item: Item, overview: String) {
+        let detail = try await detail(id, type: type)
+        let title = (type == .movie ? detail["title"] : detail["name"])?.string ?? ""
+        let date = (type == .movie ? detail["release_date"] : detail["first_air_date"])?.string ?? ""
+        let result = SearchResult(id: id, type: type, title: title, year: String(date.prefix(4)), posterPath: detail["poster_path"]?.string)
+        var item = Item(title: title, type: type)
+        try await fill(&item, from: result)
+        return (item, detail["overview"]?.string ?? "")
     }
 
     /// Whether TMDb accepts the key. A 401 means it doesn't; network trouble throws.

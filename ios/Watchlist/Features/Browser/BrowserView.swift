@@ -154,7 +154,7 @@ private struct WebContainer: UIViewRepresentable {
     func updateUIView(_ view: WKWebView, context: Context) {}
 }
 
-/// The app is portrait, except while the browser is open so videos can go landscape.
+/// The app is portrait, except while the browser or a trailer is open so videos can go landscape.
 final class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication, supportedInterfaceOrientationsFor window: UIWindow?) -> UIInterfaceOrientationMask {
         OrientationLock.mask
