@@ -132,25 +132,22 @@ final class NucleusID: NSObject {
 
     // MARK: Account appearance
 
-    /// Sets the theme every Nucleus app wears, or nil to let each app choose. Applied once the account has it.
-    func setAccountAccent(_ accent: NucleusAccent?) async throws {
+    /// Sets the account's theme, which apps start with; `applyToApps` makes every app take it over its own.
+    func setAccountAccent(_ accent: NucleusAccent, applyToApps: Bool) async throws {
         var req = URLRequest(url: Self.origin.appending(path: "api/v1/oauth/appearance"))
         req.httpMethod = "PUT"
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        let appearance: JSONValue = accent.map { a in
-            .object(a.customHex.map { ["accent": "custom", "customAccent": .string($0)] } ?? ["accent": .string(a.id)])
-        } ?? .null
-        req.httpBody = try JSONEncoder().encode(JSONValue.object(["appearance": appearance]))
+        let appearance: JSONValue = .object(accent.customHex.map { ["accent": "custom", "customAccent": .string($0)] } ?? ["accent": .string(accent.id)])
+        req.httpBody = try JSONEncoder().encode(JSONValue.object(["appearance": appearance, "applyToApps": .bool(applyToApps)]))
         let (data, response) = try await authorized(req)
         guard response.statusCode == 200 else { throw Failure.server(Self.message(from: data) ?? "HTTP \(response.statusCode)") }
         Self.applyAppearance(from: data)
     }
 
-    /// The `appearance` of a userinfo or appearance response: `{ accent, customAccent? }`, or null for none.
+    /// The `appearance` of a userinfo or appearance response, or null when the account never set one.
     private static func applyAppearance(from data: Data) {
-        guard let o = (try? JSONDecoder().decode(JSONValue.self, from: data))?.object, let value = o["appearance"] else { return }
-        let a = value.object
-        NucleusTheme.shared.account = NucleusAccent(id: a?["accent"]?.string, customHex: a?["customAccent"]?.string)
+        guard let o = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any], let value = o["appearance"] else { return }
+        NucleusTheme.shared.account = NucleusAccountTheme(json: value as? [String: Any])
     }
 
     private static func message(from data: Data) -> String? {

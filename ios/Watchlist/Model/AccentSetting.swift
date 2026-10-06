@@ -20,6 +20,9 @@ extension WatchlistSettings {
 
     var accentStamp: Double { WatchlistDocument.stamp(raw["accent"]?.object) }
 
+    /// When this app's own accent was last picked, on any device; nil if it never was.
+    var accentPickedAt: Date? { Timestamp.date(raw["accent"]?.object?["updatedAt"]?.string) }
+
     /// `settings` with whichever accent of `a` and `b` was picked last.
     static func withNewerAccent(_ settings: WatchlistSettings, _ a: WatchlistSettings, _ b: WatchlistSettings) -> WatchlistSettings {
         var out = settings

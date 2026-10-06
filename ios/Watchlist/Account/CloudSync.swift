@@ -1,4 +1,5 @@
 import Foundation
+import NucleusUI
 import Observation
 import UIKit
 
@@ -114,6 +115,7 @@ final class CloudSync {
             lastSyncedAt = Date()
             state.lastSyncedAt = Timestamp.now()
             status = .idle
+            adoptAccountTheme()
         } catch {
             state.dirty = state.dirty || wasDirty
             if !auth.isSignedIn {
@@ -151,6 +153,13 @@ final class CloudSync {
             }
         }
         throw Failure.conflict
+    }
+
+    /// Only after a sync, so an accent this app already picked on another device is known first.
+    private func adoptAccountTheme() {
+        guard let accent = NucleusTheme.shared.account?.adoption(appPickedAt: store.settings.accentPickedAt),
+              accent != store.settings.accent else { return }
+        store.updateSettings { $0.accent = accent }
     }
 
     private enum Remote {

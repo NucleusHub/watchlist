@@ -22,13 +22,15 @@ struct SettingsView: View {
     @State private var refresh = MetadataRefresh()
     @State private var showingRefresh = false
     @State private var askingRefresh = false
+    /// An account theme picked but not saved yet, while asking whether the apps take it too.
+    @State private var pendingAccountAccent: NucleusAccent?
 
     var body: some View {
         NucleusPage("Settings") {
             accountSection
             dataSection
             watchingSection
-            NucleusSection("Appearance", footer: accountThemeFooter) {
+            NucleusSection("Appearance") {
                 NucleusSegmented(selection: Binding(get: { preferences.appearance }, set: { preferences.appearance = $0 }),
                                  items: AppearanceMode.allCases.map { ($0, $0.title) }, fill: true)
                     .padding(12)
@@ -36,7 +38,6 @@ struct SettingsView: View {
                     get: { store.settings.accent ?? NucleusTheme.shared.app },
                     set: { accent in store.updateSettings { $0.accent = accent } }
                 ))
-                .opacity(NucleusTheme.shared.account == nil ? 1 : 0.5)
             }
             helpSection
             aboutSection
@@ -59,6 +60,14 @@ struct SettingsView: View {
             Button("Replace everything", role: .destructive) { apply(preview, replace: true) }
         } message: { preview in
             Text(importMessage(preview))
+        }
+        .confirmationDialog("Change the theme in your apps too?",
+                            isPresented: Binding(get: { pendingAccountAccent != nil }, set: { if !$0 { pendingAccountAccent = nil } }),
+                            titleVisibility: .visible, presenting: pendingAccountAccent) { accent in
+            Button("Change in all apps") { saveAccountAccent(accent, applyToApps: true) }
+            Button("Only new apps") { saveAccountAccent(accent, applyToApps: false) }
+        } message: { _ in
+            Text("Apps you sign in to from now on start with this theme either way.")
         }
         .confirmationDialog("Sign in to Nucleus ID", isPresented: $askingSignIn, titleVisibility: .visible) {
             Button("Keep and merge") { Task { await auth.signIn(mode: .keep) } }
@@ -102,10 +111,10 @@ struct SettingsView: View {
                     Spacer()
                 }
                 .padding(.horizontal, 16).padding(.vertical, 12)
-                NucleusAccentPicker("Theme for every app", selection: Binding(
-                    get: { NucleusTheme.shared.account },
-                    set: { accent in setAccountAccent(accent) }
-                ), noneTitle: String(localized: "Each app"))
+                NucleusAccentPicker("Account theme", selection: Binding(
+                    get: { pendingAccountAccent ?? NucleusTheme.shared.account?.accent ?? .nucleus },
+                    set: { pendingAccountAccent = $0 }
+                ))
                 Button { Task { await sync.syncNow() } } label: {
                     NucleusRow("Sync now", subtitle: syncStatusText, icon: IconTile("arrow.triangle.2.circlepath", tint: .emerald)) {
                         if sync.status == .syncing { ProgressView().controlSize(.small) }
@@ -199,20 +208,15 @@ struct SettingsView: View {
         show(String(localized: "Imported \(preview.document.items.count) titles."))
     }
 
-    private var accountThemeFooter: Text? {
-        guard let account = NucleusTheme.shared.account else { return nil }
-        return Text("Your account's \(account.name) theme is on in every app. Change it under Account.")
-    }
-
-    /// Shown straight away, saved to the account after; put back if the account refuses it.
-    private func setAccountAccent(_ accent: NucleusAccent?) {
-        let previous = NucleusTheme.shared.account
-        NucleusTheme.shared.account = accent
+    /// Saves the account theme; with `applyToApps` this app takes it straight away too.
+    private func saveAccountAccent(_ accent: NucleusAccent, applyToApps: Bool) {
         Task {
             do {
-                try await auth.setAccountAccent(accent)
+                try await auth.setAccountAccent(accent, applyToApps: applyToApps)
+                if applyToApps { store.updateSettings { $0.accent = accent } }
+                show(applyToApps ? String(localized: "Your apps switch to it the next time they open.")
+                                 : String(localized: "Apps you sign in to from now on start with it."))
             } catch {
-                withAnimation(NucleusMotion.quick) { NucleusTheme.shared.account = previous }
                 Haptics.error()
                 show(String(localized: "Couldn't save the theme to your account."))
             }
