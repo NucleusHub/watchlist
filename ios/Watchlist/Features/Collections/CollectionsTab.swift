@@ -66,12 +66,14 @@ struct CollectionCard: View {
                     }
                     .foregroundStyle(.white)
                     .shadow(color: .black.opacity(0.4), radius: 6, y: 2)
+                    // The text and its shadow as one bitmap, so the shadow isn't redrawn while the page moves.
+                    .drawingGroup()
                     .padding(18)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(LinearGradient(colors: [.clear, .black.opacity(0.65)], startPoint: .top, endPoint: .bottom))
                 }
                 .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
-                .shadow(color: .black.opacity(0.3), radius: 14, y: 8)
+                .bakedShadow(cornerRadius: 26, color: .black.opacity(0.3), radius: 14, y: 8)
                 .contentShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
         }
         .buttonStyle(NucleusPressStyle(scale: 0.98))

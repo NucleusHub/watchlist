@@ -9,10 +9,12 @@ let package = Package(
     ],
     dependencies: [
         .package(path: "../../../nucleus-native-plugins"),
+        .package(url: "https://github.com/NucleusHub/nucleus-native-ui", from: "0.1.0"),
     ],
     targets: [
         .target(name: "WatchlistPluginKit", dependencies: [
             .product(name: "NucleusPlugins", package: "nucleus-native-plugins"),
+            .product(name: "NucleusUI", package: "nucleus-native-ui", condition: .when(platforms: [.iOS])),
         ]),
     ]
 )

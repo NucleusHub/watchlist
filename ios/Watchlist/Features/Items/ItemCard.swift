@@ -19,7 +19,7 @@ struct ItemCard: View {
                         if item.favorite || !compact { FavoriteButton(item: item, size: compact ? 26 : 30).padding(compact ? 6 : 8) }
                     }
                     .overlay(alignment: .bottom) { progressBar }
-                    .shadow(color: .black.opacity(0.25), radius: 10, y: 6)
+                    .bakedShadow(cornerRadius: compact ? 14 : 18, radius: 10, y: 6)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(item.title)
                         .font(.system(size: compact ? 13 : 15, weight: .semibold))
