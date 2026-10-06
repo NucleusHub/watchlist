@@ -2,6 +2,7 @@ import NucleusPlugins
 import NucleusUI
 import SwiftUI
 import UniformTypeIdentifiers
+import WatchlistPluginKit
 
 struct SettingsView: View {
     @Environment(WatchlistStore.self) private var store
@@ -149,6 +150,10 @@ struct SettingsView: View {
 
     private var dataSection: some View {
         NucleusSection("Data", footer: Text(flash.map { LocalizedStringKey($0) } ?? "\(store.document.items.count) titles and \(store.document.collections.count) collections on this device.")) {
+            Button { navigator.open(.movieDNA) } label: {
+                NucleusRow("MovieDNA", subtitle: movieDNASummary, icon: IconTile("atom", tint: .rose)) { Chevron() }
+            }
+            .buttonStyle(NucleusRowButtonStyle())
             ShareLink(item: BackupFile(document: store.document), preview: SharePreview(Backup.fileName())) {
                 NucleusRow("Export backup", icon: IconTile("square.and.arrow.up", tint: .sky)) { Chevron() }
             }
@@ -223,6 +228,11 @@ struct SettingsView: View {
     private var searchSourcesSummary: String {
         let chosen = Set(store.settings.searchSources)
         return SourceCatalog(registry: registry, settings: store.settings).available.filter { chosen.contains($0.id) }.map(\.name).joined(separator: " · ")
+    }
+
+    private var movieDNASummary: Text {
+        guard store.movieDNASettings.enabled else { return Text("Off") }
+        return registry.contributions(to: .movieDNAUses).isEmpty ? Text("Not used by any plugin") : Text("On")
     }
 
     private var keySummary: Text {

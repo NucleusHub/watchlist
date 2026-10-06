@@ -114,6 +114,32 @@ struct WatchedButton: View {
     }
 }
 
+/// Boosts the title in MovieDNA each time it's pressed. Unlike a favorite it isn't a state you switch off: it fades.
+struct InterestedButton: View {
+    let item: Item
+    var size: CGFloat = 52
+    @Environment(WatchlistStore.self) private var store
+
+    var body: some View {
+        let count = store.interestCount(item)
+        Button {
+            Haptics.tap()
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.55)) { store.markInterested(item) }
+        } label: {
+            Image(systemName: count > 0 ? "flame.fill" : "flame")
+                .font(.system(size: size * 0.5, weight: .semibold))
+                .foregroundStyle(count > 0 ? Color(hex: 0xF97316) : Nucleus.glyph)
+                .frame(width: size, height: size)
+                .background(Circle().fill(Nucleus.well))
+                .symbolEffect(.bounce, value: count)
+                .contentShape(Circle())
+        }
+        .buttonStyle(NucleusPressStyle(scale: 0.85))
+        .accessibilityLabel("Interested")
+        .accessibilityHint("Boosts this title and its genres in your MovieDNA. Press again to boost more.")
+    }
+}
+
 struct FavoriteButton: View {
     let item: Item
     var size: CGFloat = 30

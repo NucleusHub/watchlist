@@ -18,6 +18,9 @@ final class WatchlistStore {
     private let fileURL: URL?
     @ObservationIgnored private var changeHandlers: [() -> Void] = []
     @ObservationIgnored private var anyChangeHandlers: [() -> Void] = []
+    /// Goes up on every change, so derived values like MovieDNA can be cached per version.
+    @ObservationIgnored private(set) var revision = 0
+    @ObservationIgnored var movieDNACache: (revision: Int, dna: MovieDNA)?
 
     nonisolated static let maxGenres = 12
     nonisolated static let maxGenreLength = 40
@@ -305,6 +308,7 @@ final class WatchlistStore {
     }
 
     private func commit(silent: Bool = false) {
+        revision += 1
         scheduleSave()
         if !silent { changeHandlers.forEach { $0() } }
         anyChangeHandlers.forEach { $0() }
