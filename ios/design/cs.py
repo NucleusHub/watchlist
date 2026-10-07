@@ -9,6 +9,14 @@ from pathlib import Path
 CATALOG = Path(__file__).resolve().parent.parent / "Watchlist/Resources/Localizable.xcstrings"
 
 CS = {
+"Manage your account": "Spravovat účet",
+"Connected apps": "Připojené aplikace",
+"Opens nucleus-home.dev in your browser.": "Otevře nucleus-home.dev v prohlížeči.",
+"Profile": "Profil",
+"Theme": "Motiv",
+"Email": "E-mail",
+"Nucleus ID": "Nucleus ID",
+"Apps you sign in to start with this theme. You can push it to the ones you already use too.": "Aplikace, do kterých se přihlásíte, začnou s tímto motivem. Můžete ho poslat i do těch, které už používáte.",
     "%@ left": "zbývá %@",
     "%lld / %lld": "%lld / %lld",
     "%lld installed": "nainstalováno: %lld",

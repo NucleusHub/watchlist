@@ -72,6 +72,7 @@
 		927F231E47AA826AB659D6CA /* ItemDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF8136134B666CA0DC850EAE /* ItemDetailView.swift */; };
 		92CAC26C67BE638952F75F59 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7BBF97885F76F0BB3E8C78AF /* Localizable.xcstrings */; };
 		92FEF84548757230CAE8355A /* MovieDNAEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = B516A779095EAE447C6AB869 /* MovieDNAEngine.swift */; };
+		94BD4431B4DD1DA445BE3337 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 840E912A187EAACA5B639D81 /* ProfileView.swift */; };
 		97E8309CDAD7E5E154CC502F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 6FD3D37D5291F44FC35B9DF2 /* LaunchScreen.storyboard */; };
 		99E35CEF165B0FD265616660 /* VideoTrackerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90D4E4CCEF84DCC12F3FB25C /* VideoTrackerTests.swift */; };
 		9BFD607A377FFDA7C2699BA9 /* AccentSetting.swift in Sources */ = {isa = PBXBuildFile; fileRef = E75BA06C107A4093927C1727 /* AccentSetting.swift */; };
@@ -204,6 +205,7 @@
 		764A78DA67F19491BC7861A9 /* OpenDefaultsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenDefaultsView.swift; sourceTree = "<group>"; };
 		7BBF97885F76F0BB3E8C78AF /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		834348AF8E735D00207B6493 /* NucleusSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NucleusSession.swift; sourceTree = "<group>"; };
+		840E912A187EAACA5B639D81 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		842382CE951FC81521433BF1 /* LaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchTests.swift; sourceTree = "<group>"; };
 		87040CF227E9386EE69DB6E6 /* WatchlistStore+MovieDNA.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WatchlistStore+MovieDNA.swift"; sourceTree = "<group>"; };
 		880C2D3AF6A37D90EA86B2DB /* AppHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppHost.swift; sourceTree = "<group>"; };
@@ -423,6 +425,7 @@
 				19E5D584949826117C479250 /* MovieDNAView.swift */,
 				764A78DA67F19491BC7861A9 /* OpenDefaultsView.swift */,
 				9C4A0ED0F3228D9A8EF29757 /* PluginsView.swift */,
+				840E912A187EAACA5B639D81 /* ProfileView.swift */,
 				3169B2B0FC860F2710B81A35 /* SearchSourcesView.swift */,
 				215A6E6B4B12FACEE60571D2 /* SettingsView.swift */,
 				0ED7F4B3E143D47F3783C79C /* TMDbKeySheet.swift */,
@@ -859,6 +862,7 @@
 				B0566006DCB6618EB805176F /* PluginsView.swift in Sources */,
 				33AE42E75F22EA867B5C4A06 /* Poster.swift in Sources */,
 				DD4BEC20844C7C26852B981E /* Preferences.swift in Sources */,
+				94BD4431B4DD1DA445BE3337 /* ProfileView.swift in Sources */,
 				8C75DE39168543917A55753B /* Progress.swift in Sources */,
 				3902856B0BCD3B52031823BE /* RatingControl.swift in Sources */,
 				25EFE4200F71C6B5AC3930D0 /* Records.swift in Sources */,

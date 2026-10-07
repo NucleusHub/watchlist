@@ -22,8 +22,6 @@ struct SettingsView: View {
     @State private var refresh = MetadataRefresh()
     @State private var showingRefresh = false
     @State private var askingRefresh = false
-    /// An account theme picked but not saved yet, while asking whether the apps take it too.
-    @State private var pendingAccountAccent: NucleusAccent?
 
     var body: some View {
         NucleusPage("Settings") {
@@ -61,14 +59,6 @@ struct SettingsView: View {
         } message: { preview in
             Text(importMessage(preview))
         }
-        .confirmationDialog("Change the theme in your apps too?",
-                            isPresented: Binding(get: { pendingAccountAccent != nil }, set: { if !$0 { pendingAccountAccent = nil } }),
-                            titleVisibility: .visible, presenting: pendingAccountAccent) { accent in
-            Button("Change in all apps") { saveAccountAccent(accent, applyToApps: true) }
-            Button("Only new apps") { saveAccountAccent(accent, applyToApps: false) }
-        } message: { _ in
-            Text("Apps you sign in to from now on start with this theme either way.")
-        }
         .confirmationDialog("Sign in to Nucleus ID", isPresented: $askingSignIn, titleVisibility: .visible) {
             Button("Keep and merge") { Task { await auth.signIn(mode: .keep) } }
             Button("Start clean", role: .destructive) { Task { await auth.signIn(mode: .clean) } }
@@ -98,23 +88,24 @@ struct SettingsView: View {
     private var accountSection: some View {
         NucleusSection("Account", footer: accountFooter) {
             if let user = auth.user {
-                HStack(spacing: 12) {
-                    Text(verbatim: String((user.name.isEmpty ? user.handle : user.name).prefix(1)).uppercased())
-                        .font(.system(size: 18, weight: .bold))
-                        .foregroundStyle(.white)
-                        .frame(width: 44, height: 44)
-                        .background(Circle().fill(Nucleus.primaryGradient))
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(verbatim: user.name).font(.system(size: 17, weight: .semibold)).foregroundStyle(Nucleus.primaryText)
-                        Text(verbatim: "@\(user.handle) · Nucleus ID").font(.system(size: 13)).foregroundStyle(Nucleus.secondaryText)
+                Button { navigator.open(.profile) } label: {
+                    HStack(spacing: 12) {
+                        Text(verbatim: String((user.name.isEmpty ? user.handle : user.name).prefix(1)).uppercased())
+                            .font(.system(size: 18, weight: .bold))
+                            .foregroundStyle(.white)
+                            .frame(width: 44, height: 44)
+                            .background(Circle().fill(Nucleus.primaryGradient))
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(verbatim: user.name).font(.system(size: 17, weight: .semibold)).foregroundStyle(Nucleus.primaryText)
+                            Text(verbatim: "@\(user.handle) · Nucleus ID").font(.system(size: 13)).foregroundStyle(Nucleus.secondaryText)
+                        }
+                        Spacer()
+                        Chevron()
                     }
-                    Spacer()
+                    .padding(.horizontal, 16).padding(.vertical, 12)
+                    .contentShape(Rectangle())
                 }
-                .padding(.horizontal, 16).padding(.vertical, 12)
-                NucleusAccentPicker("Account theme", selection: Binding(
-                    get: { pendingAccountAccent ?? NucleusTheme.shared.account?.accent ?? .nucleus },
-                    set: { pendingAccountAccent = $0 }
-                ))
+                .buttonStyle(NucleusRowButtonStyle())
                 Button { Task { await sync.syncNow() } } label: {
                     NucleusRow("Sync now", subtitle: syncStatusText, icon: IconTile("arrow.triangle.2.circlepath", tint: .emerald)) {
                         if sync.status == .syncing { ProgressView().controlSize(.small) }
@@ -208,21 +199,6 @@ struct SettingsView: View {
         show(String(localized: "Imported \(preview.document.items.count) titles."))
     }
 
-    /// Saves the account theme; with `applyToApps` this app takes it straight away too.
-    private func saveAccountAccent(_ accent: NucleusAccent, applyToApps: Bool) {
-        Task {
-            do {
-                try await auth.setAccountAccent(accent, applyToApps: applyToApps)
-                if applyToApps { store.updateSettings { $0.accent = accent } }
-                show(applyToApps ? String(localized: "Your apps switch to it the next time they open.")
-                                 : String(localized: "Apps you sign in to from now on start with it."))
-            } catch {
-                Haptics.error()
-                show(String(localized: "Couldn't save the theme to your account."))
-            }
-        }
-    }
-
     private func show(_ message: String) {
         withAnimation { flash = message }
         DispatchQueue.main.asyncAfter(deadline: .now() + 4) { withAnimation { flash = nil } }
@@ -305,12 +281,6 @@ struct SettingsView: View {
                 NucleusRow("Privacy policy") { Image(systemName: "arrow.up.right").foregroundStyle(Nucleus.secondaryText) }
             }
             .buttonStyle(NucleusRowButtonStyle())
-            if auth.isSignedIn {
-                Button { openURL(NucleusID.deleteAccountURL) } label: {
-                    NucleusRow("Delete Nucleus ID account", titleColor: Nucleus.danger) { Image(systemName: "arrow.up.right").foregroundStyle(Nucleus.secondaryText) }
-                }
-                .buttonStyle(NucleusRowButtonStyle())
-            }
             VStack(alignment: .leading, spacing: 8) {
                 Image("TMDbLogo").resizable().scaledToFit().frame(height: 12)
                 Text("This product uses the TMDB API but is not endorsed or certified by TMDB.")

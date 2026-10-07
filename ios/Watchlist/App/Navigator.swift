@@ -5,6 +5,7 @@ enum Route: Hashable {
     case item(String)
     case collection(String)
     case settings
+    case profile
     case stats
     case openDefaults
     case searchSources

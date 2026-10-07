@@ -18,6 +18,14 @@ final class NucleusID: NSObject {
     nonisolated static var privacyURL: URL { origin.appending(path: "privacy") }
     nonisolated static var deleteAccountURL: URL { origin.appending(path: "account/delete") }
 
+    /// The website's account dialog (signing in there first if needed), optionally on a tab:
+    /// profile, password, appearance or apps.
+    nonisolated static func manageAccountURL(tab: String? = nil) -> URL {
+        var c = URLComponents(url: origin, resolvingAgainstBaseURL: false)!
+        c.queryItems = [URLQueryItem(name: "account", value: "manage")] + (tab.map { [URLQueryItem(name: "tab", value: $0)] } ?? [])
+        return c.url!
+    }
+
     enum Mode { case keep, clean }
 
     enum AuthError: Equatable {

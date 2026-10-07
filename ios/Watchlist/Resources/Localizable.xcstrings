@@ -1,22 +1,7 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "" : {
-
-    },
-    "-100 means keep it away from me, 100 means more of this, please." : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "-100 znamená tohle mi nedávejte, 100 znamená víc takového, prosím."
-          }
-        }
-      }
-    },
-    "—" : {
-
-    },
+    "" : {},
     "%@ left" : {
       "localizations" : {
         "cs" : {
@@ -288,78 +273,6 @@
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "%lld titles"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "%lld titles · %lld watching · %lld watched" : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%#@a@ · sleduji %2$lld · zhlédnuto %3$lld"
-          },
-          "substitutions" : {
-            "a" : {
-              "argNum" : 1,
-              "formatSpecifier" : "lld",
-              "variations" : {
-                "plural" : {
-                  "few" : {
-                    "stringUnit" : {
-                      "state" : "translated",
-                      "value" : "%arg tituly"
-                    }
-                  },
-                  "many" : {
-                    "stringUnit" : {
-                      "state" : "translated",
-                      "value" : "%arg titulů"
-                    }
-                  },
-                  "one" : {
-                    "stringUnit" : {
-                      "state" : "translated",
-                      "value" : "%arg titul"
-                    }
-                  },
-                  "other" : {
-                    "stringUnit" : {
-                      "state" : "translated",
-                      "value" : "%arg titulů"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%#@a@ · %2$lld watching · %3$lld watched"
-          },
-          "substitutions" : {
-            "a" : {
-              "argNum" : 1,
-              "formatSpecifier" : "lld",
-              "variations" : {
-                "plural" : {
-                  "one" : {
-                    "stringUnit" : {
-                      "state" : "translated",
-                      "value" : "%arg title"
-                    }
-                  },
-                  "other" : {
-                    "stringUnit" : {
-                      "state" : "translated",
-                      "value" : "%arg titles"
-                    }
-                  }
                 }
               }
             }
@@ -667,6 +580,88 @@
         }
       }
     },
+    "%lld titles · %lld watching · %lld watched" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@a@ · sleduji %2$lld · zhlédnuto %3$lld"
+          },
+          "substitutions" : {
+            "a" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "few" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg tituly"
+                    }
+                  },
+                  "many" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg titulů"
+                    }
+                  },
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg titul"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg titulů"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@a@ · %2$lld watching · %3$lld watched"
+          },
+          "substitutions" : {
+            "a" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg title"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg titles"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "-100 means keep it away from me, 100 means more of this, please." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "-100 znamená tohle mi nedávejte, 100 znamená víc takového, prosím."
+          }
+        }
+      }
+    },
     "About" : {
       "localizations" : {
         "cs" : {
@@ -709,9 +704,7 @@
         }
       }
     },
-    "Account theme" : {
-
-    },
+    "Account theme" : {},
     "Acting" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -796,6 +789,27 @@
         }
       }
     },
+    "Add a TMDb API key in Settings to search and fill in details automatically." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Přidejte v Nastavení klíč k TMDb API a podrobnosti se doplní samy."
+          }
+        }
+      }
+    },
+    "Add a TMDb key in Settings to find people and link their pages." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Přidejte v Nastavení klíč k TMDb a budete moct lidi vyhledat a propojit s jejich stránkami."
+          }
+        }
+      }
+    },
     "Add a free TMDb API key in Settings and suggestions show up here." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -843,27 +857,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Přidat osobu, nebo hledat na TMDb"
-          }
-        }
-      }
-    },
-    "Add a TMDb API key in Settings to search and fill in details automatically." : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Přidejte v Nastavení klíč k TMDb API a podrobnosti se doplní samy."
-          }
-        }
-      }
-    },
-    "Add a TMDb key in Settings to find people and link their pages." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Přidejte v Nastavení klíč k TMDb a budete moct lidi vyhledat a propojit s jejich stránkami."
           }
         }
       }
@@ -959,6 +952,16 @@
         }
       }
     },
+    "Add to MovieDNA" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Přidat do MovieDNA"
+          }
+        }
+      }
+    },
     "Add to a collection" : {
       "localizations" : {
         "cs" : {
@@ -975,16 +978,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Přidat mezi oblíbené"
-          }
-        }
-      }
-    },
-    "Add to MovieDNA" : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Přidat do MovieDNA"
           }
         }
       }
@@ -1132,11 +1125,17 @@
         }
       }
     },
-    "Apps you sign in to from now on start with it." : {
-
-    },
-    "Apps you sign in to from now on start with this theme either way." : {
-
+    "Apps you sign in to from now on start with it." : {},
+    "Apps you sign in to from now on start with this theme either way." : {},
+    "Apps you sign in to start with this theme. You can push it to the ones you already use too." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aplikace, do kterých se přihlásíte, začnou s tímto motivem. Můžete ho poslat i do těch, které už používáte."
+          }
+        }
+      }
     },
     "Art" : {
       "extractionState" : "stale",
@@ -1353,18 +1352,24 @@
         }
       }
     },
-    "Change in all apps" : {
-
-    },
-    "Change the theme in your apps too?" : {
-
-    },
+    "Change in all apps" : {},
+    "Change the theme in your apps too?" : {},
     "Character" : {
       "localizations" : {
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Postava"
+          }
+        }
+      }
+    },
+    "Check your connection and TMDb key." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zkontrolujte připojení a klíč k TMDb."
           }
         }
       }
@@ -1376,16 +1381,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zkontrolujte připojení a stažením dolů to zkuste znovu."
-          }
-        }
-      }
-    },
-    "Check your connection and TMDb key." : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zkontrolujte připojení a klíč k TMDb."
           }
         }
       }
@@ -1421,9 +1416,7 @@
         }
       }
     },
-    "Clear" : {
-
-    },
+    "Clear" : {},
     "Clear filters" : {
       "localizations" : {
         "cs" : {
@@ -1491,6 +1484,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hudba"
+          }
+        }
+      }
+    },
+    "Connected apps" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Připojené aplikace"
           }
         }
       }
@@ -1611,9 +1614,7 @@
         }
       }
     },
-    "Couldn't save the theme to your account." : {
-
-    },
+    "Couldn't save the theme to your account." : {},
     "Couldn't send it (%lld)." : {
       "localizations" : {
         "cs" : {
@@ -1746,12 +1747,12 @@
         }
       }
     },
-    "Delete “%@”?" : {
+    "Delete Nucleus ID account" : {
       "localizations" : {
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Smazat „%@“?"
+            "value" : "Smazat účet Nucleus ID"
           }
         }
       }
@@ -1766,22 +1767,22 @@
         }
       }
     },
-    "Delete Nucleus ID account" : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Smazat účet Nucleus ID"
-          }
-        }
-      }
-    },
     "Delete title" : {
       "localizations" : {
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Smazat titul"
+          }
+        }
+      }
+    },
+    "Delete “%@”?" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Smazat „%@“?"
           }
         }
       }
@@ -1977,6 +1978,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Střih"
+          }
+        }
+      }
+    },
+    "Email" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "E-mail"
           }
         }
       }
@@ -2206,6 +2217,16 @@
         }
       }
     },
+    "From TMDb" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Z TMDb"
+          }
+        }
+      }
+    },
     "From people you follow" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -2213,16 +2234,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Od lidí, které sledujete"
-          }
-        }
-      }
-    },
-    "From TMDb" : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Z TMDb"
           }
         }
       }
@@ -2257,9 +2268,6 @@
         }
       }
     },
-    "Get a free key" : {
-
-    },
     "Get a TMDb key" : {
       "localizations" : {
         "cs" : {
@@ -2270,6 +2278,7 @@
         }
       }
     },
+    "Get a free key" : {},
     "Go to start page" : {
       "localizations" : {
         "cs" : {
@@ -2341,17 +2350,6 @@
         }
       }
     },
-    "hours watched" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "hodin sledování"
-          }
-        }
-      }
-    },
     "How it learns" : {
       "localizations" : {
         "cs" : {
@@ -2361,12 +2359,6 @@
           }
         }
       }
-    },
-    "https://" : {
-
-    },
-    "https://example.com/search?q={title}" : {
-
     },
     "Image" : {
       "localizations" : {
@@ -2709,6 +2701,16 @@
         }
       }
     },
+    "Manage your account" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spravovat účet"
+          }
+        }
+      }
+    },
     "Mark all" : {
       "localizations" : {
         "cs" : {
@@ -2935,6 +2937,16 @@
         }
       }
     },
+    "No TMDb API key set. Add one in Settings." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chybí klíč k TMDb API. Přidejte ho v Nastavení."
+          }
+        }
+      }
+    },
     "No account needed. Your list stays on this device." : {
       "localizations" : {
         "cs" : {
@@ -2995,16 +3007,6 @@
         }
       }
     },
-    "No TMDb API key set. Add one in Settings." : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Chybí klíč k TMDb API. Přidejte ho v Nastavení."
-          }
-        }
-      }
-    },
     "None" : {
       "localizations" : {
         "cs" : {
@@ -3045,9 +3047,7 @@
         }
       }
     },
-    "Not set" : {
-
-    },
+    "Not set" : {},
     "Not synced yet" : {
       "localizations" : {
         "cs" : {
@@ -3199,9 +3199,7 @@
         }
       }
     },
-    "Only new apps" : {
-
-    },
+    "Only new apps" : {},
     "Open" : {
       "localizations" : {
         "cs" : {
@@ -3293,6 +3291,16 @@
         }
       }
     },
+    "Opens nucleus-home.dev in your browser." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otevře nucleus-home.dev v prohlížeči."
+          }
+        }
+      }
+    },
     "Optional" : {
       "localizations" : {
         "cs" : {
@@ -3344,9 +3352,7 @@
         }
       }
     },
-    "Paste your key" : {
-
-    },
+    "Paste your key" : {},
     "People" : {
       "localizations" : {
         "cs" : {
@@ -3552,6 +3558,16 @@
         }
       }
     },
+    "Profile" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Profil"
+          }
+        }
+      }
+    },
     "Progress" : {
       "localizations" : {
         "cs" : {
@@ -3746,22 +3762,22 @@
         }
       }
     },
-    "Remove from favorites" : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Odebrat z oblíbených"
-          }
-        }
-      }
-    },
     "Remove from MovieDNA" : {
       "localizations" : {
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Odebrat z MovieDNA"
+          }
+        }
+      }
+    },
+    "Remove from favorites" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odebrat z oblíbených"
           }
         }
       }
@@ -3786,9 +3802,7 @@
         }
       }
     },
-    "Remove key" : {
-
-    },
+    "Remove key" : {},
     "Remove photo" : {
       "localizations" : {
         "cs" : {
@@ -4514,6 +4528,47 @@
         }
       }
     },
+    "TMDb %@" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TMDb %@"
+          }
+        }
+      }
+    },
+    "TMDb API key" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klíč k TMDb API"
+          }
+        }
+      }
+    },
+    "TMDb answered %lld." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TMDb odpověděla %lld."
+          }
+        }
+      }
+    },
+    "TMDb didn't accept this key. Check you copied all of it." : {},
+    "TMDb rates it %@." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TMDb hodnotí %@."
+          }
+        }
+      }
+    },
     "Take photo" : {
       "localizations" : {
         "cs" : {
@@ -4604,9 +4659,6 @@
         }
       }
     },
-    "The “API Key” from your TMDb account settings, not the read access token." : {
-
-    },
     "The chart button on Home shows how much you've watched, what's left and how you rate things." : {
       "localizations" : {
         "cs" : {
@@ -4623,6 +4675,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tituly zůstanou ve watchlistu."
+          }
+        }
+      }
+    },
+    "The “API Key” from your TMDb account settings, not the read access token." : {},
+    "Theme" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Motiv"
           }
         }
       }
@@ -4842,49 +4905,6 @@
         }
       }
     },
-    "TMDb %@" : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "TMDb %@"
-          }
-        }
-      }
-    },
-    "TMDb answered %lld." : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "TMDb odpověděla %lld."
-          }
-        }
-      }
-    },
-    "TMDb API key" : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Klíč k TMDb API"
-          }
-        }
-      }
-    },
-    "TMDb didn't accept this key. Check you copied all of it." : {
-
-    },
-    "TMDb rates it %@." : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "TMDb hodnotí %@."
-          }
-        }
-      }
-    },
     "Too large to sync. Remove some custom images." : {
       "localizations" : {
         "cs" : {
@@ -5068,6 +5088,16 @@
         }
       }
     },
+    "Use the learned value (%lld)" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Použít naučenou hodnotu (%lld)"
+          }
+        }
+      }
+    },
     "Use {title} and {year} in the link." : {
       "localizations" : {
         "cs" : {
@@ -5084,16 +5114,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Použijte {title} a {year}. Matrix (1999) otevře %@"
-          }
-        }
-      }
-    },
-    "Use the learned value (%lld)" : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Použít naučenou hodnotu (%lld)"
           }
         }
       }
@@ -5220,22 +5240,22 @@
         }
       }
     },
-    "Where “Open” takes this title. Default uses the choice in Settings." : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kam vede „Otevřít“ u tohoto titulu. Výchozí použije volbu z Nastavení."
-          }
-        }
-      }
-    },
     "Where to watch" : {
       "localizations" : {
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kde sledovat"
+          }
+        }
+      }
+    },
+    "Where “Open” takes this title. Default uses the choice in Settings." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kam vede „Otevřít“ u tohoto titulu. Výchozí použije volbu z Nastavení."
           }
         }
       }
@@ -5313,25 +5333,23 @@
         }
       }
     },
-    "Your apps switch to it the next time they open." : {
-
+    "YouTube link" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odkaz na YouTube"
+          }
+        }
+      }
     },
+    "Your apps switch to it the next time they open." : {},
     "Your edits, removals and Interested presses are forgotten. People you follow stay." : {
       "localizations" : {
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vaše úpravy, odebrání a stisknutí Zajímá mě se zapomenou. Sledovaní lidé zůstanou."
-          }
-        }
-      }
-    },
-    "your link" : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "váš odkaz"
           }
         }
       }
@@ -5366,16 +5384,6 @@
         }
       }
     },
-    "yours" : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "vaše"
-          }
-        }
-      }
-    },
     "Yours on every device" : {
       "localizations" : {
         "cs" : {
@@ -5386,16 +5394,40 @@
         }
       }
     },
-    "YouTube link" : {
+    "hours watched" : {
+      "extractionState" : "stale",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Odkaz na YouTube"
+            "value" : "hodin sledování"
           }
         }
       }
-    }
+    },
+    "https://" : {},
+    "https://example.com/search?q={title}" : {},
+    "your link" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "váš odkaz"
+          }
+        }
+      }
+    },
+    "yours" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "vaše"
+          }
+        }
+      }
+    },
+    "—" : {}
   },
   "version" : "1.0"
 }

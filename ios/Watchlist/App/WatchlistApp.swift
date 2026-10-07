@@ -146,6 +146,7 @@ enum DebugLaunch {
         guard let i = args.firstIndex(of: "-route"), i + 1 < args.count else { return }
         switch args[i + 1] {
         case "settings": navigator.path = [.settings]
+        case "profile": navigator.path = [.settings, .profile]
         case "stats": navigator.path = [.stats]
         case "sources": navigator.path = [.settings, .searchSources]
         case "plugins": navigator.path = [.settings, .plugins]

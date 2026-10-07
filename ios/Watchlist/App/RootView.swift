@@ -21,6 +21,7 @@ struct RootView: View {
                     case .item(let id): ItemDetailView(itemID: id)
                     case .collection(let id): CollectionDetailView(collectionID: id)
                     case .settings: SettingsView()
+                    case .profile: ProfileView()
                     case .stats: StatsView()
                     case .openDefaults: OpenDefaultsView()
                     case .searchSources: SearchSourcesView()
