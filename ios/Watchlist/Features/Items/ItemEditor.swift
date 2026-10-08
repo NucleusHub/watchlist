@@ -45,7 +45,6 @@ struct ItemEditor: View {
                     .padding(.bottom, 12)
             }
             titleSection
-            if isNew, picked, draft.tmdbId != nil { aboutSection }
             posterSection
             detailsSection
             ratingSection
@@ -57,6 +56,8 @@ struct ItemEditor: View {
                 if host.canOpenPeople {
                     CustomCreditsSection(credits: Binding(get: { draft.customCredits }, set: { draft.customCredits = $0 }))
                 }
+            } else if isNew, picked {
+                aboutSection
             }
             linksSection
             NucleusSection("Notes") {
@@ -113,8 +114,14 @@ struct ItemEditor: View {
         NucleusSection(footer: searchFooter) {
             HStack(spacing: 10) {
                 Image(systemName: "magnifyingglass").foregroundStyle(Nucleus.secondaryText)
-                TextField(onlyTMDb ? LocalizedStringKey("Title, or search TMDb") : LocalizedStringKey("Title, or search"), text: Binding(get: { draft.title }, set: { draft.title = $0; picked = false }))
+                TextField(onlyTMDb ? LocalizedStringKey("Title, or search TMDb") : LocalizedStringKey("Title, or search"), text: Binding(get: { draft.title }, set: { title in
+                    // The field re-sends its text when the keyboard closes on a tap; that mustn't undo the pick.
+                    guard title != draft.title else { return }
+                    draft.title = title
+                    picked = false
+                }))
                     .font(.system(size: 17, weight: .medium))
+                    .autocorrectionDisabled()
                     .focused($titleFocused)
                     .submitLabel(.done)
                 if searching || filling { ProgressView().controlSize(.small) }
