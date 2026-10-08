@@ -151,6 +151,43 @@ final class WatchlistStore {
         }
     }
 
+    /// Episodes up to `episode` of one season watched; never takes back ones already watched.
+    /// False when the title has no such season.
+    @discardableResult
+    func markSeasonWatched(_ id: String, season: Int, through episode: Int) -> Bool {
+        updateSeason(id, season) { max($0.watched, min(episode, $0.episodeCount)) }
+    }
+
+    /// One season back to at most `episodes` watched. False when the title has no such season.
+    @discardableResult
+    func unmarkSeasonWatched(_ id: String, season: Int, keeping episodes: Int) -> Bool {
+        updateSeason(id, season) { min($0.watched, max(0, episodes)) }
+    }
+
+    /// Each listed season back to at most its count, e.g. undoing a whole-show mark; status follows.
+    func restoreSeasons(_ id: String, _ counts: [Int: Int]) {
+        guard let item = item(id), item.isShow, var seasons = item.seasonProgress else { return }
+        for i in seasons.indices { if let keep = counts[seasons[i].seasonNumber] { seasons[i].watched = min(seasons[i].watched, keep) } }
+        let totals = seasons.reduce((watched: 0, total: 0)) { ($0.watched + $1.watched, $0.total + $1.episodeCount) }
+        let status = Item.status(watched: totals.watched, total: totals.total)
+        guard seasons != item.seasonProgress || status != item.status else { return }
+        updateItem(id) { $0.seasonProgress = seasons; $0.status = status }
+    }
+
+    /// Sets a season's watched count and recomputes the status; untouched when nothing changes.
+    private func updateSeason(_ id: String, _ number: Int, _ watched: (SeasonProgress) -> Int) -> Bool {
+        guard let item = item(id), item.isShow, var seasons = item.seasonProgress,
+              let i = seasons.firstIndex(where: { $0.seasonNumber == number }) else { return false }
+        seasons[i].watched = watched(seasons[i])
+        var next = item
+        next.seasonProgress = seasons
+        let totals = next.episodeTotals
+        next.status = Item.status(watched: totals.watched, total: totals.total)
+        guard next.seasonProgress != item.seasonProgress || next.status != item.status else { return true }
+        updateItem(id) { $0.seasonProgress = next.seasonProgress; $0.status = next.status }
+        return true
+    }
+
     /// Takes back watching progress. `.current` forgets the saved time and page (a movie's whole progress, or the
     /// episode in progress); `.season` also unwatches the season being watched; `.show` unwatches everything.
     func resetProgress(_ id: String, _ scope: ProgressReset) {

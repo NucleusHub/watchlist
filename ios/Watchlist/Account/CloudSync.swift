@@ -16,6 +16,7 @@ final class CloudSync {
 
     private let store: WatchlistStore
     private let auth: NucleusID
+    @ObservationIgnored private let crossApp: CrossApp
     @ObservationIgnored private var state: SyncState
     @ObservationIgnored private var pushTask: Task<Void, Never>?
     @ObservationIgnored private var running: Task<Void, Never>?
@@ -28,6 +29,7 @@ final class CloudSync {
     init(store: WatchlistStore, auth: NucleusID) {
         self.store = store
         self.auth = auth
+        crossApp = CrossApp(store: store, auth: auth)
         state = SyncState.load()
         lastSyncedAt = Timestamp.date(state.lastSyncedAt)
         store.onLocalChange { [weak self] in self?.schedulePush() }
@@ -71,6 +73,7 @@ final class CloudSync {
         pushTask?.cancel()
         state = SyncState()
         SyncState.clear()
+        crossApp.reset()
         lastSyncedAt = nil
         status = .idle
     }
@@ -112,6 +115,8 @@ final class CloudSync {
         state.dirty = false
         do {
             try await run(localDirty: wasDirty)
+            await crossApp.settle()
+            await crossApp.publishLibrary()
             lastSyncedAt = Date()
             state.lastSyncedAt = Timestamp.now()
             status = .idle
@@ -132,16 +137,23 @@ final class CloudSync {
     }
 
     private func run(localDirty: Bool) async throws {
+        var commands = await crossApp.inbox()
         // Nothing changed here and the account copy is still the one we last saw: a cheap 304.
-        if !localDirty, let version = state.version {
+        if !localDirty, commands.isEmpty, let version = state.version {
             if case .unchanged = try await fetch(ifNoneMatch: version) { return }
         }
         for _ in 0..<Self.maxAttempts {
             guard case .value(let remoteDoc, let remoteVersion) = try await fetch(ifNoneMatch: nil) else { continue }
             let local = store.document
-            let merged = remoteDoc.map { WatchlistDocument.merge(local, $0) } ?? WatchlistDocument.normalize(local.json)
+            var merged = remoteDoc.map { WatchlistDocument.merge(local, $0) } ?? WatchlistDocument.normalize(local.json)
             if merged.fingerprint != local.fingerprint {
                 store.replace(with: merged, silent: true)
+            }
+            // Applied on the merged copy, so another device's edit to the same title survives.
+            if !commands.isEmpty {
+                crossApp.apply(commands)
+                commands = []
+                merged = store.document
             }
             if let remoteDoc, merged.fingerprint == remoteDoc.fingerprint {
                 state.version = remoteVersion
