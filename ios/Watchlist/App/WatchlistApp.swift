@@ -113,6 +113,7 @@ enum DebugLaunch {
             preferences.hasSeenTour = false
             preferences.appearance = .dark
             preferences.gridStyle = .small
+            StatsLayout.standard.save()
             NucleusSession.clear()
             SyncState.clear()
         }

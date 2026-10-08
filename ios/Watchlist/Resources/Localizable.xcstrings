@@ -580,6 +580,58 @@
         }
       }
     },
+    "%lld titles watched" : {
+      "localizations" : {
+        "cs" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld zhlédnutý titul"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld zhlédnuté tituly"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld zhlédnutých titulů"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld zhlédnutých titulů"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld title watched"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld titles watched"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld titles · %lld watching · %lld watched" : {
       "localizations" : {
         "cs" : {
@@ -1686,6 +1738,16 @@
         }
       }
     },
+    "Customize" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Přizpůsobit"
+          }
+        }
+      }
+    },
     "Dark" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -1916,6 +1978,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hotovo"
+          }
+        }
+      }
+    },
+    "Drag to reorder. Small cards sit two to a row." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Přetažením změníte pořadí. Malé karty jsou po dvou v řádku."
           }
         }
       }
@@ -2329,6 +2401,16 @@
         }
       }
     },
+    "Hide card" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skrýt kartu"
+          }
+        }
+      }
+    },
     "Highly rated, from genres you haven't tried" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -2595,6 +2677,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nejznámější tituly"
+          }
+        }
+      }
+    },
+    "L" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L"
           }
         }
       }
@@ -3135,6 +3227,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zatím nic naučeného"
+          }
+        }
+      }
+    },
+    "Nothing shown" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nic se nezobrazuje"
           }
         }
       }
@@ -3863,6 +3965,16 @@
         }
       }
     },
+    "Reset" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Obnovit"
+          }
+        }
+      }
+    },
     "Reset all" : {
       "localizations" : {
         "cs" : {
@@ -3959,6 +4071,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Délka (minuty)"
+          }
+        }
+      }
+    },
+    "S" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "S"
           }
         }
       }
@@ -4174,6 +4296,16 @@
         }
       }
     },
+    "Show card" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zobrazit kartu"
+          }
+        }
+      }
+    },
     "Show fewer" : {
       "localizations" : {
         "cs" : {
@@ -4281,6 +4413,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Přihlášení selhalo: %@"
+          }
+        }
+      }
+    },
+    "Size" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Velikost"
           }
         }
       }
@@ -5028,6 +5170,16 @@
         }
       }
     },
+    "Turn cards back on with the button at the top." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Karty znovu zapnete tlačítkem nahoře."
+          }
+        }
+      }
+    },
     "Turn it back on in Settings → Plugins to see this page." : {
       "localizations" : {
         "cs" : {
@@ -5407,6 +5559,36 @@
     },
     "https://" : {},
     "https://example.com/search?q={title}" : {},
+    "of %lld watched" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "zhlédnuto z %lld"
+          }
+        }
+      }
+    },
+    "titles from %@" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "titulů z roku %@"
+          }
+        }
+      }
+    },
+    "titles on %@" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "titulů na %@"
+          }
+        }
+      }
+    },
     "your link" : {
       "localizations" : {
         "cs" : {
