@@ -54,3 +54,9 @@ English strings are in the Swift code. Czech is in `design/cs.py`; edit it and r
 `-resetAll`, `-sampleData`, `-sampleJump` (three titles to jump back into), `-skipWelcome`, `-appearance light|dark`, `-grid list|big|small`,
 `-animeSource` (search Kitsu too), `-route settings|sources|plugins|stats|item|collection|add|edit|seasons|tour`. `ScreenshotTests` uses them to capture every screen
 (set `TEST_RUNNER_SHOT_DIR` to keep the images).
+
+## Links
+
+`com.nucleushome.watchlist://item/<24-hex id>` opens that title (other Nucleus apps link to it); try it with
+`xcrun simctl openurl booted com.nucleushome.watchlist://item/<id>`. Other hosts are ignored, so the OAuth redirect
+(`com.nucleushome.watchlist:/oauth`) is untouched.

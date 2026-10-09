@@ -52,6 +52,13 @@ struct RootView: View {
             Haptics.tap()
             navigator.present(.report)
         }
+        // Links from other apps; the OAuth redirect goes to ASWebAuthenticationSession, never here.
+        .onOpenURL { url in
+            guard let id = Navigator.linkedItemID(url), store.item(id) != nil else { return }
+            navigator.sheet = nil
+            navigator.browser = nil
+            navigator.path = [.item(id)]
+        }
         .task {
             DebugLaunch.route(navigator, store: store)
             if !preferences.hasSeenWelcome && !auth.isSignedIn && !DebugLaunch.skipWelcome {

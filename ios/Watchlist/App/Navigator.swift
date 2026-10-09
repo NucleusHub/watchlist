@@ -51,4 +51,12 @@ final class Navigator {
     func open(_ route: Route) { path.append(route) }
     func present(_ sheet: Sheet) { self.sheet = sheet }
     func browse(_ url: URL, item: Item? = nil) { browser = BrowserRequest(home: url, itemID: item?.id) }
+
+    /// The item a `com.nucleushome.watchlist://item/<id>` link points at; nil for anything else, the OAuth redirect too.
+    nonisolated static func linkedItemID(_ url: URL) -> String? {
+        guard url.scheme == NucleusID.callbackScheme, url.host() == "item" else { return nil }
+        let id = url.lastPathComponent
+        guard id.count == 24, id.allSatisfy(\.isHexDigit) else { return nil }
+        return id
+    }
 }

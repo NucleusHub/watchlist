@@ -197,4 +197,13 @@ final class CrossAppTests: XCTestCase {
         s.markSeasonWatched(id, season: 1, through: 4)
         XCTAssertNotEqual(before, CrossApp.hash(CrossApp.library(s.document)))
     }
+
+    func testItemLinks() {
+        let id = "0123456789abcdef01234567"
+        XCTAssertEqual(Navigator.linkedItemID(URL(string: "com.nucleushome.watchlist://item/\(id)")!), id)
+        XCTAssertNil(Navigator.linkedItemID(URL(string: "com.nucleushome.watchlist:/oauth?code=abc")!))
+        XCTAssertNil(Navigator.linkedItemID(URL(string: "com.nucleushome.watchlist://item/short")!))
+        XCTAssertNil(Navigator.linkedItemID(URL(string: "com.nucleushome.watchlist://collection/\(id)")!))
+        XCTAssertNil(Navigator.linkedItemID(URL(string: "com.nucleushome.todo://item/\(id)")!))
+    }
 }
