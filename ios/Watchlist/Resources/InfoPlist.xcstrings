@@ -36,13 +36,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vyfoťte plakát, obálku kolekce nebo snímek k hlášení problému."
+            "value" : "Vyfoťte plakát, obálku kolekce nebo snímek k hlášení problému, nebo naskenujte QR kód serveru."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Take a photo for a poster, a collection cover or a problem report."
+            "value" : "Take a photo for a poster, a collection cover or a problem report, or scan a server QR code."
           }
         }
       }

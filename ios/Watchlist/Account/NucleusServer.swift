@@ -55,6 +55,25 @@ struct NucleusServer: Codable, Hashable {
                          path: o["path"] as? String, code: o["code"] as? String)
     }
 
+    enum Scanned: Equatable {
+        case setup(NucleusServer)
+        case code(String)
+    }
+
+    /// A QR code: a setup (as JSON or any Nucleus app's link) or just a server code.
+    static func scanned(_ text: String) throws -> Scanned {
+        let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        if text.hasPrefix("{") { return .setup(try setup(fromFile: Data(text.utf8))) }
+        if let url = URL(string: text), url.scheme?.lowercased().hasPrefix("com.nucleushome.") == true, url.host() == "server" {
+            return .setup(try setup(from: url))
+        }
+        if text.lowercased().hasPrefix("nucleus") && text.lowercased().hasSuffix("home") {
+            guard isCode(text) else { throw ServerProblem.badCode }
+            return .code(text)
+        }
+        throw ServerProblem.badSetup
+    }
+
     private static func setup(scheme: String?, host: String?, port: String?, path: String?, code: String?) throws -> NucleusServer {
         let scheme = scheme?.lowercased() ?? "https"
         guard let host, !host.isEmpty, !host.contains("/"), !host.contains(":"), scheme == "http" || scheme == "https"

@@ -2321,6 +2321,16 @@
         }
       }
     },
+    "Fills in the server and its code" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vyplní server i jeho kód"
+          }
+        }
+      }
+    },
     "Filter this collection" : {
       "localizations" : {
         "cs" : {
@@ -3789,6 +3799,16 @@
         }
       }
     },
+    "Point the camera at the QR code from your server's administrator." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Namiřte fotoaparát na QR kód od správce serveru."
+          }
+        }
+      }
+    },
     "Port" : {
       "localizations" : {
         "cs" : {
@@ -4334,6 +4354,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Uložit"
+          }
+        }
+      }
+    },
+    "Scan QR code" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Naskenovat QR kód"
           }
         }
       }
@@ -5045,6 +5075,16 @@
     },
     "The “API Key” from your TMDb account settings, not the read access token." : {
 
+    },
+    "The camera isn't available. Allow it in Settings, or type the address and code instead." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fotoaparát není k dispozici. Povolte ho v Nastavení, nebo adresu a kód zadejte ručně."
+          }
+        }
+      }
     },
     "The chart button on Home shows how much you've watched, what's left and how you rate things." : {
       "localizations" : {

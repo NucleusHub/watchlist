@@ -19,6 +19,7 @@ struct ServerSignInSheet: View {
     @State private var showsAdvanced: Bool
     @State private var revealsCode = false
     @State private var importing = false
+    @State private var scanning = false
     @State private var working = false
     @State private var check: Task<Void, Never>?
     @State private var problem: ServerProblem?
@@ -58,6 +59,11 @@ struct ServerSignInSheet: View {
                 .disabled(!canContinue)
                 .padding(.bottom, 28)
                 NucleusSection {
+                    Button { scanning = true } label: {
+                        NucleusRow("Scan QR code", subtitle: Text("Fills in the server and its code"),
+                                   icon: IconTile("qrcode.viewfinder", tint: .violet)) { Chevron() }
+                    }
+                    .buttonStyle(NucleusRowButtonStyle())
                     Button { importing = true } label: {
                         NucleusRow("Import setup", subtitle: Text("A link or file from your administrator"),
                                    icon: IconTile("square.and.arrow.down", tint: .teal)) { Chevron() }
@@ -76,6 +82,7 @@ struct ServerSignInSheet: View {
             .disabled(working)
         }
         .onDisappear { check?.cancel() }
+        .fullScreenCover(isPresented: $scanning) { QRScannerSheet(onScan: scanned) }
         .fileImporter(isPresented: $importing, allowedContentTypes: [.nucleusServer]) { result in
             guard case .success(let url) = result else { return }
             let scoped = url.startAccessingSecurityScopedResource()
@@ -166,6 +173,22 @@ struct ServerSignInSheet: View {
         guard canContinue else { return }
         working = true
         check = Task { await go() }
+    }
+
+    private func scanned(_ text: String) {
+        do {
+            switch try NucleusServer.scanned(text) {
+            case .setup(let server):
+                apply(server)
+                start()
+            case .code(let scannedCode):
+                code = scannedCode
+                needsCode = true
+                problem = nil
+            }
+        } catch {
+            problem = error as? ServerProblem ?? .badSetup
+        }
     }
 
     private func apply(_ server: NucleusServer) {

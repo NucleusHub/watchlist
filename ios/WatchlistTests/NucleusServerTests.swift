@@ -87,4 +87,25 @@ final class NucleusServerTests: XCTestCase {
         }
         XCTAssertEqual(problem { try NucleusServer.setup(fromFile: Data("not json".utf8)) }, .badSetup)
     }
+
+    func testScannedSetups() throws {
+        let json = #"{"host":"nas","code":"\#(code)"}"#
+        guard case .setup(let a) = try NucleusServer.scanned(json) else { return XCTFail("not a setup") }
+        XCTAssertEqual(a.origin.absoluteString, "https://nas")
+        XCTAssertEqual(a.code, code)
+        // Another app's link works too.
+        guard case .setup(let b) = try NucleusServer.scanned("com.nucleushome.notes://server?host=nas&code=\(code)") else { return XCTFail("not a setup") }
+        XCTAssertEqual(b, a)
+    }
+
+    func testScannedCodeOnly() throws {
+        XCTAssertEqual(try NucleusServer.scanned(" \(code)\n"), .code(code))
+        XCTAssertEqual(problem { _ = try NucleusServer.scanned("nucleus123home") }, .badCode)
+    }
+
+    func testScannedJunk() {
+        for text in ["https://example.com", "hello", "com.nucleushome.todo://task/1", "{}"] {
+            XCTAssertEqual(problem { _ = try NucleusServer.scanned(text) }, .badSetup, text)
+        }
+    }
 }
