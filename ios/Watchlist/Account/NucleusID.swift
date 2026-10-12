@@ -19,7 +19,7 @@ final class NucleusID: NSObject {
     nonisolated static let redirectURI = "com.nucleushome.watchlist:/oauth"
     nonisolated static let callbackScheme = "com.nucleushome.watchlist"
     nonisolated static let scope = "profile data"
-    nonisolated static var privacyURL: URL { officialSite.appending(path: "privacy") }
+    nonisolated static var privacyURL: URL { officialSite.appending(path: "privacy/watchlist") }
     nonisolated static var deleteAccountURL: URL { origin.appending(path: "account/delete") }
 
     /// The website's account dialog (signing in there first if needed), optionally on a tab:

@@ -2,7 +2,7 @@ import NucleusUI
 import PhotosUI
 import SwiftUI
 
-/// Tell us what went wrong, with screenshots. Sent to Nucleus ID's reports endpoint.
+/// Tell us what went wrong, with screenshots. Sent to nucleus-home.dev, whichever server the account is on.
 struct ReportSheet: View {
     @Environment(NucleusID.self) private var auth
     @Environment(\.dismiss) private var dismiss
@@ -10,6 +10,9 @@ struct ReportSheet: View {
     @State private var details = ""
     @State private var email = ""
     @State private var anonymous = false
+    private static let endpoint = URL(string: "https://nucleus-home.dev/api/v1/reports")!
+    // Only an account on nucleus-home.dev itself can be named; another server's token never goes there.
+    private var officialAccount: Bool { auth.isSignedIn && NucleusID.origin.host() == NucleusID.officialSite.host() }
     @State private var shots: [UIImage] = []
     @State private var picks: [PhotosPickerItem] = []
     @State private var sending = false
@@ -28,7 +31,7 @@ struct ReportSheet: View {
             VStack(spacing: 16) {
                 Image(systemName: "checkmark.seal.fill").font(.system(size: 56)).foregroundStyle(Nucleus.success)
                 Text("Sent").font(.system(size: 24, weight: .bold))
-                Text(auth.isSignedIn && !anonymous || !email.isEmpty ? "Thanks. We'll get back to you." : "Thanks for letting us know.")
+                Text(officialAccount && !anonymous || !email.isEmpty ? "Thanks. We'll get back to you." : "Thanks for letting us know.")
                     .foregroundStyle(Nucleus.secondaryText)
                 Button("Done") { dismiss() }.buttonStyle(NucleusPrimaryButtonStyle()).frame(maxWidth: 240)
             }
@@ -77,7 +80,7 @@ struct ReportSheet: View {
                 }
             }
             NucleusSection("Reply to", footer: Text(verbatim: diagnostics)) {
-                if let user = auth.user {
+                if let user = auth.user, officialAccount {
                     Toggle(isOn: $anonymous) { Text("Send anonymously") }
                         .tint(Color(hex: 0x34C759))
                         .padding(.horizontal, 16).frame(minHeight: 52)
@@ -134,12 +137,12 @@ struct ReportSheet: View {
                     .map { ["type": "image/jpeg", "data": .string($0.base64EncodedString())] }),
             ]
             if !mail.isEmpty { body["email"] = .string(mail) }
-            var req = URLRequest(url: NucleusID.origin.appending(path: "api/v1/reports"))
+            var req = URLRequest(url: Self.endpoint)
             req.httpMethod = "POST"
             req.setValue("application/json", forHTTPHeaderField: "Content-Type")
             req.httpBody = try? JSONEncoder().encode(JSONValue.object(body))
             do {
-                let (_, response) = auth.isSignedIn && !anonymous ? try await auth.authorized(req) : try await NucleusID.send(req)
+                let (_, response) = officialAccount && !anonymous ? try await auth.authorized(req) : try await NucleusID.send(req)
                 switch response.statusCode {
                 case 200..<300:
                     Haptics.success()
