@@ -4,6 +4,7 @@ import VisionKit
 
 /// Full-screen camera that reports the first QR code it reads.
 struct QRScannerSheet: View {
+    var caption: LocalizedStringKey = "Point the camera at the QR code from your server's administrator."
     let onScan: (String) -> Void
     @Environment(\.dismiss) private var dismiss
 
@@ -22,7 +23,7 @@ struct QRScannerSheet: View {
                     Image(systemName: "camera.fill")
                         .font(.system(size: 34, weight: .semibold))
                         .foregroundStyle(Nucleus.secondaryText)
-                    Text("The camera isn't available. Allow it in Settings, or type the address and code instead.")
+                    Text("The camera isn't available. Allow camera access in Settings.")
                         .font(.system(size: 15))
                         .foregroundStyle(Nucleus.secondaryText)
                         .multilineTextAlignment(.center)
@@ -36,7 +37,7 @@ struct QRScannerSheet: View {
                 Spacer()
             }
             .padding(16)
-            Text("Point the camera at the QR code from your server's administrator.")
+            Text(caption)
                 .font(.system(size: 15, weight: .medium))
                 .foregroundStyle(.white)
                 .multilineTextAlignment(.center)

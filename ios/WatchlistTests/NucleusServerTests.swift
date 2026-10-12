@@ -103,6 +103,28 @@ final class NucleusServerTests: XCTestCase {
         XCTAssertEqual(problem { _ = try NucleusServer.scanned("nucleus123home") }, .badCode)
     }
 
+    func testScannedWebLogin() throws {
+        let json = #"{"login":"AbC_d-12345678901234567","kind":"web","scheme":"https","host":"id.example","port":8443}"#
+        let scanned = try NucleusServer.scanned(json)
+        XCTAssertEqual(scanned, .webLogin(id: "AbC_d-12345678901234567", server: NucleusServer(host: "id.example", port: 8443)))
+    }
+
+    func testScannedAppLoginCarriesTheCode() throws {
+        let json = #"{"login":"req1","kind":"app","scheme":"http","host":"nas","code":"\#(code)"}"#
+        guard case .appLogin(let id, let server) = try NucleusServer.scanned(json) else { return XCTFail("not an app login") }
+        XCTAssertEqual(id, "req1")
+        XCTAssertEqual(server.origin.absoluteString, "http://nas")
+        XCTAssertEqual(server.code, code)
+    }
+
+    func testScannedBrokenLogins() {
+        for json in [#"{"login":"req1","kind":"desktop","host":"nas"}"#, #"{"login":"req1","host":"nas"}"#,
+                     #"{"login":"../oauth/token","kind":"web","host":"nas"}"#, #"{"login":"","kind":"web","host":"nas"}"#,
+                     #"{"login":7,"kind":"web","host":"nas"}"#, #"{"login":"req1","kind":"web"}"#] {
+            XCTAssertEqual(problem { _ = try NucleusServer.scanned(json) }, .badSetup, json)
+        }
+    }
+
     func testScannedJunk() {
         for text in ["https://example.com", "hello", "com.nucleushome.todo://task/1", "{}"] {
             XCTAssertEqual(problem { _ = try NucleusServer.scanned(text) }, .badSetup, text)

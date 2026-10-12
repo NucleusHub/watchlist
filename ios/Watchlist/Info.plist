@@ -69,7 +69,7 @@
 		</dict>
 	</dict>
 	<key>NSCameraUsageDescription</key>
-	<string>Take a photo for a poster, a collection cover or a problem report, or scan a server QR code.</string>
+	<string>Take a photo for a poster, a collection cover or a problem report, or scan a Nucleus QR code to set up a server or sign in.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

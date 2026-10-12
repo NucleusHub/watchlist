@@ -36,13 +36,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vyfoťte plakát, obálku kolekce nebo snímek k hlášení problému, nebo naskenujte QR kód serveru."
+            "value" : "Vyfoťte plakát, obálku kolekce nebo snímek k hlášení problému, nebo naskenujte QR kód Nucleus pro nastavení serveru či přihlášení."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Take a photo for a poster, a collection cover or a problem report, or scan a server QR code."
+            "value" : "Take a photo for a poster, a collection cover or a problem report, or scan a Nucleus QR code to set up a server or sign in."
           }
         }
       }

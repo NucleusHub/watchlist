@@ -79,7 +79,7 @@ targets:
           - UIInterfaceOrientationLandscapeLeft
           - UIInterfaceOrientationLandscapeRight
         UIRequiredDeviceCapabilities: [arm64]
-        NSCameraUsageDescription: Take a photo for a poster, a collection cover or a problem report, or scan a server QR code.
+        NSCameraUsageDescription: Take a photo for a poster, a collection cover or a problem report, or scan a Nucleus QR code to set up a server or sign in.
         CFBundleURLTypes:
           - CFBundleURLName: com.nucleushome.watchlist
             CFBundleURLSchemes: [com.nucleushome.watchlist]

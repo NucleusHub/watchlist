@@ -1230,6 +1230,26 @@
         }
       }
     },
+    "Approve" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Potvrdit"
+          }
+        }
+      }
+    },
+    "Approve on the website…" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Potvrďte to na webu…"
+          }
+        }
+      }
+    },
     "Apps you sign in to from now on start with it." : {
 
     },
@@ -1613,6 +1633,16 @@
         }
       }
     },
+    "Confirm signing in Watchlist where you showed the QR code." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Přihlášení Watchlistu potvrďte tam, kde jste zobrazili QR kód."
+          }
+        }
+      }
+    },
     "Connect to your server" : {
       "localizations" : {
         "cs" : {
@@ -1778,6 +1808,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nepodařilo se odeslat (%lld)."
+          }
+        }
+      }
+    },
+    "Couldn't sign in. Try again." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Přihlášení se nezdařilo. Zkuste to znovu."
           }
         }
       }
@@ -1950,6 +1990,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Smazat titul"
+          }
+        }
+      }
+    },
+    "Deny" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zamítnout"
           }
         }
       }
@@ -3508,6 +3558,16 @@
         }
       }
     },
+    "Only approve if you're signing in on a device in front of you right now." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Potvrďte jen tehdy, když se právě přihlašujete na zařízení, které máte před sebou."
+          }
+        }
+      }
+    },
     "Only new apps" : {
 
     },
@@ -3805,6 +3865,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Namiřte fotoaparát na QR kód od správce serveru."
+          }
+        }
+      }
+    },
+    "Point the camera at the QR code on the sign-in page." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Namiřte fotoaparát na QR kód na přihlašovací stránce."
           }
         }
       }
@@ -4218,6 +4288,16 @@
         }
       }
     },
+    "Requested at %@" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vyžádáno v %@"
+          }
+        }
+      }
+    },
     "Reset" : {
       "localizations" : {
         "cs" : {
@@ -4364,6 +4444,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Naskenovat QR kód"
+          }
+        }
+      }
+    },
+    "Scan the QR code on a Nucleus sign-in page, then approve it here." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Naskenujte QR kód na přihlašovací stránce Nucleus a pak přihlášení potvrďte tady."
           }
         }
       }
@@ -4650,12 +4740,42 @@
         }
       }
     },
+    "Sign in on %@?" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Přihlásit zařízení %@?"
+          }
+        }
+      }
+    },
+    "Sign in on another device" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Přihlásit jiné zařízení"
+          }
+        }
+      }
+    },
     "Sign in to Nucleus ID" : {
       "localizations" : {
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Přihlásit se k Nucleus ID"
+          }
+        }
+      }
+    },
+    "Sign in to this app first, then scan again." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nejdřív se přihlaste v této aplikaci a pak kód naskenujte znovu."
           }
         }
       }
@@ -4726,6 +4846,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Přihlášení selhalo: %@"
+          }
+        }
+      }
+    },
+    "Signed in on %@." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zařízení %@ je přihlášené."
           }
         }
       }
@@ -5076,12 +5206,12 @@
     "The “API Key” from your TMDb account settings, not the read access token." : {
 
     },
-    "The camera isn't available. Allow it in Settings, or type the address and code instead." : {
+    "The camera isn't available. Allow camera access in Settings." : {
       "localizations" : {
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Fotoaparát není k dispozici. Povolte ho v Nastavení, nebo adresu a kód zadejte ručně."
+            "value" : "Fotoaparát není k dispozici. Povolte přístup k němu v Nastavení."
           }
         }
       }
@@ -5102,6 +5232,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Server tento kód nepřijal."
+          }
+        }
+      }
+    },
+    "The sign-in was denied." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Přihlášení bylo zamítnuto."
           }
         }
       }
@@ -5133,6 +5273,36 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tohle nejde vzít zpět."
+          }
+        }
+      }
+    },
+    "This code has expired. Show a new one and scan again." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Platnost kódu vypršela. Zobrazte nový a naskenujte ho znovu."
+          }
+        }
+      }
+    },
+    "This code is for another server." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tento kód patří k jinému serveru."
+          }
+        }
+      }
+    },
+    "This code was already scanned. Show a new one and scan again." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tento kód už byl naskenován. Zobrazte nový a naskenujte ho znovu."
           }
         }
       }
@@ -5287,6 +5457,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tohle není nastavení serveru Nucleus."
+          }
+        }
+      }
+    },
+    "This isn't a Nucleus sign-in code." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tohle není přihlašovací kód Nucleus."
           }
         }
       }
@@ -5908,6 +6088,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Byli jste odhlášeni. Přihlaste se znovu, ať se dál synchronizuje."
+          }
+        }
+      }
+    },
+    "You're already signed in." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Už jste přihlášeni."
           }
         }
       }

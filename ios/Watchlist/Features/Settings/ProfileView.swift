@@ -10,6 +10,12 @@ struct ProfileView: View {
     /// An account theme picked but not saved yet, while asking whether the apps take it too.
     @State private var pendingAccent: NucleusAccent?
     @State private var flash: String?
+    @State private var scanning = false
+    /// Read once the scanner is gone, so a problem's alert isn't presented over it.
+    @State private var scannedText: String?
+    @State private var approving: QRLogin.Prompt?
+    @State private var approvedDevice: String?
+    @State private var notice: LocalizedStringResource?
 
     var body: some View {
         NucleusPage("Profile") {
@@ -47,6 +53,13 @@ struct ProfileView: View {
                     }
                 }
 
+                NucleusSection(footer: Text("Scan the QR code on a Nucleus sign-in page, then approve it here.")) {
+                    Button { scanning = true } label: {
+                        NucleusRow("Sign in on another device", icon: IconTile("qrcode", tint: .violet)) { Chevron() }
+                    }
+                    .buttonStyle(NucleusRowButtonStyle())
+                }
+
                 NucleusSection("Nucleus ID", footer: Text("Opens \(NucleusID.origin.host() ?? "") in your browser.")) {
                     if let email = user.email, !email.isEmpty {
                         NucleusRow("Email", icon: IconTile("envelope.fill", tint: .sky)) {
@@ -64,6 +77,35 @@ struct ProfileView: View {
         }
         // Signed out (or expired) while here: nothing left to show.
         .onChange(of: auth.isSignedIn) { _, signedIn in if !signedIn { dismiss() } }
+        .fullScreenCover(isPresented: $scanning, onDismiss: {
+            if let text = scannedText { scannedText = nil; scanned(text) }
+        }) {
+            QRScannerSheet(caption: "Point the camera at the QR code on the sign-in page.") { scannedText = $0 }
+        }
+        .sheet(item: $approving, onDismiss: {
+            if let device = approvedDevice { approvedDevice = nil; notice = "Signed in on \(device)." }
+        }) { prompt in
+            QRApproveSheet(prompt: prompt) { approvedDevice = prompt.device }
+        }
+        .alert(Text(notice ?? ""), isPresented: Binding(get: { notice != nil }, set: { if !$0 { notice = nil } })) {}
+    }
+
+    /// A website's sign-in request on this account's server: bind it to this account, then ask.
+    private func scanned(_ text: String) {
+        Task {
+            do {
+                switch try? NucleusServer.scanned(text) {
+                case .webLogin(let id, let server)?:
+                    guard NucleusDiscovery.sameOrigin(server.origin, NucleusID.origin) else { throw QRLogin.Problem.otherServer }
+                    approving = try await QRLogin.scan(id, on: NucleusID.origin, send: auth.authorized)
+                case .appLogin?: throw QRLogin.Problem.alreadySignedIn
+                default: throw QRLogin.Problem.notSignIn
+                }
+            } catch {
+                Haptics.error()
+                notice = (error as? QRLogin.Problem ?? .failed).message
+            }
+        }
     }
 
     private func link(_ title: LocalizedStringKey, icon: String, tint: NucleusTint, url: URL) -> some View {

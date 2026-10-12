@@ -108,24 +108,46 @@ final class NucleusID: NSObject {
             }
             guard items.first(where: { $0.name == "state" })?.value == state,
                   let code = items.first(where: { $0.name == "code" })?.value else { throw Failure.server("invalid_state") }
-
-            var tokens = try await tokenRequest([
-                "grant_type": "authorization_code", "code": code,
-                "redirect_uri": Self.redirectURI, "code_verifier": verifier,
-            ])
-            var request = URLRequest(url: Self.endpoints.userinfo)
-            request.setValue("Bearer \(tokens.accessToken)", forHTTPHeaderField: "Authorization")
-            let (data, _) = try await URLSession.shared.data(for: request)
-            if let user = Self.user(from: data) { tokens.user = user }
-            Self.applyAppearance(from: data)
-            tokens.save()
-            session = tokens
-            await onSignedIn?(mode)
+            await finishSignIn(try await redeem(code: code, verifier: verifier), mode: mode)
         } catch let e as ASWebAuthenticationSessionError where e.code == .canceledLogin {
             return
         } catch {
             self.error = Self.classify(error)
         }
+    }
+
+    /// Signs in with a code a website approved (QR sign-in); `verifier` is the PKCE pair of the claimed challenge.
+    func signIn(code: String, verifier: String, mode: Mode = .keep) async {
+        guard !signingIn else { return }
+        signingIn = true
+        error = nil
+        defer { signingIn = false }
+
+        do {
+            await finishSignIn(try await redeem(code: code, verifier: verifier), mode: mode)
+        } catch {
+            self.error = Self.classify(error)
+        }
+    }
+
+    /// Exchanges an authorization code for tokens and reads who signed in.
+    private func redeem(code: String, verifier: String) async throws -> NucleusSession {
+        var tokens = try await tokenRequest([
+            "grant_type": "authorization_code", "code": code,
+            "redirect_uri": Self.redirectURI, "code_verifier": verifier,
+        ])
+        var request = URLRequest(url: Self.endpoints.userinfo)
+        request.setValue("Bearer \(tokens.accessToken)", forHTTPHeaderField: "Authorization")
+        let (data, _) = try await URLSession.shared.data(for: request)
+        if let user = Self.user(from: data) { tokens.user = user }
+        Self.applyAppearance(from: data)
+        return tokens
+    }
+
+    private func finishSignIn(_ tokens: NucleusSession, mode: Mode) async {
+        tokens.save()
+        session = tokens
+        await onSignedIn?(mode)
     }
 
     func signOut(clean: Bool) async {

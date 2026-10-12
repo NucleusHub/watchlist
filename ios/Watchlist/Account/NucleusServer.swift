@@ -58,12 +58,28 @@ struct NucleusServer: Codable, Hashable {
     enum Scanned: Equatable {
         case setup(NucleusServer)
         case code(String)
+        /// A website's sign-in page, for a signed-in app to approve.
+        case webLogin(id: String, server: NucleusServer)
+        /// A signed-in website's "Sign in an app", for a signed-out app to claim.
+        case appLogin(id: String, server: NucleusServer)
     }
 
-    /// A QR code: a setup (as JSON or any Nucleus app's link) or just a server code.
+    /// A QR code: a setup (as JSON or any Nucleus app's link), a sign-in request, or just a server code.
     static func scanned(_ text: String) throws -> Scanned {
         let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        if text.hasPrefix("{") { return .setup(try setup(fromFile: Data(text.utf8))) }
+        if text.hasPrefix("{") {
+            let data = Data(text.utf8)
+            let server = try setup(fromFile: data)
+            guard let o = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any], o["login"] != nil else { return .setup(server) }
+            // The id goes into a request path.
+            guard let id = o["login"] as? String, id.range(of: "^[A-Za-z0-9_-]{1,128}$", options: .regularExpression) != nil
+            else { throw ServerProblem.badSetup }
+            switch o["kind"] as? String {
+            case "web": return .webLogin(id: id, server: server)
+            case "app": return .appLogin(id: id, server: server)
+            default: throw ServerProblem.badSetup
+            }
+        }
         if let url = URL(string: text), url.scheme?.lowercased().hasPrefix("com.nucleushome.") == true, url.host() == "server" {
             return .setup(try setup(from: url))
         }
