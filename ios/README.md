@@ -28,7 +28,7 @@ picks which sources the add screen searches.
 | --- | --- |
 | `Watchlist/Model` | The document, items, collections, settings, and the merge |
 | `Watchlist/Store` | The on-device store, backups, Keychain, preferences, and the one-time migration from the Capacitor app |
-| `Watchlist/Account` | Nucleus ID sign-in (PKCE) and cloud sync (`/api/v1/app-data/watchlist`) |
+| `Watchlist/Account` | Nucleus ID sign-in (PKCE), the server picker, and cloud sync (`/api/v1/app-data/watchlist`) |
 | `Watchlist/Services` | TMDb, search sources (`Sources.swift`), "Open on" links, watching progress, image helpers |
 | `Watchlist/Features` | The screens |
 | `Watchlist/Watch` | The phone's side of WatchConnectivity |
@@ -52,8 +52,30 @@ English strings are in the Swift code. Czech is in `design/cs.py`; edit it and r
 ## Debug launch arguments
 
 `-resetAll`, `-sampleData`, `-sampleJump` (three titles to jump back into), `-skipWelcome`, `-appearance light|dark`, `-grid list|big|small`,
-`-animeSource` (search Kitsu too), `-route settings|sources|plugins|stats|item|collection|add|edit|seasons|tour`. `ScreenshotTests` uses them to capture every screen
+`-animeSource` (search Kitsu too), `-route settings|sources|plugins|stats|item|collection|add|edit|seasons|tour|signin`. `ScreenshotTests` uses them to capture every screen
 (set `TEST_RUNNER_SHOT_DIR` to keep the images).
+
+## Servers
+
+There is no default server: the person types one in, or opens a setup link or file from the server's
+administrator. The app reads `{server}/api/v1/oauth/metadata` (the path is changeable under Advanced),
+then signs in at the `authorization_endpoint` it names. Sync and cross-app calls go to `{server}/api/v1/…`.
+The watch gets everything from the phone and never talks to a server.
+
+**Handing out a server.** On the server, `cd server && npm run server-code -- <host> [--scheme http] [--port 8080]`
+prints a code for `SERVER_CODE`, a setup link and a `.nucleusserver` file:
+
+    com.nucleushome.watchlist://server?scheme=http&host=nas&port=8080&code=nucleus…home
+
+    { "scheme": "http", "host": "nas", "port": 8080, "code": "nucleus…home" }
+
+Both fields besides `host` are optional (`path` sets the discovery path). The file type `com.nucleushome.server`
+is Todo's; this app imports it, so a file offers every Nucleus app. Either asks before it changes anything,
+and only while signed out.
+
+**Tailscale.** IP addresses (`100.x.y.z`) and MagicDNS short names work over http. `*.ts.net` names work over
+https (Tailscale certificates) or http (an ATS exception, since the tailnet encrypts the traffic). Other
+domains need https. The server's `PUBLIC_ORIGIN` must be the address the app uses.
 
 ## Links
 

@@ -60,8 +60,8 @@ struct SettingsView: View {
             Text(importMessage(preview))
         }
         .confirmationDialog("Sign in to Nucleus ID", isPresented: $askingSignIn, titleVisibility: .visible) {
-            Button("Keep and merge") { Task { await auth.signIn(mode: .keep) } }
-            Button("Start clean", role: .destructive) { Task { await auth.signIn(mode: .clean) } }
+            Button("Keep and merge") { navigator.present(.signIn(nil, .keep)) }
+            Button("Start clean", role: .destructive) { navigator.present(.signIn(nil, .clean)) }
         } message: {
             Text("This device has \(store.document.items.count) titles and \(store.document.collections.count) collections. Merge them into your account, or replace them with the account's copy?")
         }
@@ -123,7 +123,7 @@ struct SettingsView: View {
                 }
                 .padding(16)
                 Button {
-                    if store.document.isEmpty { Task { await auth.signIn(mode: .keep) } } else { askingSignIn = true }
+                    if store.document.isEmpty { navigator.present(.signIn(nil, .keep)) } else { askingSignIn = true }
                 } label: {
                     NucleusRow("Sign in with Nucleus ID", icon: IconTile("person.crop.circle", tint: .indigo)) {
                         if auth.signingIn { ProgressView().controlSize(.small) } else { Chevron() }

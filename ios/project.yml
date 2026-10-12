@@ -83,6 +83,25 @@ targets:
         CFBundleURLTypes:
           - CFBundleURLName: com.nucleushome.watchlist
             CFBundleURLSchemes: [com.nucleushome.watchlist]
+        # Setup files from a server's administrator (.nucleusserver, JSON); Todo exports the type.
+        CFBundleDocumentTypes:
+          - CFBundleTypeName: Nucleus server setup
+            LSHandlerRank: Owner
+            LSItemContentTypes: [com.nucleushome.server]
+        UTImportedTypeDeclarations:
+          - UTTypeIdentifier: com.nucleushome.server
+            UTTypeDescription: Nucleus server setup
+            UTTypeConformsTo: [public.json]
+            UTTypeTagSpecification:
+              public.filename-extension: [nucleusserver]
+        # Opened files arrive as copies, read once on import.
+        LSSupportsOpeningDocumentsInPlace: false
+        # Tailscale names over plain http: the tailnet already encrypts the traffic.
+        NSAppTransportSecurity:
+          NSExceptionDomains:
+            ts.net:
+              NSIncludesSubdomains: true
+              NSExceptionAllowsInsecureHTTPLoads: true
 
   WatchlistWatch:
     type: application

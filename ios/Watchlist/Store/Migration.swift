@@ -12,7 +12,10 @@ enum Migration {
     static func dropLeftoverSession(store: WatchlistStore, defaults: UserDefaults = .standard) {
         let earlierInstall = defaults.object(forKey: doneKey) != nil || store.hasSavedFile
             || defaults.dictionaryRepresentation().keys.contains { $0.hasPrefix(key("")) }
-        if !earlierInstall { NucleusSession.clear() }
+        if !earlierInstall {
+            NucleusSession.clear()
+            Keychain.delete(.nucleusServer)
+        }
     }
 
     static func run(store: WatchlistStore, preferences: Preferences, defaults: UserDefaults = .standard) {

@@ -10,12 +10,16 @@ import UIKit
 @MainActor
 @Observable
 final class NucleusID: NSObject {
-    nonisolated static let origin = URL(string: "https://nucleus-home.dev")!
+    /// The app's own pages (privacy policy), whichever server the account is on.
+    nonisolated static let officialSite = URL(string: "https://nucleus-home.dev")!
+    /// The account's server; only used while signed in, so the fallback is never reached in practice.
+    nonisolated static var origin: URL { ActiveServer.config?.server.origin ?? officialSite }
+    private nonisolated static var endpoints: NucleusEndpoints { ActiveServer.config?.endpoints ?? .derived(from: origin) }
     nonisolated static let clientID = "watchlist"
     nonisolated static let redirectURI = "com.nucleushome.watchlist:/oauth"
     nonisolated static let callbackScheme = "com.nucleushome.watchlist"
     nonisolated static let scope = "profile data"
-    nonisolated static var privacyURL: URL { origin.appending(path: "privacy") }
+    nonisolated static var privacyURL: URL { officialSite.appending(path: "privacy") }
     nonisolated static var deleteAccountURL: URL { origin.appending(path: "account/delete") }
 
     /// The website's account dialog (signing in there first if needed), optionally on a tab:
@@ -40,6 +44,12 @@ final class NucleusID: NSObject {
     var isSignedIn: Bool { session != nil }
     var user: NucleusSession.User? { session?.user }
 
+    /// Picks the server to sign in to. Only while signed out, so a session never outlives its server.
+    func use(_ config: ServerConfig) {
+        guard !isSignedIn else { return }
+        ActiveServer.use(config)
+    }
+
     @ObservationIgnored var onSignedIn: ((Mode) async -> Void)?
     @ObservationIgnored var onSignedOut: ((_ clean: Bool) async -> Void)?
     /// The account ended the session (refresh token revoked); nothing can be synced any more.
@@ -50,7 +60,8 @@ final class NucleusID: NSObject {
     private static let refreshMargin: TimeInterval = 60
 
     override init() {
-        session = NucleusSession.load()
+        // A session without a usable server would talk to the fallback origin; reading the server first also runs its cleanup.
+        session = ActiveServer.config == nil ? nil : NucleusSession.load()
         super.init()
     }
 
@@ -58,7 +69,7 @@ final class NucleusID: NSObject {
     func validate() async {
         guard session != nil else { return }
         do {
-            let (data, response) = try await authorized(URLRequest(url: Self.origin.appending(path: "api/v1/oauth/userinfo")))
+            let (data, response) = try await authorized(URLRequest(url: Self.endpoints.userinfo))
             if response.statusCode == 200, let user = Self.user(from: data), var s = session {
                 s.user = user
                 session = s
@@ -78,8 +89,7 @@ final class NucleusID: NSObject {
 
         let verifier = Self.randomToken(48)
         let state = Self.randomToken(16)
-        var c = URLComponents(url: Self.origin.appending(path: "authorize"), resolvingAgainstBaseURL: false)!
-        c.queryItems = [
+        let url = Self.authorizeURL(Self.endpoints.authorization, items: [
             .init(name: "response_type", value: "code"),
             .init(name: "client_id", value: Self.clientID),
             .init(name: "redirect_uri", value: Self.redirectURI),
@@ -87,10 +97,10 @@ final class NucleusID: NSObject {
             .init(name: "state", value: state),
             .init(name: "code_challenge", value: Self.challenge(verifier)),
             .init(name: "code_challenge_method", value: "S256"),
-        ]
+        ], code: ActiveServer.config?.server.code)
 
         do {
-            let callback = try await authenticate(url: c.url!)
+            let callback = try await authenticate(url: url)
             let items = URLComponents(url: callback, resolvingAgainstBaseURL: false)?.queryItems ?? []
             if let err = items.first(where: { $0.name == "error" })?.value {
                 if err == "access_denied" { return }
@@ -103,7 +113,7 @@ final class NucleusID: NSObject {
                 "grant_type": "authorization_code", "code": code,
                 "redirect_uri": Self.redirectURI, "code_verifier": verifier,
             ])
-            var request = URLRequest(url: Self.origin.appending(path: "api/v1/oauth/userinfo"))
+            var request = URLRequest(url: Self.endpoints.userinfo)
             request.setValue("Bearer \(tokens.accessToken)", forHTTPHeaderField: "Authorization")
             let (data, _) = try await URLSession.shared.data(for: request)
             if let user = Self.user(from: data) { tokens.user = user }
@@ -122,7 +132,7 @@ final class NucleusID: NSObject {
         await onSignedOut?(clean)
         if let refresh = session?.refreshToken {
             // Fire and forget: signing out works offline too.
-            Task.detached { _ = try? await Self.post("api/v1/oauth/revoke", ["client_id": Self.clientID, "token": refresh]) }
+            Task.detached { _ = try? await Self.post(Self.endpoints.revocation, ["client_id": Self.clientID, "token": refresh]) }
         }
         NucleusSession.clear()
         session = nil
@@ -212,10 +222,18 @@ final class NucleusID: NSObject {
         case server(String)
     }
 
+    /// The consent page; the server code rides in the fragment, which never reaches the server's logs.
+    nonisolated static func authorizeURL(_ endpoint: URL, items: [URLQueryItem], code: String?) -> URL {
+        var c = URLComponents(url: endpoint, resolvingAgainstBaseURL: false)!
+        c.queryItems = (c.queryItems ?? []) + items
+        if let code { c.fragment = "server_code=\(code)" }
+        return c.url!
+    }
+
     private func tokenRequest(_ fields: [String: String]) async throws -> NucleusSession {
         var body = fields
         body["client_id"] = Self.clientID
-        let (data, response) = try await Self.post("api/v1/oauth/token", body)
+        let (data, response) = try await Self.post(Self.endpoints.token, body)
         let json = (try? JSONDecoder().decode(JSONValue.self, from: data))?.object ?? [:]
         guard response.statusCode == 200, let access = json["access_token"]?.string else {
             throw Failure.server(json["error"]?.string ?? "HTTP \(response.statusCode)")
@@ -229,8 +247,8 @@ final class NucleusID: NSObject {
         )
     }
 
-    private nonisolated static func post(_ path: String, _ fields: [String: String]) async throws -> (Data, HTTPURLResponse) {
-        var req = URLRequest(url: origin.appending(path: path))
+    private nonisolated static func post(_ url: URL, _ fields: [String: String]) async throws -> (Data, HTTPURLResponse) {
+        var req = URLRequest(url: url)
         req.httpMethod = "POST"
         req.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
         req.httpBody = fields.map { "\($0.key)=\(OpenLinks.enc($0.value))" }.joined(separator: "&").data(using: .utf8)

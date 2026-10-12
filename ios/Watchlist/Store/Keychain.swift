@@ -7,6 +7,7 @@ enum Keychain {
 
     enum Slot: String {
         case nucleusSession = "nucleus-id.session"
+        case nucleusServer = "nucleus-id.server"
     }
 
     static func set(_ data: Data, for slot: Slot) {

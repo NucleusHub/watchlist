@@ -11,6 +11,9 @@ struct RootView: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var showWelcome = false
     @State private var tourAfterWelcome = false
+    @State private var signInAfterWelcome = false
+    @State private var pendingServer: NucleusServer?
+    @State private var importProblem: LocalizedStringResource?
 
     var body: some View {
         @Bindable var navigator = navigator
@@ -41,9 +44,10 @@ struct RootView: View {
         .overlay { Confetti(trigger: store.celebrations) }
         .fullScreenCover(item: $navigator.browser) { BrowserView(request: $0) }
         .sheet(isPresented: $showWelcome, onDismiss: {
-            if tourAfterWelcome && !preferences.hasSeenTour { navigator.present(.tour) }
+            if signInAfterWelcome { navigator.present(.signIn(nil)) }
+            else if tourAfterWelcome && !preferences.hasSeenTour { navigator.present(.tour) }
         }) {
-            WelcomeView { tourAfterWelcome = true }
+            WelcomeView(onTour: { tourAfterWelcome = true }, onSignIn: { signInAfterWelcome = true })
                 .interactiveDismissDisabled()
                 .presentationDragIndicator(.hidden)
         }
@@ -52,18 +56,37 @@ struct RootView: View {
             Haptics.tap()
             navigator.present(.report)
         }
-        // Links from other apps; the OAuth redirect goes to ASWebAuthenticationSession, never here.
+        // Links from other apps and server setups; the OAuth redirect goes to ASWebAuthenticationSession, never here.
         .onOpenURL { url in
+            if url.isFileURL, url.pathExtension.lowercased() == "nucleusserver" {
+                let scoped = url.startAccessingSecurityScopedResource()
+                defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+                importServer { try NucleusServer.setup(fromFile: try Data(contentsOf: url)) }
+                return
+            }
+            if url.scheme == NucleusID.callbackScheme, url.host() == "server" {
+                importServer { try NucleusServer.setup(from: url) }
+                return
+            }
             guard let id = Navigator.linkedItemID(url), store.item(id) != nil else { return }
             navigator.sheet = nil
             navigator.browser = nil
             navigator.path = [.item(id)]
         }
+        .confirmationDialog(Text("Use server \(pendingServer?.host ?? "")?"),
+                            isPresented: Binding(get: { pendingServer != nil }, set: { if !$0 { pendingServer = nil } }),
+                            titleVisibility: .visible, presenting: pendingServer) { server in
+            Button("Use server") { navigator.present(.signIn(server)) }
+        } message: { server in
+            Text("\(server.origin.absoluteString) will be used for signing in.")
+        }
+        .alert(Text(importProblem ?? ""), isPresented: Binding(get: { importProblem != nil }, set: { if !$0 { importProblem = nil } })) {}
         .task {
             DebugLaunch.route(navigator, store: store)
             if !preferences.hasSeenWelcome && !auth.isSignedIn && !DebugLaunch.skipWelcome {
                 try? await Task.sleep(for: .milliseconds(400))
-                showWelcome = true
+                // A setup link that opened the app goes first.
+                if pendingServer == nil && navigator.sheet == nil { showWelcome = true }
             }
             await auth.validate()
             await sync.syncNow()
@@ -97,6 +120,22 @@ struct RootView: View {
         case .reorder(let id): ReorderSheet(collectionID: id)
         case .report: ReportSheet()
         case .tour: TourView().presentationDragIndicator(.hidden)
+        case .signIn(let prefill, let mode): ServerSignInSheet(prefill: prefill, mode: mode)
+        }
+    }
+
+    /// A setup link or file from the server's administrator: confirm, then sign in with it filled in.
+    private func importServer(_ read: () throws -> NucleusServer) {
+        guard !auth.isSignedIn else {
+            Haptics.error()
+            importProblem = "Sign out to switch servers."
+            return
+        }
+        do {
+            pendingServer = try read()
+        } catch {
+            Haptics.error()
+            importProblem = (error as? ServerProblem ?? .badSetup).message
         }
     }
 }

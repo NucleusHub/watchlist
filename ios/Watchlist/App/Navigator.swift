@@ -36,6 +36,7 @@ enum Sheet: Identifiable, Hashable {
     case reorder(String)
     case report
     case tour
+    case signIn(NucleusServer?, NucleusID.Mode = .keep)
 
     var id: Self { self }
 }

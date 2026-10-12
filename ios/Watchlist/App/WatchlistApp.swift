@@ -160,6 +160,7 @@ enum DebugLaunch {
         case "edit": if let first = store.items.first { navigator.sheet = .editItem(first.id) }
         case "seasons": if let show = store.items.first(where: \.isShow) { navigator.sheet = .seasons(show.id) }
         case "tour": navigator.sheet = .tour
+        case "signin": navigator.sheet = .signIn(nil)
         default: break
         }
         #endif

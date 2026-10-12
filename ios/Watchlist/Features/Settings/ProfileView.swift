@@ -47,7 +47,7 @@ struct ProfileView: View {
                     }
                 }
 
-                NucleusSection("Nucleus ID", footer: Text("Opens nucleus-home.dev in your browser.")) {
+                NucleusSection("Nucleus ID", footer: Text("Opens \(NucleusID.origin.host() ?? "") in your browser.")) {
                     if let email = user.email, !email.isEmpty {
                         NucleusRow("Email", icon: IconTile("envelope.fill", tint: .sky)) {
                             Text(verbatim: email).foregroundStyle(Nucleus.secondaryText).lineLimit(1)

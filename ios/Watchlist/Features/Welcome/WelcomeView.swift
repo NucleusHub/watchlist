@@ -3,10 +3,11 @@ import SwiftUI
 
 struct WelcomeView: View {
     @Environment(Preferences.self) private var preferences
-    @Environment(NucleusID.self) private var auth
     @Environment(\.dismiss) private var dismiss
     /// Opens the tour once Welcome is gone; skipping and signing in don't.
     var onTour: () -> Void = {}
+    /// Opens the server sign-in once Welcome is gone.
+    var onSignIn: () -> Void = {}
 
     var body: some View {
         NucleusWelcome(
@@ -31,8 +32,8 @@ struct WelcomeView: View {
                 Button("Skip the tour", action: finish)
                     .buttonStyle(NucleusSecondaryButtonStyle())
                 Button("Sync with Nucleus ID") {
+                    onSignIn()
                     finish()
-                    Task { await auth.signIn(mode: .keep) }
                 }
                 .font(.system(size: 15, weight: .semibold))
                 .foregroundStyle(Nucleus.accent)
