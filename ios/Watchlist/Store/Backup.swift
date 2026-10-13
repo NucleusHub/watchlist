@@ -29,6 +29,16 @@ enum Backup {
         return try encoder.encode(document.exportJSON())
     }
 
+    /// A safety copy in Documents/Backups before sync changes either side. Throws if it can't be written.
+    static func save(_ document: WatchlistDocument, label: String, date: Date = Date()) throws -> URL {
+        let dir = URL.documentsDirectory.appending(path: "Backups")
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let stamp = Timestamp.string(date).replacingOccurrences(of: ":", with: "-")
+        let url = dir.appending(path: "watchlist-\(label)-\(stamp).json")
+        try data(document).write(to: url, options: .atomic)
+        return url
+    }
+
     static func read(_ data: Data) throws -> Preview {
         guard let o = (try? JSONDecoder().decode(JSONValue.self, from: data))?.object,
               o["format"]?.string == WatchlistDocument.format, o["items"]?.array != nil else { throw Failure.notABackup }

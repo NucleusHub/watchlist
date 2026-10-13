@@ -45,5 +45,8 @@ struct SyncState: Codable, Equatable {
         if let data = try? JSONEncoder().encode(self) { defaults.set(data, forKey: Self.key) }
     }
 
-    static func clear(_ defaults: UserDefaults = .standard) { defaults.removeObject(forKey: key) }
+    static func clear(_ defaults: UserDefaults = .standard) {
+        defaults.removeObject(forKey: key)
+        SyncBook.clear(defaults)
+    }
 }

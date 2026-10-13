@@ -43,6 +43,9 @@ struct RootView: View {
         }
         .overlay { Confetti(trigger: store.celebrations) }
         .fullScreenCover(item: $navigator.browser) { BrowserView(request: $0) }
+        .sheet(item: Binding(get: { sync.choice }, set: { if $0 == nil { sync.deferChoice() } })) { choice in
+            FirstSignInSheet(choice: choice)
+        }
         .sheet(isPresented: $showWelcome, onDismiss: {
             if signInAfterWelcome { navigator.present(.signIn(nil)) }
             else if tourAfterWelcome && !preferences.hasSeenTour { navigator.present(.tour) }

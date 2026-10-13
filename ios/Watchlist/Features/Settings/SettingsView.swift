@@ -113,6 +113,13 @@ struct SettingsView: View {
                 }
                 .buttonStyle(NucleusRowButtonStyle())
                 .disabled(sync.status == .syncing)
+                if sync.hasSkipped {
+                    Button { Task { await sync.fetchSkipped() } } label: {
+                        NucleusRow("Sync skipped items", subtitle: Text("Titles you left out on first sign-in stay on the account. Tap to bring them in."), icon: IconTile("arrow.down.circle", tint: .indigo))
+                    }
+                    .buttonStyle(NucleusRowButtonStyle())
+                    .disabled(sync.status == .syncing)
+                }
                 Button { askingSignOut = true } label: { NucleusRow("Sign out", titleColor: Nucleus.danger) }
                     .buttonStyle(NucleusRowButtonStyle())
             } else {
@@ -140,6 +147,7 @@ struct SettingsView: View {
         case .syncing: Text("Syncing…")
         case .offline: Text("Offline. Changes sync when you're back.")
         case .tooLarge: Text("Too large to sync. Remove some custom images.")
+        case .needsChoice: Text("Tap to choose how to combine this iPhone with your account.")
         case .error(let message): Text(verbatim: message)
         case .idle:
             if let at = sync.lastSyncedAt { Text("Synced \(at, format: .relative(presentation: .named))") } else { Text("Not synced yet") }

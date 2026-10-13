@@ -40,7 +40,9 @@
 		3A34F54958572720E5E481C8 /* WatchlistPluginKit in Frameworks */ = {isa = PBXBuildFile; productRef = E01E0344CF0608D36B18DC32 /* WatchlistPluginKit */; };
 		3CB76E0057377C458EEAD336 /* TrailerPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 550F0F9CCE35E5E9588814F9 /* TrailerPlayer.swift */; };
 		3D01661B460160F9BDFB6E7F /* NucleusServerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1214D001716F31D4B6019DC4 /* NucleusServerTests.swift */; };
+		3E56EA0F3A843B5D5478905E /* WatchlistAPITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1B3F4D6D0AB25226D0C6088 /* WatchlistAPITests.swift */; };
 		442D245CB868A062FE079BAB /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 620D44117F0591875C634E89 /* RootView.swift */; };
+		47318C8B575746422858081B /* FirstSignInSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3BA18341EB99D389EB5F7ED /* FirstSignInSheet.swift */; };
 		48260A5F21303680FD793026 /* CloudSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = 721A30750EE12E43016BB2F5 /* CloudSync.swift */; };
 		48E53476E1232E4746CF922B /* JumpBackInPlugin in Frameworks */ = {isa = PBXBuildFile; productRef = A58FD08A060BD26B1F964D06 /* JumpBackInPlugin */; };
 		497FC7E0C2BC65BA59D3910D /* DiscoverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D645168FC1E211DCCA176174 /* DiscoverTests.swift */; };
@@ -103,12 +105,14 @@
 		BFCEB5F925E19A9044C661D4 /* WatchSnapshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 108CE153C65192DCBBE1D4AF /* WatchSnapshotTests.swift */; };
 		C4FF9ADF6380942C7E938AFC /* MovieDNA.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3DAC0576B39A35F975FC3AE /* MovieDNA.swift */; };
 		C987C6992FA1D82AC0DD70A1 /* TMDbExtrasTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9ABBBAA77E03256736BC4E0 /* TMDbExtrasTests.swift */; };
+		CB74C0D4FEA25405D2EF42B1 /* FirstSyncChoice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AEB40024A012265241786BC /* FirstSyncChoice.swift */; };
 		CCF21172F1CE8A1EE659DC91 /* OpenDefaultsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 764A78DA67F19491BC7861A9 /* OpenDefaultsView.swift */; };
 		D00B8DF71A6070D7A9C9F4EA /* ActiveServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECF16139A82E3FAE7C89B8D2 /* ActiveServer.swift */; };
 		D13F18335981FF3C42D2BB11 /* Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3294705B2EC94742ED3D5486 /* Model.swift */; };
 		D60B961D3E1FC96665564F00 /* SeasonProgressSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3CBDB8DED2CBEC8F9AB7183 /* SeasonProgressSheet.swift */; };
 		D87CF30CE8584528739E2B68 /* BakedShadow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45BBCE343170D4ED9B9113DB /* BakedShadow.swift */; };
 		D91173B8809CF19B4D06E7D4 /* PhoneWatchBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = A70C70DF31A1EEE112DA02F6 /* PhoneWatchBridge.swift */; };
+		DBB9B0D8A4811B7388D1AEE6 /* WatchlistAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 261F858BA5923ECA9EF46A49 /* WatchlistAPI.swift */; };
 		DD4BEC20844C7C26852B981E /* Preferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 095B673D22785F70FE53380F /* Preferences.swift */; };
 		DE77F7027BE9056CEAD73B63 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = A972988F4294D53D49213735 /* Localizable.xcstrings */; };
 		DF9C57FBEAD2325D128D5EF7 /* BrowserModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54C3AA466B360A53B82B6044 /* BrowserModel.swift */; };
@@ -190,6 +194,7 @@
 		215A6E6B4B12FACEE60571D2 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		224FB8918EDC9A9D08DB2085 /* QRScannerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRScannerSheet.swift; sourceTree = "<group>"; };
 		23DE1DC3FF26FCFB12793AD5 /* WatchlistStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchlistStore.swift; sourceTree = "<group>"; };
+		261F858BA5923ECA9EF46A49 /* WatchlistAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchlistAPI.swift; sourceTree = "<group>"; };
 		26E92612DD4CB4D07D3B1C39 /* CastAndCrewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CastAndCrewTests.swift; sourceTree = "<group>"; };
 		27AA4B99A79C143D756E8945 /* TrailersSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrailersSection.swift; sourceTree = "<group>"; };
 		288BDE08DCEB4F89AD02D59E /* NucleusDiscovery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NucleusDiscovery.swift; sourceTree = "<group>"; };
@@ -220,6 +225,7 @@
 		620D44117F0591875C634E89 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		6355A9A3EA8B834CB6F791D2 /* Backup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Backup.swift; sourceTree = "<group>"; };
 		66749D624D7509DC53899623 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		6AEB40024A012265241786BC /* FirstSyncChoice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstSyncChoice.swift; sourceTree = "<group>"; };
 		6B3C034F2D6FFEE38AC124AF /* WatchStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchStore.swift; sourceTree = "<group>"; };
 		6BCA606866B7F4B1FF837155 /* jump-back-in */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "jump-back-in"; path = "../../../plugins/jump-back-in"; sourceTree = SOURCE_ROOT; };
 		6C44B19FED0378409382D00C /* QRLoginTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRLoginTests.swift; sourceTree = "<group>"; };
@@ -246,6 +252,7 @@
 		9C4A0ED0F3228D9A8EF29757 /* PluginsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginsView.swift; sourceTree = "<group>"; };
 		A1F59D83FD2435E02B944284 /* StoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreTests.swift; sourceTree = "<group>"; };
 		A2FABD36AB7B739C1C8E99C0 /* ItemCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemCard.swift; sourceTree = "<group>"; };
+		A3BA18341EB99D389EB5F7ED /* FirstSignInSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstSignInSheet.swift; sourceTree = "<group>"; };
 		A531BF16D94367443FC00681 /* WatchlistApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchlistApp.swift; sourceTree = "<group>"; };
 		A5CB7347888154172C3B6EF5 /* Images.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Images.swift; sourceTree = "<group>"; };
 		A5EB45909D8A2D6ECFBBF1CB /* Confetti.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Confetti.swift; sourceTree = "<group>"; };
@@ -284,6 +291,7 @@
 		EF8136134B666CA0DC850EAE /* ItemDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemDetailView.swift; sourceTree = "<group>"; };
 		F177D9AC222EFC5336BBCC55 /* CollectionCover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionCover.swift; sourceTree = "<group>"; };
 		F1A1C8FDE995910AE739348D /* nucleus-native-plugins */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "nucleus-native-plugins"; path = "../../../nucleus-native-plugins"; sourceTree = SOURCE_ROOT; };
+		F1B3F4D6D0AB25226D0C6088 /* WatchlistAPITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchlistAPITests.swift; sourceTree = "<group>"; };
 		F3BB0199E4C3329D831CFC4F /* CollectionsTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionsTab.swift; sourceTree = "<group>"; };
 		F7F26CDC1678024AA4866601 /* TourView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TourView.swift; sourceTree = "<group>"; };
 		FD8EE28A7AA1AF087DA02F51 /* ActiveServerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveServerTests.swift; sourceTree = "<group>"; };
@@ -534,6 +542,7 @@
 		99E9E36CEF54AD1AB7CB7698 /* Account */ = {
 			isa = PBXGroup;
 			children = (
+				A3BA18341EB99D389EB5F7ED /* FirstSignInSheet.swift */,
 				82C18A2A123B73C096222C98 /* QRApproveSheet.swift */,
 				224FB8918EDC9A9D08DB2085 /* QRScannerSheet.swift */,
 				59AB5837FE0AACCAB24EB9E9 /* ServerSignInSheet.swift */,
@@ -557,11 +566,13 @@
 				ECF16139A82E3FAE7C89B8D2 /* ActiveServer.swift */,
 				721A30750EE12E43016BB2F5 /* CloudSync.swift */,
 				44B814156EA9611C2E45C7CF /* CrossApp.swift */,
+				6AEB40024A012265241786BC /* FirstSyncChoice.swift */,
 				288BDE08DCEB4F89AD02D59E /* NucleusDiscovery.swift */,
 				3C4566E5271D96AA2FFDCFCF /* NucleusID.swift */,
 				2F6DA6AC7EBDA23E39735471 /* NucleusServer.swift */,
 				834348AF8E735D00207B6493 /* NucleusSession.swift */,
 				559169B80C4E0739B9BECDDF /* QRLogin.swift */,
+				261F858BA5923ECA9EF46A49 /* WatchlistAPI.swift */,
 			);
 			path = Account;
 			sourceTree = "<group>";
@@ -630,6 +641,7 @@
 				A1F59D83FD2435E02B944284 /* StoreTests.swift */,
 				C9ABBBAA77E03256736BC4E0 /* TMDbExtrasTests.swift */,
 				90D4E4CCEF84DCC12F3FB25C /* VideoTrackerTests.swift */,
+				F1B3F4D6D0AB25226D0C6088 /* WatchlistAPITests.swift */,
 				108CE153C65192DCBBE1D4AF /* WatchSnapshotTests.swift */,
 				63B2975B691216954CFC34A4 /* Fixtures */,
 			);
@@ -876,6 +888,7 @@
 				C987C6992FA1D82AC0DD70A1 /* TMDbExtrasTests.swift in Sources */,
 				99E35CEF165B0FD265616660 /* VideoTrackerTests.swift in Sources */,
 				BFCEB5F925E19A9044C661D4 /* WatchSnapshotTests.swift in Sources */,
+				3E56EA0F3A843B5D5478905E /* WatchlistAPITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -899,6 +912,8 @@
 				22114C15E4FC78A110A59F58 /* CrossApp.swift in Sources */,
 				0C529283CFF2FC703E78AEDE /* CustomCreditsEditor.swift in Sources */,
 				71E22B26962E6A1E738C5AFD /* DNAGlyph.swift in Sources */,
+				47318C8B575746422858081B /* FirstSignInSheet.swift in Sources */,
+				CB74C0D4FEA25405D2EF42B1 /* FirstSyncChoice.swift in Sources */,
 				878FBABB8EA6046BE684B1D1 /* FrameMonitor.swift in Sources */,
 				B34E268D1EBDEEBFC711DEB7 /* HomeView.swift in Sources */,
 				A368D5F479BD7441EE28BD47 /* Images.swift in Sources */,
@@ -950,6 +965,7 @@
 				3CB76E0057377C458EEAD336 /* TrailerPlayer.swift in Sources */,
 				14499CDAF0DEBE33E8ED3025 /* TrailersSection.swift in Sources */,
 				B14466FC3DE9E3652861FC07 /* VideoTracker.swift in Sources */,
+				DBB9B0D8A4811B7388D1AEE6 /* WatchlistAPI.swift in Sources */,
 				A2F89E684FDF041AA50A5DE5 /* WatchlistApp.swift in Sources */,
 				58D0154A9F6849DD462DE8D7 /* WatchlistDocument.swift in Sources */,
 				17F213CC49C852DBAD02FB2A /* WatchlistStore+MovieDNA.swift in Sources */,
