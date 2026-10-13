@@ -8,6 +8,9 @@
     "nucleus": ">=0.1.0 <1.0.0"
   },
   "route": "/watchlist",
+  "nucleusId": {
+    "clientId": "watchlist"
+  },
   "icon": "icon.svg",
   "category": "media",
   "localization": {

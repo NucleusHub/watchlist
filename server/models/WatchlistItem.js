@@ -27,6 +27,26 @@ const openTargetSchema = new mongoose.Schema(
   { _id: false }
 )
 
+const creditSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true, trim: true },
+    role: { type: String, default: '' },
+    cast: { type: Boolean, default: true },
+    personId: { type: Number, default: null },
+    photo: { type: String, default: null },
+  },
+  { _id: false }
+)
+
+const playbackSchema = new mongoose.Schema(
+  {
+    url: { type: String, required: true },
+    position: { type: Number, default: 0, min: 0 },
+    duration: { type: Number, required: true, min: 1 },
+  },
+  { _id: false }
+)
+
 const watchlistItemSchema = new mongoose.Schema(
   {
     profileId: { type: mongoose.Schema.Types.ObjectId, ref: 'Profile', index: true },
@@ -58,6 +78,14 @@ const watchlistItemSchema = new mongoose.Schema(
     // Null for items completed before this field existed; consumers fall back to updatedAt.
     completedAt: { type: Date, default: null },
     notes: { type: String, trim: true, default: '' },
+    // iOS-origin fields: hand-entered metadata and in-app browser state.
+    overview: { type: String, default: null },
+    trailerUrl: { type: String, default: null },
+    customCredits: { type: [creditSchema], default: undefined },
+    source: { type: String, default: null },
+    lastPage: { type: String, default: null },
+    lastWatchedAt: { type: Date, default: null },
+    playback: { type: playbackSchema, default: null },
   },
   { timestamps: true }
 )

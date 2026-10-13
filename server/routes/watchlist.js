@@ -48,6 +48,8 @@ router.get('/settings', async (req, res) => {
       openDefaults: doc?.openDefaults ?? null,
       searchSources: doc?.searchSources ?? ['tmdb'],
       pluginPlacements: placementsOut(doc?.pluginPlacements),
+      tmdbApiKey: doc?.tmdbApiKey ?? '',
+      accent: doc?.accent ?? null,
     })
   } catch (err) {
     res.status(500).json({ error: err.message })
@@ -74,6 +76,12 @@ router.put('/settings', async (req, res) => {
       }
       $set.pluginPlacements = placements
     }
+    if (typeof req.body?.tmdbApiKey === 'string') $set.tmdbApiKey = req.body.tmdbApiKey.trim()
+    if (req.body?.accent === null) $set.accent = null
+    else if (typeof req.body?.accent?.id === 'string' && req.body.accent.id) {
+      const { id, custom, updatedAt } = req.body.accent
+      $set.accent = { id, custom: typeof custom === 'string' ? custom : null, updatedAt: updatedAt ? new Date(updatedAt) : new Date() }
+    }
     const doc = await WatchlistSettings.findOneAndUpdate(
       { profileId: req.profile.profileId },
       { $set },
@@ -83,6 +91,8 @@ router.put('/settings', async (req, res) => {
       openDefaults: doc.openDefaults,
       searchSources: doc.searchSources ?? ['tmdb'],
       pluginPlacements: placementsOut(doc.pluginPlacements),
+      tmdbApiKey: doc.tmdbApiKey ?? '',
+      accent: doc.accent ?? null,
     })
   } catch (err) {
     res.status(400).json({ error: err.message })
@@ -122,10 +132,35 @@ function cleanGenres(value) {
   return out
 }
 
+function cleanCredits(value) {
+  if (!Array.isArray(value)) return undefined
+  return value
+    .filter((c) => c && typeof c.name === 'string' && c.name.trim())
+    .map((c) => ({
+      name: c.name.trim(),
+      role: typeof c.role === 'string' ? c.role : '',
+      cast: c.cast !== false,
+      personId: Number.isFinite(c.personId) ? c.personId : null,
+      photo: typeof c.photo === 'string' ? c.photo : null,
+    }))
+}
+
+// Applies shared iOS-field normalisation; an invalid playback is dropped rather than rejected.
+function cleanIosFields(body) {
+  if ('customCredits' in body) body.customCredits = cleanCredits(body.customCredits)
+  if ('playback' in body) {
+    const p = body.playback
+    body.playback = p && typeof p.url === 'string' && p.url && p.duration > 0
+      ? { url: p.url, position: Math.max(0, Number(p.position) || 0), duration: p.duration }
+      : null
+  }
+}
+
 router.post('/', async (req, res) => {
   try {
     const body = { ...req.body }
     if ('genres' in body) body.genres = cleanGenres(body.genres)
+    cleanIosFields(body)
     if (body.status === 'completed' && !body.completedAt) body.completedAt = new Date()
     const item = await WatchlistItem.create({ ...body, profileId: req.profile.profileId })
     res.status(201).json(item)
@@ -143,6 +178,7 @@ router.patch('/:id', async (req, res) => {
 
     const patch = { ...req.body }
     if ('genres' in patch) patch.genres = cleanGenres(patch.genres)
+    cleanIosFields(patch)
     // completedAt is server-derived; re-saving an already completed item keeps the original date.
     delete patch.completedAt
     if (patch.status && patch.status !== current.status) {

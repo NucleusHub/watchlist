@@ -9,6 +9,7 @@ import { fileURLToPath } from 'url'
 import watchlistRoutes from './routes/watchlist.js'
 import collectionsRoutes from './routes/collections.js'
 import WatchlistItem from './models/WatchlistItem.js'
+import { appDataRouter } from './core/server/appData.js'
 import { requireAppEnabled } from './core/server/appAccess.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -18,8 +19,9 @@ const app = express()
 const PORT = process.env.PORT || 3000
 
 app.use(cors({ origin: true, credentials: true }))
-app.use(express.json())
 app.use(cookieParser())
+app.use(appDataRouter({ appId: 'watchlist' }))
+app.use(express.json())
 app.use('/uploads', express.static(uploadsDir))
 
 const storage = multer.diskStorage({

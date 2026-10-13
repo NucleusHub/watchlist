@@ -32,6 +32,15 @@ const watchlistSettingsSchema = new mongoose.Schema(
     },
     // Free strings, not an enum: the client ignores unknown source ids.
     searchSources: { type: [String], default: ['tmdb'] },
+    // Only used by clients that call TMDb directly (iOS); the web client keeps its key server-side.
+    tmdbApiKey: { type: String, default: '' },
+    accent: {
+      type: new mongoose.Schema(
+        { id: { type: String, required: true }, custom: { type: String, default: null }, updatedAt: { type: Date, default: Date.now } },
+        { _id: false }
+      ),
+      default: null,
+    },
     // Plugin id -> 'tab' | 'panel' | 'hidden'; free strings so stale keys are harmless.
     pluginPlacements: { type: Map, of: String, default: () => ({}) },
   },
