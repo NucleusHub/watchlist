@@ -1,316 +1,6 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "This iPhone" : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tento iPhone"
-          }
-        }
-      }
-    },
-    "Watchlist account" : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Účet Watchlist"
-          }
-        }
-      }
-    },
-    "%lld titles, %lld collections" : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Titulů: %1$lld, kolekcí: %2$lld"
-          }
-        }
-      }
-    },
-    "Both have data. Choose how to combine them. A backup of this iPhone is saved first, whatever you pick." : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Data jsou na obou stranách. Vyberte, jak je spojit. Záloha tohoto iPhonu se uloží vždy jako první."
-          }
-        }
-      }
-    },
-    "Merge" : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sloučit"
-          }
-        }
-      }
-    },
-    "Keep everything. The newest edit of each title wins. Nothing is deleted." : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zachová vše. U každého titulu vyhraje nejnovější úprava. Nic se nemaže."
-          }
-        }
-      }
-    },
-    "Keep web" : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ponechat web"
-          }
-        }
-      }
-    },
-    "Replace this iPhone's data with the account's. Nothing is uploaded." : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Data v tomto iPhonu se nahradí daty z účtu. Nic se nenahrává."
-          }
-        }
-      }
-    },
-    "Keep this iPhone" : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ponechat tento iPhone"
-          }
-        }
-      }
-    },
-    "Replace the account's data with this iPhone's. Deletes what is only on the account." : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Data na účtu se nahradí daty z tohoto iPhonu. Smaže se to, co je jen na účtu."
-          }
-        }
-      }
-    },
-    "Choose items" : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vybrat položky"
-          }
-        }
-      }
-    },
-    "Pick titles and collections from both sides. Unchecked ones stay as they are." : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vyberte tituly a kolekce z obou stran. Nezaškrtnuté zůstanou beze změny."
-          }
-        }
-      }
-    },
-    "Start empty" : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Začít prázdné"
-          }
-        }
-      }
-    },
-    "Clear this iPhone. The account's data stays on the server and can be fetched later in Settings. To erase the server too, use Keep this iPhone with an empty iPhone." : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vymaže tento iPhone. Data účtu zůstanou na serveru a půjdou později stáhnout v Nastavení. Chcete-li smazat i server, použijte Ponechat tento iPhone s prázdným iPhonem."
-          }
-        }
-      }
-    },
-    "Combine your data" : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Spojení dat"
-          }
-        }
-      }
-    },
-    "Not now" : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Teď ne"
-          }
-        }
-      }
-    },
-    "Replace this iPhone's data?" : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nahradit data v tomto iPhonu?"
-          }
-        }
-      }
-    },
-    "Everything only on this iPhone is removed from it. A backup is saved first." : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vše, co je jen v tomto iPhonu, se z něj odstraní. Záloha se uloží jako první."
-          }
-        }
-      }
-    },
-    "Replace the account's data?" : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nahradit data na účtu?"
-          }
-        }
-      }
-    },
-    "%lld titles and %lld collections on the server will be deleted. Backups of both sides are saved first." : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Na serveru se smaže titulů: %1$lld a kolekcí: %2$lld. Zálohy obou stran se uloží jako první."
-          }
-        }
-      }
-    },
-    "Clear this iPhone?" : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vymazat tento iPhone?"
-          }
-        }
-      }
-    },
-    "A backup is saved first. Nothing is deleted on the server: its %lld titles and %lld collections stay and can be fetched later." : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Záloha se uloží jako první. Na serveru se nic nemaže: jeho tituly (%1$lld) a kolekce (%2$lld) zůstanou a půjdou později stáhnout."
-          }
-        }
-      }
-    },
-    "Recommended" : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Doporučeno"
-          }
-        }
-      }
-    },
-    "Combine %lld selected" : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Spojit vybrané (%lld)"
-          }
-        }
-      }
-    },
-    "Only on this iPhone" : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Jen v tomto iPhonu"
-          }
-        }
-      }
-    },
-    "Only on the account" : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Jen na účtu"
-          }
-        }
-      }
-    },
-    "On both, edited differently" : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Na obou stranách, upraveno jinak"
-          }
-        }
-      }
-    },
-    "Deleted on this iPhone. Check to delete it on the account too." : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Smazáno v tomto iPhonu. Zaškrtnutím se smaže i na účtu."
-          }
-        }
-      }
-    },
-    "Tap to choose how to combine this iPhone with your account." : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Klepnutím vyberte, jak spojit tento iPhone s účtem."
-          }
-        }
-      }
-    },
-    "Sync skipped items" : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Synchronizovat vynechané položky"
-          }
-        }
-      }
-    },
-    "Titles you left out on first sign-in stay on the account. Tap to bring them in." : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tituly vynechané při prvním přihlášení zůstaly na účtu. Klepnutím je přenesete."
-          }
-        }
-      }
-    },
     "" : {
 
     },
@@ -687,6 +377,16 @@
         }
       }
     },
+    "%lld titles and %lld collections on the server will be deleted. Backups of both sides are saved first." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Na serveru se smaže titulů: %1$lld a kolekcí: %2$lld. Zálohy obou stran se uloží jako první."
+          }
+        }
+      }
+    },
     "%lld titles and %lld collections on this device." : {
       "localizations" : {
         "cs" : {
@@ -1039,11 +739,31 @@
         }
       }
     },
+    "%lld titles, %lld collections" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Titulů: %1$lld, kolekcí: %2$lld"
+          }
+        }
+      }
+    },
     "80" : {
 
     },
     "443" : {
 
+    },
+    "A backup is saved first. Nothing is deleted on the server: its %lld titles and %lld collections stay and can be fetched later." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Záloha se uloží jako první. Na serveru se nic nemaže: jeho tituly (%1$lld) a kolekce (%2$lld) zůstanou a půjdou později stáhnout."
+          }
+        }
+      }
     },
     "A domain, an IP address or a Tailscale name." : {
       "localizations" : {
@@ -1500,6 +1220,7 @@
       }
     },
     "Another device kept changing the watchlist. Try again." : {
+      "extractionState" : "stale",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -1720,6 +1441,16 @@
         }
       }
     },
+    "Both have data. Choose how to combine them. A backup of this iPhone is saved first, whatever you pick." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Data jsou na obou stranách. Vyberte, jak je spojit. Záloha tohoto iPhonu se uloží vždy jako první."
+          }
+        }
+      }
+    },
     "Build my MovieDNA" : {
       "localizations" : {
         "cs" : {
@@ -1848,6 +1579,16 @@
         }
       }
     },
+    "Choose items" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vybrat položky"
+          }
+        }
+      }
+    },
     "Choose photo" : {
       "localizations" : {
         "cs" : {
@@ -1878,6 +1619,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zrušit filtry"
+          }
+        }
+      }
+    },
+    "Clear this iPhone?" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vymazat tento iPhone?"
+          }
+        }
+      }
+    },
+    "Clear this iPhone. The account's data stays on the server and can be fetched later in Settings. To erase the server too, use Keep this iPhone with an empty iPhone." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vymaže tento iPhone. Data účtu zůstanou na serveru a půjdou později stáhnout v Nastavení. Chcete-li smazat i server, použijte Ponechat tento iPhone s prázdným iPhonem."
           }
         }
       }
@@ -1918,6 +1679,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kolekce"
+          }
+        }
+      }
+    },
+    "Combine %lld selected" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spojit vybrané (%lld)"
+          }
+        }
+      }
+    },
+    "Combine your data" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spojení dat"
           }
         }
       }
@@ -2304,6 +2085,16 @@
         }
       }
     },
+    "Deleted on this iPhone. Check to delete it on the account too." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Smazáno v tomto iPhonu. Zaškrtnutím se smaže i na účtu."
+          }
+        }
+      }
+    },
     "Deny" : {
       "localizations" : {
         "cs" : {
@@ -2597,6 +2388,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vše"
+          }
+        }
+      }
+    },
+    "Everything only on this iPhone is removed from it. A backup is saved first." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vše, co je jen v tomto iPhonu, se z něj odstraní. Záloha se uloží jako první."
           }
         }
       }
@@ -3194,12 +2995,42 @@
         }
       }
     },
+    "Keep everything. The newest edit of each title wins. Nothing is deleted." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zachová vše. U každého titulu vyhraje nejnovější úprava. Nic se nemaže."
+          }
+        }
+      }
+    },
     "Keep on this device" : {
       "localizations" : {
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ponechat v zařízení"
+          }
+        }
+      }
+    },
+    "Keep this iPhone" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ponechat tento iPhone"
+          }
+        }
+      }
+    },
+    "Keep web" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ponechat web"
           }
         }
       }
@@ -3425,6 +3256,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zmiňuje osobu %@, kterou sledujete"
+          }
+        }
+      }
+    },
+    "Merge" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sloučit"
           }
         }
       }
@@ -3684,6 +3525,16 @@
         }
       }
     },
+    "Not now" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Teď ne"
+          }
+        }
+      }
+    },
     "Not set" : {
 
     },
@@ -3868,6 +3719,16 @@
         }
       }
     },
+    "On both, edited differently" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Na obou stranách, upraveno jinak"
+          }
+        }
+      }
+    },
     "Only approve if you're signing in on a device in front of you right now." : {
       "localizations" : {
         "cs" : {
@@ -3880,6 +3741,26 @@
     },
     "Only new apps" : {
 
+    },
+    "Only on the account" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jen na účtu"
+          }
+        }
+      }
+    },
+    "Only on this iPhone" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jen v tomto iPhonu"
+          }
+        }
+      }
     },
     "Open" : {
       "localizations" : {
@@ -4083,6 +3964,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vybrat tituly"
+          }
+        }
+      }
+    },
+    "Pick titles and collections from both sides. Unchecked ones stay as they are." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vyberte tituly a kolekce z obou stran. Nezaškrtnuté zůstanou beze změny."
           }
         }
       }
@@ -4362,6 +4253,16 @@
         }
       }
     },
+    "Recommended" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Doporučeno"
+          }
+        }
+      }
+    },
     "Refresh" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -4574,6 +4475,46 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nahradit fotku"
+          }
+        }
+      }
+    },
+    "Replace the account's data with this iPhone's. Deletes what is only on the account." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Data na účtu se nahradí daty z tohoto iPhonu. Smaže se to, co je jen na účtu."
+          }
+        }
+      }
+    },
+    "Replace the account's data?" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nahradit data na účtu?"
+          }
+        }
+      }
+    },
+    "Replace this iPhone's data with the account's. Nothing is uploaded." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Data v tomto iPhonu se nahradí daty z účtu. Nic se nenahrává."
+          }
+        }
+      }
+    },
+    "Replace this iPhone's data?" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nahradit data v tomto iPhonu?"
           }
         }
       }
@@ -5262,6 +5203,16 @@
         }
       }
     },
+    "Start empty" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Začít prázdné"
+          }
+        }
+      }
+    },
     "Start over" : {
       "localizations" : {
         "cs" : {
@@ -5372,6 +5323,16 @@
         }
       }
     },
+    "Sync skipped items" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Synchronizovat vynechané položky"
+          }
+        }
+      }
+    },
     "Sync with Nucleus ID" : {
       "localizations" : {
         "cs" : {
@@ -5459,6 +5420,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Když něco dokoukáte, klepněte na fajfku, oblíbené označte srdíčkem. Podržením titulu najdete všechno ostatní."
+          }
+        }
+      }
+    },
+    "Tap to choose how to combine this iPhone with your account." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klepnutím vyberte, jak spojit tento iPhone s účtem."
           }
         }
       }
@@ -5741,6 +5712,16 @@
         }
       }
     },
+    "This iPhone" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tento iPhone"
+          }
+        }
+      }
+    },
     "This isn't a Nucleus ID server." : {
       "localizations" : {
         "cs" : {
@@ -5897,6 +5878,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "titulů na %@"
+          }
+        }
+      }
+    },
+    "Titles you left out on first sign-in stay on the account. Tap to bring them in." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tituly vynechané při prvním přihlášení zůstaly na účtu. Klepnutím je přenesete."
           }
         }
       }
@@ -6285,6 +6276,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Watchlist"
+          }
+        }
+      }
+    },
+    "Watchlist account" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Účet Watchlist"
           }
         }
       }

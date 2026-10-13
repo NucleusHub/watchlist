@@ -98,6 +98,7 @@ targets:
         LSSupportsOpeningDocumentsInPlace: false
         # Tailscale names over plain http: the tailnet already encrypts the traffic.
         NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
           NSExceptionDomains:
             ts.net:
               NSIncludesSubdomains: true
