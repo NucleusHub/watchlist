@@ -332,5 +332,22 @@
   "watchlist.form.job.Producer": "Producent",
   "watchlist.form.job.Composer": "Hudba",
   "watchlist.form.job.Cinematographer": "Kamera",
-  "watchlist.form.job.Editor": "Střih"
+  "watchlist.form.job.Editor": "Střih",
+
+  "watchlist.backup.title": "Záloha",
+  "watchlist.backup.desc": "Exportujte watchlist do souboru, nebo nějaký importujte. Zálohy z aplikace na iOS fungují i tady.",
+  "watchlist.backup.export": "Exportovat zálohu",
+  "watchlist.backup.import": "Importovat zálohu",
+  "watchlist.backup.exported": "Exportováno {items} titulů a {collections} kolekcí.",
+  "watchlist.backup.exportFailed": "Watchlist se nepodařilo exportovat.",
+  "watchlist.backup.notABackup": "Tento soubor není záloha Watchlistu.",
+  "watchlist.backup.contents": "{items} titulů a {collections} kolekcí.",
+  "watchlist.backup.exportedAt": "Exportováno {date}.",
+  "watchlist.backup.merge": "Sloučit s tímto watchlistem",
+  "watchlist.backup.replace": "Nahradit vše",
+  "watchlist.backup.replaceWarning": "Nejdřív se smaže vše na tomto účtu a pak se nahradí souborem. Nelze vrátit zpět.",
+  "watchlist.backup.replaceConfirm": "Ano, nahradit vše",
+  "watchlist.backup.imported": "Importováno {count} titulů. Načítám znovu…",
+  "watchlist.backup.skipped": "Přeskočeno záznamů (neplatné nebo selhaly): {count}.",
+  "watchlist.backup.importFailed": "Import selhal v polovině. Načtěte stránku znovu a zkontrolujte watchlist."
 }

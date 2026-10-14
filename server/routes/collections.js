@@ -51,7 +51,8 @@ router.post('/', async (req, res) => {
   try {
     const data = pickWritable(req.body)
     if (!data.name) return res.status(400).json({ error: 'Name is required' })
-    const col = await Collection.create({ ...data, profileId: req.profile.profileId })
+    const _id = typeof req.body?._id === 'string' && /^[0-9a-f]{24}$/i.test(req.body._id) ? req.body._id : undefined
+    const col = await Collection.create({ ...data, _id, profileId: req.profile.profileId })
     res.status(201).json(await decorate(col, req.profile.profileId))
   } catch (err) {
     res.status(400).json({ error: err.message })

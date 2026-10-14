@@ -332,5 +332,22 @@
   "watchlist.form.job.Producer": "Producer",
   "watchlist.form.job.Composer": "Composer",
   "watchlist.form.job.Cinematographer": "Cinematographer",
-  "watchlist.form.job.Editor": "Editor"
+  "watchlist.form.job.Editor": "Editor",
+
+  "watchlist.backup.title": "Backup",
+  "watchlist.backup.desc": "Export your watchlist to a file, or import one. Backups from the iOS app work here too.",
+  "watchlist.backup.export": "Export backup",
+  "watchlist.backup.import": "Import backup",
+  "watchlist.backup.exported": "Exported {items} titles and {collections} collections.",
+  "watchlist.backup.exportFailed": "Couldn't export your watchlist.",
+  "watchlist.backup.notABackup": "That file isn't a Watchlist backup.",
+  "watchlist.backup.contents": "{items} titles and {collections} collections.",
+  "watchlist.backup.exportedAt": "Exported {date}.",
+  "watchlist.backup.merge": "Merge with this watchlist",
+  "watchlist.backup.replace": "Replace everything",
+  "watchlist.backup.replaceWarning": "Everything on this account is deleted first, then replaced with the file. This can't be undone.",
+  "watchlist.backup.replaceConfirm": "Yes, replace everything",
+  "watchlist.backup.imported": "Imported {count} titles. Reloading…",
+  "watchlist.backup.skipped": "Skipped {count} invalid or failed records.",
+  "watchlist.backup.importFailed": "The import failed part-way. Reload and check your watchlist."
 }
