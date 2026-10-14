@@ -398,5 +398,10 @@
   "watchlist.stats.ofWatched": "z {total} zhlédnuto",
   "watchlist.stats.titlesOn": "titulů na {name}",
   "watchlist.stats.titlesFrom": "titulů z roku {year}",
-  "watchlist.stats.yours": "vaše"
+  "watchlist.stats.yours": "vaše",
+
+  "watchlist.search.collections": "Kolekce",
+  "watchlist.search.titles": "Tituly",
+  "watchlist.search.noMatches": "Nic nenalezeno",
+  "watchlist.search.noMatchesHint": "Nic tu neodpovídá „{query}“."
 }

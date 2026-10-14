@@ -398,5 +398,10 @@
   "watchlist.stats.ofWatched": "of {total} watched",
   "watchlist.stats.titlesOn": "titles on {name}",
   "watchlist.stats.titlesFrom": "titles from {year}",
-  "watchlist.stats.yours": "yours"
+  "watchlist.stats.yours": "yours",
+
+  "watchlist.search.collections": "Collections",
+  "watchlist.search.titles": "Titles",
+  "watchlist.search.noMatches": "No matches",
+  "watchlist.search.noMatchesHint": "Nothing here matches “{query}”."
 }

@@ -4,6 +4,8 @@ import { getItems, createItem, updateItem } from '@/api/watchlist.js'
 import { searchMulti, fetchMovieDetail, fetchTvDetail, fetchWatchProviders, buildSeasonProgress } from '@/api/tmdb.js'
 import { genreFacets, genresFromTmdbDetail, hasGenre, genrePillClass } from '@/utils/genres.js'
 import { watchlistSurfaces } from '@/utils/pluginSurfaces.js'
+import { searchAll } from '@/utils/globalSearch.js'
+import { itemRoute } from '@/utils/routes.js'
 import ItemCard from '@/components/ItemCard.vue'
 import ItemFormModal from '@/components/ItemFormModal.vue'
 import ManageCollectionsModal from '@/components/ManageCollectionsModal.vue'
@@ -19,6 +21,7 @@ import { useI18n } from '@core/useI18n.js'
 import { useCollections } from '@/composables/useCollections.js'
 import { useRegistry } from '@core/useRegistry.js'
 import { useOpenSettings } from '@/composables/useOpenSettings.js'
+import { useWatchlistHost } from '@/composables/useWatchlistHost.js'
 import { Icon } from '@core/icons'
 import VideoCameraIcon from '@/assets/icons/video-camera.svg?component'
 import ClockAltIcon from '@/assets/icons/clock-alt.svg?component'
@@ -30,7 +33,7 @@ import ViewColumns2Icon from '@/assets/icons/view-columns-2.svg?component'
 import ViewColumns3Icon from '@/assets/icons/view-columns-3.svg?component'
 
 const { t } = useI18n()
-const { applyMembership } = useCollections()
+const { applyMembership, collections } = useCollections()
 const { isPluginEnabled } = useRegistry()
 const { placementOf } = useOpenSettings()
 
@@ -51,6 +54,7 @@ const gridClass = computed(() => ({
 }[gridStyle.value]))
 
 const items = ref([])
+const host = useWatchlistHost({ items: () => items.value, changed: () => load() })
 const loading = ref(true)
 const error = ref(null)
 const showModal = ref(false)
@@ -65,6 +69,9 @@ const sortBy = ref('alphabetical')
 const sortDir = ref('asc')
 const searchQuery = ref('')
 const activeGenres = ref([])
+const searchOpen = ref(false)
+const hits = computed(() => searchAll(items.value, collections.value, searchQuery.value))
+const hasHits = computed(() => hits.value.collections.length || hits.value.items.length)
 
 const showRefreshWarning = ref(false)
 const refreshing = ref(false)
@@ -375,6 +382,9 @@ onMounted(load)
             type="text"
             :placeholder="t('watchlist.header.search')"
             autocomplete="off"
+            @focus="searchOpen = true"
+            @blur="searchOpen = false"
+            @keydown.esc="searchOpen = false"
             class="w-32 sm:w-48 pl-9 pr-3 py-1.5 text-sm bg-black/5 dark:bg-white/8 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-lg border border-transparent focus:border-indigo-500/50 focus:outline-none focus:bg-white dark:focus:bg-white/12 transition-all duration-200"
           />
           <button
@@ -384,6 +394,41 @@ onMounted(load)
           >
             <Icon name="close" class="w-3.5 h-3.5" :sw="2.5" />
           </button>
+
+          <div
+            v-if="searchOpen && searchQuery.trim()"
+            class="absolute right-0 top-full mt-2 z-50 w-72 sm:w-80 max-h-96 overflow-y-auto rounded-xl bg-white dark:bg-slate-800 border border-black/5 dark:border-white/10 shadow-xl py-1.5"
+            @mousedown.prevent
+          >
+            <template v-if="hits.collections.length">
+              <p class="px-3 pt-1.5 pb-1 text-[11px] uppercase tracking-wide text-slate-400 dark:text-slate-500">{{ t('watchlist.search.collections') }}</p>
+              <RouterLink
+                v-for="c in hits.collections"
+                :key="c._id"
+                :to="{ name: 'collection', params: { id: String(c._id) } }"
+                class="flex items-center justify-between gap-3 px-3 py-2 text-sm text-slate-800 dark:text-slate-100 hover:bg-black/5 dark:hover:bg-white/10 no-underline"
+              >
+                <span class="truncate">{{ c.name }}</span>
+                <span class="shrink-0 text-xs text-slate-400 dark:text-slate-500">{{ t('watchlist.collections.itemCount', { count: c.itemCount || 0 }) }}</span>
+              </RouterLink>
+            </template>
+            <template v-if="hits.items.length">
+              <p class="px-3 pt-2 pb-1 text-[11px] uppercase tracking-wide text-slate-400 dark:text-slate-500">{{ t('watchlist.search.titles') }}</p>
+              <RouterLink
+                v-for="i in hits.items"
+                :key="i._id"
+                :to="itemRoute(i._id)"
+                class="flex items-center justify-between gap-3 px-3 py-2 text-sm text-slate-800 dark:text-slate-100 hover:bg-black/5 dark:hover:bg-white/10 no-underline"
+              >
+                <span class="truncate">{{ i.title }}</span>
+                <span class="shrink-0 text-xs text-slate-400 dark:text-slate-500">{{ [i.year, t('watchlist.status.' + i.status)].filter(Boolean).join(' · ') }}</span>
+              </RouterLink>
+            </template>
+            <div v-if="!hasHits" class="px-3 py-4 text-center">
+              <p class="text-sm font-medium text-slate-600 dark:text-slate-300">{{ t('watchlist.search.noMatches') }}</p>
+              <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{{ t('watchlist.search.noMatchesHint', { query: searchQuery.trim() }) }}</p>
+            </div>
+          </div>
         </div>
 
         <button
@@ -426,6 +471,7 @@ onMounted(load)
         :key="s.pluginId"
         :is="s.component"
         :items="items"
+        :host="host"
         placement="panel"
         @changed="load"
       />
@@ -623,6 +669,7 @@ onMounted(load)
       :reset-key="modalResetKey"
       @close="closeModal"
       @submit="handleSubmit"
+      @deleted="handleDeleted"
     />
 
 
