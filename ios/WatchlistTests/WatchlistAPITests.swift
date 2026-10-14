@@ -82,6 +82,17 @@ final class WatchlistAPITests: XCTestCase {
         XCTAssertEqual(WatchlistAPI.settingsHash(raw), WatchlistAPI.settingsHash(body))
     }
 
+    func testMovieDNARoundTripsThroughSettings() {
+        let dna: JSONValue = ["enabled": false, "entries": ["genre:drama": ["kind": "genre", "name": "Drama", "strength": 40]], "notInterested": [:]]
+        let body = WatchlistAPI.settingsBody(["movieDNA": dna])
+        XCTAssertEqual(body["movieDNA"], dna)
+        XCTAssertNil(WatchlistAPI.settingsBody([:])["movieDNA"])
+        let applied = WatchlistAPI.settings(applying: ["movieDNA": dna], to: WatchlistSettings.empty)
+        XCTAssertFalse(applied.movieDNA.enabled)
+        XCTAssertEqual(applied.movieDNA.entries["genre:drama"]?.strength, 40)
+        XCTAssertEqual(WatchlistAPI.settingsHash(["movieDNA": .null]), WatchlistAPI.settingsHash([:]))
+    }
+
     // MARK: Plan: ids and deletions
 
     func testLocalOnlyRecordsAreCreatedNeverRemoved() {

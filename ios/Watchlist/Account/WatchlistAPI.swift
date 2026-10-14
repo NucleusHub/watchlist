@@ -168,6 +168,7 @@ enum WatchlistAPI {
         if let a = raw["accent"]?.object, let id = a["id"]?.string, !id.isEmpty {
             o["accent"] = .object(["id": .string(id), "custom": JSONValue(a["custom"]?.string), "updatedAt": a["updatedAt"] ?? .null])
         }
+        if raw["movieDNA"]?.object != nil { o["movieDNA"] = MovieDNASettings(raw["movieDNA"]).json }
         return o
     }
 
@@ -187,6 +188,7 @@ enum WatchlistAPI {
         }
         for key in ["searchSources", "pluginPlacements", "tmdbApiKey"] { if let v = server[key] { s.raw[key] = v } }
         if let a = server["accent"], a.object != nil { s.raw["accent"] = a }
+        if let d = server["movieDNA"], d.object != nil { s.raw["movieDNA"] = d }
         return s
     }
 
