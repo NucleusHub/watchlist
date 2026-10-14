@@ -3,8 +3,10 @@ import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from '@core/useI18n.js'
 import { useRegistry } from '@core/useRegistry.js'
+import { pageRoute } from '@/utils/routes.js'
 import { useOpenSettings } from '@/composables/useOpenSettings.js'
-import { watchlistSurfaces } from '@/utils/pluginSurfaces.js'
+import { Icon } from '@core/icons'
+import { watchlistSurfaces, headerButtons } from '@/utils/pluginSurfaces.js'
 
 const { t } = useI18n()
 const { isPluginEnabled } = useRegistry()
@@ -16,6 +18,8 @@ const pluginTabs = computed(() =>
     .filter((s) => isPluginEnabled(s.pluginId) && placementOf(s) === 'tab')
     .map((s) => ({ to: `/x/${s.path}`, label: t(s.label), match: ['plugin-surface'], surface: s.path }))
 )
+
+const buttons = computed(() => headerButtons.filter((b) => isPluginEnabled(b.pluginId)))
 
 const TABS = computed(() => [
   { to: '/', label: t('watchlist.nav.watchlist'), match: ['watchlist'] },
@@ -40,6 +44,16 @@ const isActive = (tab) =>
       ]"
     >
       {{ tab.label }}
+    </RouterLink>
+    <RouterLink
+      v-for="b in buttons"
+      :key="`${b.pluginId}/${b.page}`"
+      :to="pageRoute(b.pluginId, b.page)"
+      :title="b.title"
+      :aria-label="b.title"
+      class="cursor-pointer px-2.5 py-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
+    >
+      <Icon :name="b.icon" class="w-4 h-4" />
     </RouterLink>
   </nav>
 </template>
