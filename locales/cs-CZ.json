@@ -281,6 +281,10 @@
   "watchlist.dna.rebuildConfirm": "Začít znovu z vaší knihovny?",
   "watchlist.dna.rebuildBody": "Vaše úpravy, odebrání a stisknutí Zajímá mě se zapomenou. Sledovaní lidé a tituly, které vás nezajímají, zůstanou.",
   "watchlist.dna.rebuildYes": "Začít znovu",
+  "watchlist.host.reset": "Resetovat postup",
+  "watchlist.host.resetEpisode": "Resetovat tuto epizodu",
+  "watchlist.host.resetSeason": "Resetovat tuto sérii",
+  "watchlist.host.resetShow": "Resetovat celý seriál",
 
   "watchlist.detail.notFound": "Titul nenalezen",
   "watchlist.detail.notFoundHint": "Možná byl smazán na jiném zařízení.",

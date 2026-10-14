@@ -192,13 +192,19 @@ router.patch('/:id', async (req, res) => {
     if (!current) return res.status(404).json({ error: 'Not found' })
 
     const patch = { ...req.body }
+    delete patch._id
+    delete patch.profileId
     if ('genres' in patch) patch.genres = cleanGenres(patch.genres)
     cleanIosFields(patch)
     // completedAt is server-derived; re-saving an already completed item keeps the original date.
     delete patch.completedAt
     if (patch.status && patch.status !== current.status) {
-      if (patch.status === 'completed') patch.completedAt = new Date()
-      else patch.completedAt = null
+      if (patch.status === 'completed') {
+        patch.completedAt = new Date()
+        // Nothing left to resume once finished.
+        patch.playback = null
+        patch.lastPage = null
+      } else patch.completedAt = null
     }
 
     const item = await WatchlistItem.findOneAndUpdate(

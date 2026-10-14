@@ -9,6 +9,7 @@ import { fileURLToPath } from 'url'
 import watchlistRoutes from './routes/watchlist.js'
 import collectionsRoutes from './routes/collections.js'
 import WatchlistItem from './models/WatchlistItem.js'
+import { republishOnWrite, startCrossApp } from './crossApp.js'
 import { appDataRouter } from './core/server/appData.js'
 import { requireAppEnabled } from './core/server/appAccess.js'
 
@@ -49,6 +50,7 @@ app.post('/api/upload', upload.single('image'), (req, res) => {
 app.get('/api/watchlist/health', (_, res) => res.json({ ok: true }))
 app.use('/api/watchlist', requireAppEnabled('watchlist'))
 app.use('/api/watchlist/collections', collectionsRoutes)
+app.use('/api/watchlist', republishOnWrite)
 app.use('/api/watchlist', watchlistRoutes)
 
 async function backfillDateAdded() {
@@ -68,6 +70,7 @@ mongoose
   .then(async () => {
     console.log('Connected to MongoDB')
     await backfillDateAdded()
+    await startCrossApp().catch((err) => console.error('Cross-app start failed:', err))
     app.listen(PORT, () => console.log(`Server running on port ${PORT}`))
   })
   .catch((err) => {

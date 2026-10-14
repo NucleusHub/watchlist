@@ -281,6 +281,10 @@
   "watchlist.dna.rebuildConfirm": "Start over from your library?",
   "watchlist.dna.rebuildBody": "Your edits, removals and Interested presses are forgotten. People you follow and titles you're not interested in stay.",
   "watchlist.dna.rebuildYes": "Start over",
+  "watchlist.host.reset": "Reset progress",
+  "watchlist.host.resetEpisode": "Reset this episode",
+  "watchlist.host.resetSeason": "Reset this season",
+  "watchlist.host.resetShow": "Reset the whole show",
 
   "watchlist.detail.notFound": "Title not found",
   "watchlist.detail.notFoundHint": "It may have been deleted on another device.",
