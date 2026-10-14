@@ -1,17 +1,22 @@
 <script setup>
 import { ref, computed, watch, nextTick } from 'vue'
-import { logoUrl } from '@/api/tmdb.js'
+import { logoUrl, hasTMDbKey, fetchExtras } from '@/api/tmdb.js'
 import { BUILTIN_SOURCES, PLUGIN_SOURCES } from '@/api/sources.js'
-import { uploadImage } from '@/api/watchlist.js'
+import { uploadImage, deleteItem } from '@/api/watchlist.js'
+import { isYouTubeLink } from '@/utils/trailers.js'
 import { OPEN_OPTIONS, TITLE_FORMATS } from '@/utils/openTarget.js'
 import { normalizeGenres, genrePillClass, MAX_GENRES } from '@/utils/genres.js'
 import TemplateModal from '@core/TemplateModal.vue'
+import TrashIcon from '@core/TrashIcon.vue'
 import RatingControl from './RatingControl.vue'
 import CollectionSelect from '@/components/CollectionSelect.vue'
+import CustomCreditsEditor from '@/components/CustomCreditsEditor.vue'
+import TrailersSection from '@/components/TrailersSection.vue'
 import FavoriteHeart from '@core/FavoriteHeart.vue'
 import { useI18n } from '@core/useI18n.js'
 import { useRegistry } from '@core/useRegistry.js'
 import { useOpenSettings } from '@/composables/useOpenSettings.js'
+import { useCollections } from '@/composables/useCollections.js'
 import { Icon, Spinner } from '@core/icons'
 import PhotoIcon from '@/assets/icons/photo.svg?component'
 import ChevronDownIcon from '@/assets/icons/chevron-down.svg?component'
@@ -23,6 +28,7 @@ import ArrowRightIcon from '@/assets/icons/arrow-right.svg?component'
 const { t } = useI18n()
 const { isPluginEnabled } = useRegistry()
 const { searchSources } = useOpenSettings()
+const { applyMembership } = useCollections()
 
 const enabledSources = computed(() => {
   const avail = [...BUILTIN_SOURCES, ...PLUGIN_SOURCES.filter((s) => isPluginEnabled(s.pluginId))]
@@ -36,7 +42,7 @@ const props = defineProps({
   initial: { type: Object, default: null },
   resetKey: { type: Number, default: 0 },
 })
-const emit = defineEmits(['close', 'submit'])
+const emit = defineEmits(['close', 'submit', 'deleted'])
 
 const form = ref({})
 const results = ref([])
@@ -55,6 +61,10 @@ const openType = ref('')
 const openCustomUrl = ref('')
 const openTitleFormat = ref('raw')
 let searchTimer = null
+let extrasRequest = 0
+const extras = ref(null)
+const confirmDelete = ref(false)
+const deleting = ref(false)
 
 const EMPTY_FORM = () => ({
   title: '', type: 'movie', status: 'planned',
@@ -70,6 +80,9 @@ const EMPTY_FORM = () => ({
   favorite: false,
   collectionIds: [],
   notes: '',
+  overview: '',
+  trailerUrl: '',
+  customCredits: [],
 })
 
 function resetForm() {
@@ -84,6 +97,12 @@ function resetForm() {
   posterUrlDraft.value = ''
   genreDraft.value = ''
   form.value.genres = normalizeGenres(form.value.genres)
+  form.value.overview ??= ''
+  form.value.trailerUrl ??= ''
+  form.value.customCredits = (form.value.customCredits ?? []).map((c) => ({ ...c }))
+  extras.value = null
+  extrasRequest++
+  confirmDelete.value = false
   nextTick(() => titleInput.value?.focus())
 }
 
@@ -105,6 +124,7 @@ function removeGenre(name) {
   form.value.genres = (form.value.genres ?? []).filter((g) => g.toLowerCase() !== key)
 }
 
+const badTrailer = computed(() => !isYouTubeLink(form.value.trailerUrl))
 const genresFull = computed(() => (form.value.genres?.length ?? 0) >= MAX_GENRES)
 
 function openPosterMenu() {
@@ -181,6 +201,32 @@ async function selectResult(r) {
   } finally {
     fetchingDetail.value = false
   }
+  loadExtras()
+}
+
+// What the picked TMDb title is about, so it's easy to tell it's the right one before adding it.
+async function loadExtras() {
+  const id = form.value.tmdbId
+  const request = ++extrasRequest
+  extras.value = null
+  if (props.initial || !id || !hasTMDbKey.value) return
+  const loaded = await fetchExtras(id, form.value.type).catch(() => null)
+  if (request === extrasRequest) extras.value = loaded
+}
+
+async function handleDelete() {
+  deleting.value = true
+  try {
+    await deleteItem(props.initial._id)
+    applyMembership(props.initial.collectionIds || [], [])
+    confirmDelete.value = false
+    emit('deleted', props.initial._id)
+    emit('close')
+  } catch {
+    // The confirm stays open, so the title visibly wasn't deleted.
+  } finally {
+    deleting.value = false
+  }
 }
 
 function triggerUpload() {
@@ -216,6 +262,8 @@ function handleSubmit(addAnother = false) {
     else payload[f] = Number(payload[f])
   }
   payload.genres = normalizeGenres(payload.genres)
+  payload.overview = payload.overview?.trim() || null
+  payload.trailerUrl = payload.trailerUrl?.trim() || null
   payload.openTarget = openType.value
     ? {
         type: openType.value,
@@ -493,6 +541,34 @@ function handleSubmit(addAnother = false) {
                   </div>
                 </div>
 
+                <div v-if="extras && (extras.overview || extras.videos.length)" class="flex flex-col gap-3 sm:col-span-2">
+                  <p v-if="extras.overview" class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">{{ extras.overview }}</p>
+                  <TrailersSection v-if="extras.videos.length" :videos="extras.videos" />
+                </div>
+
+                <div class="flex flex-col gap-1.5 sm:col-span-2">
+                  <label class="text-sm text-slate-500 dark:text-slate-400">{{ t('watchlist.form.overview') }}</label>
+                  <textarea v-model="form.overview" rows="3" :placeholder="t('watchlist.form.overviewPlaceholder')" class="bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white rounded-lg px-3 py-2 text-sm placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none" />
+                </div>
+
+                <div class="flex flex-col gap-1.5 sm:col-span-2">
+                  <label class="text-sm text-slate-500 dark:text-slate-400">{{ t('watchlist.form.trailer') }}</label>
+                  <input
+                    v-model="form.trailerUrl"
+                    type="text"
+                    inputmode="url"
+                    autocomplete="off"
+                    :placeholder="t('watchlist.form.trailerPlaceholder')"
+                    :class="['bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white rounded-lg px-3 py-2 text-sm placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2', badTrailer ? 'ring-2 ring-red-500 focus:ring-red-500' : 'focus:ring-indigo-500']"
+                  />
+                  <p v-if="badTrailer" class="text-xs text-red-500 dark:text-red-400">{{ t('watchlist.form.trailerInvalid') }}</p>
+                </div>
+
+                <div v-if="!form.tmdbId" class="flex flex-col gap-1.5 sm:col-span-2">
+                  <label class="text-sm text-slate-500 dark:text-slate-400">{{ t('watchlist.form.credits') }}</label>
+                  <CustomCreditsEditor v-model="form.customCredits" />
+                </div>
+
                 <div class="sm:col-span-2 h-px bg-black/[0.06] dark:bg-white/8" />
 
                 <div class="flex flex-col gap-1.5 sm:col-span-2">
@@ -516,6 +592,16 @@ function handleSubmit(addAnother = false) {
                     {{ initial ? t('watchlist.form.saveChanges') : t('watchlist.form.addTitle') }}
                   </button>
                   <button
+                    v-if="initial"
+                    type="button"
+                    @click="confirmDelete = true"
+                    :title="t('watchlist.card.delete')"
+                    class="nuc-trash nuc-press cursor-pointer shrink-0 flex items-center gap-1.5 px-3 py-2 text-sm text-red-600 dark:text-red-400 bg-red-500/10 hover:bg-red-500/20 rounded-lg transition-colors"
+                  >
+                    <TrashIcon class="w-4 h-4" stroke-width="2" />
+                    <span class="hidden sm:inline">{{ t('watchlist.card.delete') }}</span>
+                  </button>
+                  <button
                     v-if="!initial"
                     type="button"
                     @click="handleSubmit(true)"
@@ -529,4 +615,15 @@ function handleSubmit(addAnother = false) {
               </div>
     </form>
   </TemplateModal>
+
+  <TemplateModal
+    :show="confirmDelete"
+    :title="t('watchlist.card.removeTitle')"
+    :message="t('watchlist.card.removeMessage', { title: initial?.title || '' })"
+    :confirm-label="t('watchlist.card.remove')"
+    :busy="deleting"
+    z="z-[250]"
+    @confirm="handleDelete"
+    @cancel="confirmDelete = false"
+  />
 </template>

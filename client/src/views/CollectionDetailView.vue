@@ -516,6 +516,7 @@ function onItemsAdded(added) {
         :initial="editingItem"
         @close="showEditItem = false; editingItem = null"
         @submit="submitEdit"
+        @deleted="handleDeleted"
       />
       <ManageCollectionsModal
         :show="showManage"

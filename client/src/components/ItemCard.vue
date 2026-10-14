@@ -1,9 +1,11 @@
 <script setup>
 import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import confetti from 'canvas-confetti'
 import { updateItem, deleteItem } from '@/api/watchlist.js'
 import { logoUrl } from '@/api/tmdb.js'
-import { showTotals, watchedFraction, remainingMinutes } from '@/utils/progress.js'
+import { showTotals, watchedFraction, remainingMinutes, formatRuntime, metaLine, markWatchedPatch } from '@/utils/progress.js'
+import { itemRoute } from '@/utils/routes.js'
 import TemplateModal from '@core/TemplateModal.vue'
 import TrashIcon from '@core/TrashIcon.vue'
 import ContextMenu from '@core/ContextMenu.vue'
@@ -26,6 +28,7 @@ import StarIcon from '@/assets/icons/star.svg?component'
 import CheckCircleIcon from '@/assets/icons/check-circle.svg?component'
 
 const { t } = useI18n()
+const router = useRouter()
 const { isPluginEnabled } = useRegistry()
 const { defaults } = useOpenSettings()
 const { applyMembership } = useCollections()
@@ -62,7 +65,6 @@ const deleting = ref(false)
 const showConfirm = ref(false)
 const marking = ref(false)
 const showProgress = ref(false)
-const showDetail = ref(false)
 
 const totals = computed(() => showTotals(props.item))
 const progressPct = computed(() => {
@@ -80,38 +82,27 @@ const remainingLabel = computed(() => {
 
 const openUrl = computed(() => buildOpenUrl(resolveTarget(props.item, defaults), props.item))
 
+function openDetail() {
+  router.push(itemRoute(props.item._id))
+}
+
 function openPoster() {
   if (openUrl.value) window.open(openUrl.value, '_blank', 'noopener,noreferrer')
+  else openDetail()
+}
+
+// Clicks on the card's own buttons and links keep their meaning.
+function onBodyClick(e) {
+  if (!e.target.closest('button, a')) openDetail()
 }
 
 function handleProgressUpdated(updated) {
   emit('updated', updated)
 }
 
-function formatRuntime(minutes) {
-  if (!minutes) return null
-  if (minutes < 60) return `${minutes} min`
-  const h = Math.floor(minutes / 60)
-  const m = minutes % 60
-  return m ? `${h}h ${m}m` : `${h}h`
-}
-
 const runtimeLabel = computed(() => (isShow.value ? null : formatRuntime(props.item.runtime)))
 
-const meta = computed(() => {
-  const parts = []
-  if (props.item.year) parts.push(props.item.year)
-  if (props.item.type === 'movie') {
-    const rt = formatRuntime(props.item.runtime)
-    if (rt) parts.push(rt)
-  } else {
-    if (props.item.seasons) parts.push(t(props.item.seasons === 1 ? 'watchlist.card.seasonOne' : 'watchlist.card.seasonMany', { count: props.item.seasons }))
-    if (props.item.episodes) parts.push(t('watchlist.card.episodesShort', { count: props.item.episodes }))
-    const rt = formatRuntime(props.item.showRuntime)
-    if (rt) parts.push(rt)
-  }
-  return parts.join(' · ')
-})
+const meta = computed(() => metaLine(props.item, t))
 
 async function toggleFavorite() {
   const updated = await updateItem(props.item._id, { favorite: !props.item.favorite })
@@ -129,11 +120,7 @@ async function markWatched() {
   if (marking.value) return
   marking.value = true
   try {
-    const patch = { status: 'completed' }
-    if (props.item.type === 'show' && props.item.seasonProgress?.length) {
-      patch.seasonProgress = props.item.seasonProgress.map((s) => ({ ...s, watched: s.episodeCount }))
-    }
-    const updated = await updateItem(props.item._id, patch)
+    const updated = await updateItem(props.item._id, markWatchedPatch(props.item))
     emit('updated', updated)
     fireConfetti()
   } finally {
@@ -174,6 +161,7 @@ async function removeFromCollection() {
 const menu = ref({ show: false, x: 0, y: 0 })
 const menuItems = computed(() => {
   const items = [
+    { label: t('watchlist.card.details'), icon: ICONS.eye, action: openDetail },
     { label: t('watchlist.card.edit'), icon: ICONS.pencil, action: () => emit('edit', props.item) },
     { label: t('watchlist.collections.manage'), icon: ICONS.folder, action: () => emit('manage-collections', props.item) },
   ]
@@ -282,7 +270,7 @@ function openMenu(e) {
       <button
         v-if="!isList"
         type="button"
-        @click.stop="showDetail = true"
+        @click.stop="openDetail"
         :title="t('watchlist.card.details')"
         class="sm:hidden nuc-press cursor-pointer absolute bottom-1.5 right-1.5 w-7 h-7 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-white/80 transition-all duration-200 hover:bg-black/60 hover:scale-110"
       >
@@ -290,12 +278,10 @@ function openMenu(e) {
       </button>
     </div>
 
-    <div :class="['flex-1 flex flex-col min-w-0', isList ? 'p-2 gap-0.5' : isCompact ? 'p-3 gap-1' : 'p-4 gap-1.5']">
+    <div @click="onBodyClick" :class="['flex-1 flex flex-col min-w-0 cursor-pointer', isList ? 'p-2 gap-0.5' : isCompact ? 'p-3 gap-1' : 'p-4 gap-1.5']">
       <div class="flex items-start justify-between gap-1.5">
         <h3
-          :class="['font-semibold text-slate-900 dark:text-white text-sm leading-tight', !isList ? 'line-clamp-2 sm:line-clamp-none' : '', openUrl ? 'cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors' : '']"
-          :title="openUrl ? t('watchlist.card.openExternal') : undefined"
-          @click="openPoster"
+          :class="['font-semibold text-slate-900 dark:text-white text-sm leading-tight', !isList ? 'line-clamp-2 sm:line-clamp-none' : '', 'hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors']"
         >{{ item.title }}</h3>
         <div :class="['gap-0.5 shrink-0', isList ? 'flex' : 'hidden sm:flex']">
           <button
@@ -395,150 +381,6 @@ function openMenu(e) {
       </div>
     </div>
   </div>
-
-  <TemplateModal
-    :show="showDetail"
-    header
-    size="md"
-    z="z-[150]"
-    :title="item.title"
-    :description="meta || ''"
-    body-class="px-5 sm:px-6 pb-6 pt-2"
-    @cancel="showDetail = false"
-  >
-    <div class="flex flex-col gap-5">
-      <div class="flex gap-4">
-        <div
-          :class="['relative w-28 shrink-0 overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-700/60 aspect-[2/3] ring-1 ring-black/5 dark:ring-white/10', openUrl ? 'cursor-pointer' : '']"
-          @click="openPoster"
-          :title="openUrl ? t('watchlist.card.openExternal') : undefined"
-        >
-          <img v-if="item.posterUrl" :src="item.posterUrl" :alt="item.title" class="w-full h-full object-cover" />
-          <div v-else class="w-full h-full flex items-center justify-center">
-            <ArchiveBoxIcon class="w-8 h-8 text-slate-300 dark:text-slate-600" />
-          </div>
-        </div>
-
-        <div class="flex-1 min-w-0 flex flex-col gap-3">
-          <div class="flex items-center gap-0.5 -mt-0.5">
-            <button
-              v-if="openUrl"
-              @click="openPoster"
-              :title="t('watchlist.card.openExternal')"
-              class="nuc-press cursor-pointer p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
-            >
-              <Icon name="externalLink" class="w-5 h-5" :sw="1.75" />
-            </button>
-            <button
-              @click="toggleFavorite"
-              :title="item.favorite ? t('watchlist.card.unfavorite') : t('watchlist.card.favorite')"
-              class="nuc-fav nuc-press cursor-pointer p-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
-              :class="item.favorite ? 'text-rose-500' : 'text-slate-400'"
-            >
-              <FavoriteHeart :active="item.favorite" class="w-5 h-5" />
-            </button>
-            <button
-              @click="$emit('edit', item); showDetail = false"
-              :title="t('watchlist.card.edit')"
-              class="nuc-press cursor-pointer p-1.5 rounded-lg text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
-            >
-              <Icon name="edit" class="w-5 h-5" :sw="1.75" />
-            </button>
-            <button
-              @click="$emit('manage-collections', item); showDetail = false"
-              :title="t('watchlist.collections.manage')"
-              class="nuc-press cursor-pointer p-1.5 rounded-lg text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
-            >
-              <Icon name="folder" class="w-5 h-5" :sw="1.75" />
-            </button>
-            <button
-              @click="showConfirm = true"
-              :title="t('watchlist.card.delete')"
-              class="nuc-trash nuc-press cursor-pointer p-1.5 rounded-lg text-slate-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
-            >
-              <TrashIcon class="w-5 h-5" stroke-width="1.75" />
-            </button>
-          </div>
-
-          <div v-if="item.genres?.length" class="flex items-center gap-1.5 flex-wrap">
-            <span
-              v-for="g in item.genres"
-              :key="g"
-              :class="['text-xs font-medium px-2 py-0.5 rounded-full', genrePillClass(g)]"
-            >
-              {{ g }}
-            </span>
-          </div>
-
-          <div class="flex items-center gap-1.5 flex-wrap">
-            <span :class="['text-xs font-medium px-2 py-0.5 rounded-full', TYPE_COLORS[item.type]]">
-              {{ item.type === 'movie' ? t('watchlist.type.movie') : t('watchlist.type.show') }}
-            </span>
-            <button
-              @click="cycleStatus"
-              :class="['cursor-pointer text-xs font-medium px-2 py-0.5 rounded-full transition-opacity hover:opacity-80', STATUS_COLORS[item.status]]"
-              :title="t('watchlist.card.cycleStatus')"
-            >
-              {{ t('watchlist.status.' + item.status) }}
-            </button>
-            <span v-if="item.tmdbRating" class="inline-flex items-center gap-0.5 text-xs text-amber-400">
-              <StarIcon class="w-3 h-3 fill-current" />
-              {{ item.tmdbRating }}
-            </span>
-            <component
-              v-for="ind in indicators"
-              :key="ind.pluginId"
-              :is="ind.component"
-              :item="item"
-            />
-          </div>
-
-          <RatingControl
-            v-if="item.rating"
-            :model-value="item.rating"
-            :max="10"
-            readonly
-            size="sm"
-            show-value
-          />
-        </div>
-      </div>
-
-      <div v-if="isShow" class="flex flex-col gap-2.5 rounded-xl bg-white/60 dark:bg-slate-800/50 border border-white/60 dark:border-white/8 p-4">
-        <template v-if="totals.totalEp > 0">
-          <div class="flex items-center justify-between gap-2 text-sm">
-            <span class="text-slate-500 dark:text-slate-400">{{ t('watchlist.card.episodeProgress', { watched: item.status === 'completed' ? totals.totalEp : totals.watchedEp, total: totals.totalEp }) }}</span>
-            <span v-if="remainingLabel" class="text-slate-400 dark:text-slate-500">{{ remainingLabel }}</span>
-          </div>
-          <div class="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-            <div class="h-full rounded-full transition-all duration-500" :class="item.status === 'completed' ? 'bg-green-500' : 'bg-indigo-500'" :style="{ width: `${progressPct}%` }" />
-          </div>
-        </template>
-        <button
-          @click="showProgress = true"
-          class="nuc-press cursor-pointer self-start inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium px-3 py-1.5 rounded-lg transition-colors"
-        >
-          <ListBulletIcon class="w-4 h-4" />
-          {{ t('watchlist.card.trackEpisodes') }}
-        </button>
-      </div>
-
-      <button
-        v-if="item.status !== 'completed'"
-        @click="markWatched"
-        :disabled="marking"
-        class="nuc-press cursor-pointer self-start inline-flex items-center gap-1.5 bg-green-600/90 hover:bg-green-500 text-white text-sm font-medium px-3 py-1.5 rounded-lg transition-colors disabled:cursor-wait disabled:opacity-60"
-      >
-        <Icon name="check" class="w-4 h-4" :sw="2.5" />
-        {{ t('watchlist.card.markWatched') }}
-      </button>
-
-      <div v-if="item.notes" class="flex flex-col gap-1">
-        <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/35">{{ t('watchlist.card.notes') }}</p>
-        <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line">{{ item.notes }}</p>
-      </div>
-    </div>
-  </TemplateModal>
 
   <TemplateModal
     :show="showConfirm"
