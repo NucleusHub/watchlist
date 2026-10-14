@@ -1,6 +1,9 @@
 import { reactive, ref, watch } from 'vue'
 import { getSettings, saveSettings } from '@/api/watchlist.js'
 import { PLACEMENTS } from '@/utils/pluginSurfaces.js'
+import { setTMDbKey } from '@/api/tmdb.js'
+import { applyAccent, loadAccent, storeAccent } from '@/utils/accent.js'
+import { newerAccent } from '@/utils/backup.js'
 
 const KEY = 'watchlist-settings'
 const DEFAULT = () => ({ type: 'tmdb', customUrl: '', titleFormat: 'raw' })
@@ -28,6 +31,8 @@ const normalizePlacements = (obj) => {
 const defaults = reactive({ movie: DEFAULT(), show: DEFAULT() })
 const searchSources = ref([BUILTIN_SOURCE])
 const pluginPlacements = ref({})
+const tmdbApiKey = ref('')
+const accent = ref(loadAccent())
 
 const snapshot = () => ({
   movie: normalize(defaults.movie),
@@ -50,6 +55,14 @@ function loadLocal() {
 }
 loadLocal()
 
+function adoptAccent(next) {
+  accent.value = next
+  storeAccent(next)
+  applyAccent(next)
+}
+
+const sameAccent = (a, b) => a?.id === b?.id && a?.custom === b?.custom && Date.parse(a?.updatedAt) === Date.parse(b?.updatedAt)
+
 let lastSaved = null
 let saveTimer = null
 let touched = false
@@ -70,7 +83,15 @@ async function hydrate() {
   if (hydrated) return
   hydrated = true
   try {
-    const { openDefaults, searchSources: sources, pluginPlacements: placements } = await getSettings()
+    const { openDefaults, searchSources: sources, pluginPlacements: placements, tmdbApiKey: key, accent: remote } = await getSettings()
+    if (typeof key === 'string') {
+      tmdbApiKey.value = key
+      if (key) setTMDbKey(key)
+    }
+    // Newest pick wins, as on iOS; a browser that never picked one keeps what it shows.
+    const winner = newerAccent(accent.value, remote)
+    if (winner && winner !== accent.value) adoptAccent(winner)
+    if (winner && winner === accent.value && !sameAccent(winner, remote)) saveSettings({ accent: winner }).catch(() => {})
     if (touched) return
     if (sources) searchSources.value = normalizeSources(sources)
     if (placements) pluginPlacements.value = normalizePlacements(placements)
@@ -101,6 +122,18 @@ export function useOpenSettings() {
       searchSources.value = normalizeSources(ids)
     },
     pluginPlacements,
+    tmdbApiKey,
+    accent,
+    async setTmdbApiKey(key) {
+      const value = key.trim()
+      await saveSettings({ tmdbApiKey: value })
+      tmdbApiKey.value = value
+      setTMDbKey(value)
+    },
+    setAccent(next) {
+      adoptAccent(next ? { ...next, updatedAt: new Date().toISOString() } : null)
+      saveSettings({ accent: accent.value }).catch(() => {})
+    },
     placementOf(surface) {
       const chosen = pluginPlacements.value[surface.pluginId]
       if (chosen === 'hidden') return 'hidden'

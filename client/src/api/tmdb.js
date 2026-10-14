@@ -1,14 +1,46 @@
-const BASE = 'https://api.themoviedb.org/3'
-const KEY = import.meta.env.VITE_TMDB_API_KEY
+import { shallowRef } from 'vue'
+import { parseExtras } from '@/utils/trailers.js'
 
-async function get(path, params = {}) {
-  if (!KEY) throw new Error('VITE_TMDB_API_KEY not set')
+const BASE = 'https://api.themoviedb.org/3'
+const BUILD_KEY = import.meta.env.VITE_TMDB_API_KEY
+const STORE = 'watchlist-tmdb-key'
+
+// The key from Settings wins over the build-time one; cached so the first screen already has it.
+let userKey = ''
+try { userKey = localStorage.getItem(STORE) || '' } catch {}
+
+async function get(path, params = {}, key = userKey || BUILD_KEY) {
+  if (!key) throw new Error('TMDb API key not set')
   const url = new URL(`${BASE}${path}`)
-  url.searchParams.set('api_key', KEY)
+  url.searchParams.set('api_key', key)
   for (const [k, v] of Object.entries(params)) url.searchParams.set(k, String(v))
   const res = await fetch(url)
   if (!res.ok) throw new Error(`TMDb ${res.status}`)
   return res.json()
+}
+
+// Reactive: flips when a key is saved in Settings.
+export const hasTMDbKey = shallowRef(!!(userKey || BUILD_KEY))
+export const tmdb = (path, params) => get(path, params)
+
+export function setTMDbKey(key) {
+  userKey = (key || '').trim()
+  hasTMDbKey.value = !!(userKey || BUILD_KEY)
+  try {
+    if (userKey) localStorage.setItem(STORE, userKey)
+    else localStorage.removeItem(STORE)
+  } catch {}
+}
+
+// false when TMDb rejects the key; other failures (offline) throw so the caller can keep it anyway.
+export async function verifyTMDbKey(key) {
+  try {
+    await get('/configuration', {}, key)
+    return true
+  } catch (e) {
+    if (e.message === 'TMDb 401') return false
+    throw e
+  }
 }
 
 export async function searchMulti(query) {
@@ -63,4 +95,29 @@ export function buildSeasonProgress(detail, existing = []) {
       episodeCount: s.episode_count,
       watched: Math.min(prev.get(s.season_number) ?? 0, s.episode_count),
     }))
+}
+
+const extrasCache = new Map()
+
+// Overview and trailers for a title; cached per session so going back to a title doesn't ask again.
+export function fetchExtras(id, type) {
+  const key = `${type}:${id}`
+  if (!extrasCache.has(key)) {
+    const request = get(`/${type === 'movie' ? 'movie' : 'tv'}/${id}`, { append_to_response: 'videos', include_video_language: 'en,null' })
+      .then(parseExtras)
+      .catch((err) => { extrasCache.delete(key); throw err })
+    extrasCache.set(key, request)
+  }
+  return extrasCache.get(key)
+}
+
+// People matching a name, for the custom credits editor.
+export async function searchPeople(query) {
+  const data = await get('/search/person', { query, include_adult: false })
+  return (data.results || []).slice(0, 8).map((p) => ({
+    id: p.id,
+    name: p.name,
+    knownFor: p.known_for_department || '',
+    photo: p.profile_path ? `https://image.tmdb.org/t/p/w185${p.profile_path}` : null,
+  }))
 }

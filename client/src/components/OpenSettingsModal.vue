@@ -1,6 +1,9 @@
 <script setup>
 import { reactive, ref, computed, watch, onMounted } from 'vue'
 import TemplateModal from '@core/TemplateModal.vue'
+import MovieDNAModal from '@/components/MovieDNAModal.vue'
+import SettingsDataTab from '@/components/SettingsDataTab.vue'
+import ReportModal from '@/components/ReportModal.vue'
 import { useI18n } from '@core/useI18n.js'
 import { useRegistry } from '@core/useRegistry.js'
 import { usePlugins } from '@core/usePlugins.js'
@@ -8,13 +11,16 @@ import { useOpenSettings } from '@/composables/useOpenSettings.js'
 import { BUILTIN_SOURCES, PLUGIN_SOURCES } from '@/api/sources.js'
 import { watchlistSurfaces } from '@/utils/pluginSurfaces.js'
 import { OPEN_OPTIONS, TITLE_FORMATS, buildOpenUrl } from '@/utils/openTarget.js'
+import { PRESETS, HEX } from '@/utils/accent.js'
+import { APP_VERSION, PRIVACY_URL } from '@/utils/about.js'
+import { openTour } from '@/composables/useTour.js'
 
 const { t } = useI18n()
 const { isPluginEnabled } = useRegistry()
 const props = defineProps({ show: { type: Boolean, default: false } })
 const emit = defineEmits(['close'])
 
-const { defaults, setDefault, searchSources, setSearchSources, placementOf, setPlacement } = useOpenSettings()
+const { defaults, setDefault, searchSources, setSearchSources, placementOf, setPlacement, accent, setAccent } = useOpenSettings()
 
 const { plugins: installedPlugins, load: loadInstalledPlugins } = usePlugins()
 onMounted(loadInstalledPlugins)
@@ -44,11 +50,20 @@ const placementOptions = (surface) => [...surface.placements, 'hidden']
 const OPEN_TAB_ICON = 'M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5M15 3h6m0 0v6m0-6L10.5 13.5'
 const SOURCES_TAB_ICON = 'm21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607z'
 const EXTRAS_TAB_ICON = 'M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z'
+const DNA_TAB_ICON = 'M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456Z'
+const APPEARANCE_TAB_ICON = 'M9.53 16.122a3 3 0 0 0-5.78 1.128 2.25 2.25 0 0 1-2.4 2.245 4.5 4.5 0 0 0 8.4-2.245c0-.399-.078-.78-.22-1.128Zm0 0a15.998 15.998 0 0 0 3.388-1.62m-5.043-.025a15.994 15.994 0 0 1 1.622-3.395m3.42 3.42a15.995 15.995 0 0 0 4.764-4.648l3.876-5.814a1.151 1.151 0 0 0-1.597-1.597L14.146 6.32a15.996 15.996 0 0 0-4.649 4.763m3.42 3.42a6.776 6.776 0 0 0-3.42-3.42'
+const DATA_TAB_ICON = 'M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75'
+const HELP_TAB_ICON = 'M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z'
+const showDNA = ref(false)
+const showReport = ref(false)
 const tabs = computed(() => {
-  if (!showSourcesTab.value && !showSurfacesTab.value) return []
   const list = [{ key: 'open', label: t('watchlist.settings.tabOpen'), icon: OPEN_TAB_ICON }]
   if (showSourcesTab.value) list.push({ key: 'sources', label: t('watchlist.settings.tabSources'), icon: SOURCES_TAB_ICON })
   if (showSurfacesTab.value) list.push({ key: 'surfaces', label: t('watchlist.settings.tabExtras'), icon: EXTRAS_TAB_ICON })
+  list.push({ key: 'moviedna', label: t('watchlist.dna.title'), icon: DNA_TAB_ICON })
+  list.push({ key: 'appearance', label: t('watchlist.settings.tabAppearance'), icon: APPEARANCE_TAB_ICON })
+  list.push({ key: 'data', label: t('watchlist.settings.tabData'), icon: DATA_TAB_ICON })
+  list.push({ key: 'help', label: t('watchlist.settings.tabHelp'), icon: HELP_TAB_ICON })
   return list
 })
 
@@ -88,6 +103,17 @@ watch(
 
 const SAMPLE = { title: 'The Matrix', year: 1999 }
 const previewUrl = (kind) => buildOpenUrl(draft[kind], SAMPLE)
+
+const customHex = ref('#A855F7')
+const isCustom = computed(() => accent.value?.id === 'custom')
+const isPicked = (id) => (accent.value?.id ?? 'nucleus') === id
+watch(accent, (a) => { if (a?.id === 'custom' && HEX.test(a.custom)) customHex.value = a.custom }, { immediate: true })
+const pickCustom = (e) => setAccent({ id: 'custom', custom: e.target.value.toUpperCase() })
+
+function startTour() {
+  emit('close')
+  openTour()
+}
 
 function save() {
   for (const { key } of KINDS) setDefault(key, draft[key])
@@ -219,6 +245,17 @@ function save() {
         </div>
       </section>
 
+      <section v-show="activeTab === 'moviedna'" class="flex flex-col items-start gap-3">
+        <p class="text-sm text-slate-500 dark:text-slate-400">{{ t('watchlist.dna.tabDesc') }}</p>
+        <button
+          type="button"
+          @click="showDNA = true"
+          class="cursor-pointer px-3 py-1.5 rounded-lg text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-500 transition-colors"
+        >
+          {{ t('watchlist.dna.open') }}
+        </button>
+      </section>
+
       <section v-show="activeTab === 'surfaces'" class="flex flex-col gap-3">
         <p class="text-sm text-slate-500 dark:text-slate-400">{{ t('watchlist.settings.surfaceDesc') }}</p>
         <div class="flex flex-col gap-1.5">
@@ -253,7 +290,54 @@ function save() {
           </div>
         </div>
       </section>
+
+      <section v-show="activeTab === 'appearance'" class="flex flex-col gap-3">
+        <p class="text-sm text-slate-500 dark:text-slate-400">{{ t('watchlist.settings.accentDesc') }}</p>
+        <div class="flex flex-wrap items-center gap-3">
+          <button
+            v-for="p in PRESETS"
+            :key="p.id"
+            type="button"
+            :title="t('watchlist.settings.accent.' + p.id)"
+            :aria-pressed="isPicked(p.id)"
+            :class="['cursor-pointer w-9 h-9 rounded-full transition-all', isPicked(p.id) ? 'ring-2 ring-offset-2 ring-slate-900 dark:ring-white ring-offset-white dark:ring-offset-slate-900' : 'hover:scale-110']"
+            :style="{ background: p.hex }"
+            @click="setAccent({ id: p.id })"
+          />
+          <label
+            :title="t('watchlist.settings.accent.custom')"
+            :class="['cursor-pointer relative w-9 h-9 rounded-full overflow-hidden transition-all', isCustom ? 'ring-2 ring-offset-2 ring-slate-900 dark:ring-white ring-offset-white dark:ring-offset-slate-900' : 'hover:scale-110']"
+            :style="{ background: isCustom ? customHex : 'conic-gradient(#f43f5e, #f59e0b, #10b981, #3b82f6, #a855f7, #f43f5e)' }"
+          >
+            <input type="color" :value="customHex" class="absolute inset-0 opacity-0 cursor-pointer" @change="pickCustom" />
+          </label>
+        </div>
+        <p class="text-xs text-slate-400 dark:text-slate-500">{{ t('watchlist.settings.accentSync') }}</p>
+      </section>
+
+      <section v-show="activeTab === 'data'">
+        <SettingsDataTab />
+      </section>
+
+      <section v-show="activeTab === 'help'" class="flex flex-col gap-3">
+        <div class="flex flex-wrap gap-2">
+          <button type="button" class="cursor-pointer px-3 py-1.5 rounded-lg text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-500 transition-colors" @click="startTour">{{ t('watchlist.settings.takeTour') }}</button>
+          <button type="button" class="cursor-pointer px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/15 transition-colors" @click="showReport = true">{{ t('watchlist.settings.reportProblem') }}</button>
+        </div>
+        <div class="flex flex-col gap-2 rounded-xl border border-black/5 dark:border-white/10 bg-white/40 dark:bg-white/[0.03] p-4 text-sm">
+          <span class="text-sm font-semibold text-slate-900 dark:text-white">{{ t('watchlist.about.title') }}</span>
+          <div class="flex items-center justify-between text-slate-600 dark:text-slate-300">
+            <span>{{ t('watchlist.about.version') }}</span>
+            <span class="font-mono text-xs text-slate-500 dark:text-slate-400">{{ APP_VERSION || '—' }}</span>
+          </div>
+          <a :href="PRIVACY_URL" target="_blank" rel="noopener" class="text-indigo-600 dark:text-indigo-400 hover:underline">{{ t('watchlist.about.privacy') }} ↗</a>
+          <a href="https://www.themoviedb.org" target="_blank" rel="noopener" class="text-indigo-600 dark:text-indigo-400 hover:underline">TMDB ↗</a>
+          <p class="text-xs text-slate-400 dark:text-slate-500">{{ t('watchlist.about.tmdb') }}</p>
+        </div>
+      </section>
     </div>
     </template>
   </TemplateModal>
+  <MovieDNAModal :show="showDNA" @close="showDNA = false" />
+  <ReportModal :show="showReport" @close="showReport = false" />
 </template>
