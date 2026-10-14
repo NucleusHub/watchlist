@@ -39,6 +39,17 @@ const pickOpenTarget = (t) => ({
   titleFormat: t?.titleFormat || 'raw',
 })
 
+const isPlainObject = (v) => v !== null && typeof v === 'object' && !Array.isArray(v)
+
+// Keeps the iOS shape (ios/Watchlist/Model/MovieDNA.swift) so device and server copies hash equal.
+function pickMovieDNA(v) {
+  return {
+    enabled: typeof v.enabled === 'boolean' ? v.enabled : true,
+    entries: isPlainObject(v.entries) ? Object.fromEntries(Object.entries(v.entries).filter(([, e]) => isPlainObject(e) && typeof e.kind === 'string')) : {},
+    notInterested: isPlainObject(v.notInterested) ? Object.fromEntries(Object.entries(v.notInterested).filter(([, n]) => isPlainObject(n))) : {},
+  }
+}
+
 const placementsOut = (m) => (m instanceof Map ? Object.fromEntries(m) : m ?? {})
 
 router.get('/settings', async (req, res) => {
@@ -50,6 +61,7 @@ router.get('/settings', async (req, res) => {
       pluginPlacements: placementsOut(doc?.pluginPlacements),
       tmdbApiKey: doc?.tmdbApiKey ?? '',
       accent: doc?.accent ?? null,
+      movieDNA: doc?.movieDNA ?? null,
     })
   } catch (err) {
     res.status(500).json({ error: err.message })
@@ -82,6 +94,8 @@ router.put('/settings', async (req, res) => {
       const { id, custom, updatedAt } = req.body.accent
       $set.accent = { id, custom: typeof custom === 'string' ? custom : null, updatedAt: updatedAt ? new Date(updatedAt) : new Date() }
     }
+    if (req.body?.movieDNA === null) $set.movieDNA = null
+    else if (isPlainObject(req.body?.movieDNA)) $set.movieDNA = pickMovieDNA(req.body.movieDNA)
     const doc = await WatchlistSettings.findOneAndUpdate(
       { profileId: req.profile.profileId },
       { $set },
@@ -93,6 +107,7 @@ router.put('/settings', async (req, res) => {
       pluginPlacements: placementsOut(doc.pluginPlacements),
       tmdbApiKey: doc.tmdbApiKey ?? '',
       accent: doc.accent ?? null,
+      movieDNA: doc.movieDNA ?? null,
     })
   } catch (err) {
     res.status(400).json({ error: err.message })

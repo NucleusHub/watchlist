@@ -20,7 +20,7 @@ Base: `https://<host>/api/watchlist` (JSON). The web Watchlist's Mongo data is t
 | PUT `/collections/:id/order` | `{ itemIds: [] }` | `Collection` (sets `itemOrder`) |
 | POST `/collections/:id/items` | `{ itemIds: [] }` | `{ items, modified }` (adds membership) |
 | DELETE `/collections/:id` | | `{message}`; removes it from items |
-| GET / PUT `/settings` | PUT: `movie`, `show` (OpenTarget), `searchSources`, `pluginPlacements`, `tmdbApiKey`, `accent` (all optional) | `{ openDefaults:{movie,show}, searchSources, pluginPlacements, tmdbApiKey, accent }` |
+| GET / PUT `/settings` | PUT: `movie`, `show` (OpenTarget), `searchSources`, `pluginPlacements`, `tmdbApiKey`, `accent`, `movieDNA` (all optional) | `{ openDefaults:{movie,show}, searchSources, pluginPlacements, tmdbApiKey, accent, movieDNA }` |
 
 Item membership is stored on the item (`collectionIds`); change it with PATCH `collectionIds` or the collection `/items` call.
 
@@ -29,6 +29,7 @@ Item membership is stored on the item (`collectionIds`); change it with PATCH `c
 iOS-origin (new, all nullable): `overview, trailerUrl, customCredits[{name, role, cast(bool), personId, photo}], source, lastPage, lastWatchedAt (ISO date), playback{url, position, duration>0}|null`.
 Collection: `_id, name, description, coverUrl, coverItemIds[], coverCount, parentId, kind (manual|smart), filter, itemOrder[], position, createdAt, updatedAt`.
 Settings `accent`: `{ id, custom?, updatedAt }`. `tmdbApiKey` is returned to the owner only; the web client ignores it.
+Settings `movieDNA` (null until first set; PUT replaces it whole, `null` clears it): `{ enabled (default true), entries: { <key>: { kind genre|title|person, name, strength? (-100..100), hidden?, boosts?[ISO], genres?[], poster?, followed? } }, notInterested: { <key>: { name, genres[], at (ISO) } } }`. Keys: `genre:<lowercased name>`, `movie:<tmdbId>`, `show:<tmdbId>`, `person:<tmdbId>`, `item:<_id>` (untracked titles). Only what the person set is stored; the learned part is computed on each client from the library.
 
 ## iOS record <-> API mapping
 Field names are identical (iOS stores the web JSON as-is: `raw[...]`), so no renames. Notes:
@@ -40,6 +41,7 @@ Field names are identical (iOS stores the web JSON as-is: `raw[...]`), so no ren
 | `WatchlistDocument.deleted` tombstones | not needed: DELETE is authoritative; locally-tombstoned ids -> DELETE |
 | `Item.overview` empty -> `.null` | `overview: null` |
 | `settings.openDefaults.movie/show` | PUT `/settings` `{movie, show}`, read back as `openDefaults` |
+| `settings.movieDNA` | PUT/GET `/settings` `movieDNA`, same shape |
 
 ## First sign-in choice
 Offer when both device and server hold data. Load server state with GET `/`, GET `/collections`, GET `/settings` and diff by `_id` (compare `updatedAt`).
