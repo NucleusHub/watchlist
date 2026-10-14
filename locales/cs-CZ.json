@@ -403,5 +403,25 @@
   "watchlist.search.collections": "Kolekce",
   "watchlist.search.titles": "Tituly",
   "watchlist.search.noMatches": "Nic nenalezeno",
-  "watchlist.search.noMatchesHint": "Nic tu neodpovídá „{query}“."
+  "watchlist.search.noMatchesHint": "Nic tu neodpovídá „{query}“.",
+
+  "watchlist.tour.skip": "Přeskočit",
+  "watchlist.tour.next": "Další",
+  "watchlist.tour.done": "Hotovo",
+  "watchlist.tour.add.title": "Přidejte cokoli",
+  "watchlist.tour.add.message": "Kliknutím na Přidat dáte do seznamu film nebo seriál. S klíčem TMDb vyhledávání doplní plakát, herce i to, kde se dá sledovat.",
+  "watchlist.tour.pages.title": "Přepínejte mezi stránkami",
+  "watchlist.tour.pages.message": "Záložky nahoře přepínají mezi Watchlistem, Kolekcemi a stránkami, které přidávají pluginy, třeba Discover.",
+  "watchlist.tour.mark.title": "Označte a oblibte si",
+  "watchlist.tour.mark.message": "Až něco uvidíte, klikněte na fajfku, a na srdíčko pro oblíbené. Vše ostatní najdete v detailu titulu.",
+  "watchlist.tour.progress.title": "Navažte, kde jste skončili",
+  "watchlist.tour.progress.message": "Odškrtávejte epizody po sezónách a vždy víte, jak daleko u každého seriálu jste.",
+  "watchlist.tour.collections.title": "Vytvářejte kolekce",
+  "watchlist.tour.collections.message": "Seskupte tituly na večer ve dvou, maraton nebo doporučení od kamaráda, každou kolekci s vlastní obálkou a pořadím.",
+  "watchlist.tour.discover.title": "Objevte, co dál",
+  "watchlist.tour.discover.message": "Discover navrhuje tituly, MovieDNA se učí, co máte rádi, Cast & Crew ukáže, kdo je natočil, a News sleduje vaše tituly.",
+  "watchlist.tour.stats.title": "Podívejte se na svá čísla",
+  "watchlist.tour.stats.message": "Tlačítko s grafem v záhlaví ukáže, kolik jste toho zhlédli, kolik zbývá a jak hodnotíte. Karty si můžete upravit.",
+  "watchlist.tour.sync.title": "Vaše na každém zařízení",
+  "watchlist.tour.sync.message": "Watchlist se synchronizuje přes váš Nucleus ID a zálohu můžete exportovat kdykoli. Tuto prohlídku si můžete znovu přehrát v Nastavení."
 }

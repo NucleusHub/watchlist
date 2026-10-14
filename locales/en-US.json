@@ -403,5 +403,25 @@
   "watchlist.search.collections": "Collections",
   "watchlist.search.titles": "Titles",
   "watchlist.search.noMatches": "No matches",
-  "watchlist.search.noMatchesHint": "Nothing here matches “{query}”."
+  "watchlist.search.noMatchesHint": "Nothing here matches “{query}”.",
+
+  "watchlist.tour.skip": "Skip",
+  "watchlist.tour.next": "Next",
+  "watchlist.tour.done": "Done",
+  "watchlist.tour.add.title": "Add anything",
+  "watchlist.tour.add.message": "Click Add to put a movie or show on your list. With a TMDb key, search fills in the poster, cast and where to watch.",
+  "watchlist.tour.pages.title": "Switch between pages",
+  "watchlist.tour.pages.message": "The tabs at the top move between your Watchlist, Collections and the pages plugins add, like Discover.",
+  "watchlist.tour.mark.title": "Mark it, love it",
+  "watchlist.tour.mark.message": "Click the check when you've seen something and the heart for favorites. Open a title for everything else.",
+  "watchlist.tour.progress.title": "Pick up where you left off",
+  "watchlist.tour.progress.message": "Tick off episodes season by season, so you always know how far along each show is.",
+  "watchlist.tour.collections.title": "Make collections",
+  "watchlist.tour.collections.message": "Group titles for date night, a marathon or a friend's recommendations, each with its own cover and order.",
+  "watchlist.tour.discover.title": "Find what's next",
+  "watchlist.tour.discover.message": "Discover suggests titles, MovieDNA learns what you like, Cast & Crew shows who made them and News follows your titles.",
+  "watchlist.tour.stats.title": "See your numbers",
+  "watchlist.tour.stats.message": "The chart button in the header shows how much you've watched, what's left and how you rate things. Customize which cards you see.",
+  "watchlist.tour.sync.title": "Yours on every device",
+  "watchlist.tour.sync.message": "Your watchlist syncs through your Nucleus ID, and you can export a backup any time. You can replay this tour from Settings."
 }
