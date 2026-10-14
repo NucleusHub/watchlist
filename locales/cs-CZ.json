@@ -423,5 +423,29 @@
   "watchlist.tour.stats.title": "Podívejte se na svá čísla",
   "watchlist.tour.stats.message": "Tlačítko s grafem v záhlaví ukáže, kolik jste toho zhlédli, kolik zbývá a jak hodnotíte. Karty si můžete upravit.",
   "watchlist.tour.sync.title": "Vaše na každém zařízení",
-  "watchlist.tour.sync.message": "Watchlist se synchronizuje přes váš Nucleus ID a zálohu můžete exportovat kdykoli. Tuto prohlídku si můžete znovu přehrát v Nastavení."
+  "watchlist.tour.sync.message": "Watchlist se synchronizuje přes váš Nucleus ID a zálohu můžete exportovat kdykoli. Tuto prohlídku si můžete znovu přehrát v Nastavení.",
+
+  "watchlist.report.title": "Nahlásit problém",
+  "watchlist.report.whatHappened": "Co se stalo?",
+  "watchlist.report.details": "Postup, co jste čekali, co jste viděli",
+  "watchlist.report.screenshots": "Snímky obrazovky",
+  "watchlist.report.shotsHint": "Nejvýše {max}.",
+  "watchlist.report.removeShot": "Odebrat snímek",
+  "watchlist.report.replyTo": "Odpovědět na",
+  "watchlist.report.email": "E-mail (nepovinné)",
+  "watchlist.report.diagnostics": "Watchlist {version} · odesláno anonymně spolu s údaji o prohlížeči a systému",
+  "watchlist.report.send": "Odeslat",
+  "watchlist.report.done": "Hotovo",
+  "watchlist.report.sent": "Odesláno",
+  "watchlist.report.thanks": "Díky, že nám to dáváte vědět.",
+  "watchlist.report.thanksReply": "Díky. Ozveme se vám.",
+  "watchlist.report.badEmail": "Tento e-mail nevypadá správně.",
+  "watchlist.report.tooMany": "Příliš mnoho hlášení. Zkuste to později.",
+  "watchlist.report.failed": "Odeslání se nepovedlo ({status}).",
+  "watchlist.report.offline": "Jste offline. Zkuste to znovu, až budete připojeni.",
+
+  "watchlist.about.title": "O aplikaci",
+  "watchlist.about.version": "Verze",
+  "watchlist.about.privacy": "Zásady ochrany osobních údajů",
+  "watchlist.about.tmdb": "Tento produkt využívá API TMDB, ale není TMDB podporován ani certifikován."
 }

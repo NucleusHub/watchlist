@@ -423,5 +423,29 @@
   "watchlist.tour.stats.title": "See your numbers",
   "watchlist.tour.stats.message": "The chart button in the header shows how much you've watched, what's left and how you rate things. Customize which cards you see.",
   "watchlist.tour.sync.title": "Yours on every device",
-  "watchlist.tour.sync.message": "Your watchlist syncs through your Nucleus ID, and you can export a backup any time. You can replay this tour from Settings."
+  "watchlist.tour.sync.message": "Your watchlist syncs through your Nucleus ID, and you can export a backup any time. You can replay this tour from Settings.",
+
+  "watchlist.report.title": "Report a problem",
+  "watchlist.report.whatHappened": "What happened?",
+  "watchlist.report.details": "Steps, what you expected, what you saw",
+  "watchlist.report.screenshots": "Screenshots",
+  "watchlist.report.shotsHint": "Up to {max}.",
+  "watchlist.report.removeShot": "Remove screenshot",
+  "watchlist.report.replyTo": "Reply to",
+  "watchlist.report.email": "Email (optional)",
+  "watchlist.report.diagnostics": "Watchlist {version} · sent anonymously with your browser and system details",
+  "watchlist.report.send": "Send",
+  "watchlist.report.done": "Done",
+  "watchlist.report.sent": "Sent",
+  "watchlist.report.thanks": "Thanks for letting us know.",
+  "watchlist.report.thanksReply": "Thanks. We'll get back to you.",
+  "watchlist.report.badEmail": "That email doesn't look right.",
+  "watchlist.report.tooMany": "Too many reports. Try again later.",
+  "watchlist.report.failed": "Couldn't send it ({status}).",
+  "watchlist.report.offline": "You're offline. Try again when you're connected.",
+
+  "watchlist.about.title": "About",
+  "watchlist.about.version": "Version",
+  "watchlist.about.privacy": "Privacy policy",
+  "watchlist.about.tmdb": "This product uses the TMDB API but is not endorsed or certified by TMDB."
 }
