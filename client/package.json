@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build"
+    "build": "vite build",
+    "test": "node --test src/movieDNA/engine.test.js src/utils/*.test.js"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.0",
