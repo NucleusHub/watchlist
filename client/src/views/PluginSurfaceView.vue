@@ -11,6 +11,7 @@ import { useRegistry } from '@core/useRegistry.js'
 import { getItems } from '@/api/watchlist.js'
 import { surfaceByPath } from '@/utils/pluginSurfaces.js'
 import { useOpenSettings } from '@/composables/useOpenSettings.js'
+import { useWatchlistHost } from '@/composables/useWatchlistHost.js'
 
 const { t } = useI18n()
 const { isPluginEnabled } = useRegistry()
@@ -27,7 +28,8 @@ const available = computed(
 )
 
 async function load() {
-  loading.value = true
+  // A reload after the plugin changed something mustn't unmount it.
+  loading.value = !items.value.length
   try {
     items.value = await getItems()
   } catch {
@@ -36,6 +38,8 @@ async function load() {
     loading.value = false
   }
 }
+
+const host = useWatchlistHost({ items: () => items.value, changed: load })
 
 onMounted(load)
 </script>
@@ -82,6 +86,7 @@ onMounted(load)
           v-else
           :is="surface.component"
           :items="items"
+          :host="host"
           placement="tab"
           @changed="load"
         />
