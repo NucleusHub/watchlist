@@ -1,39 +1,29 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import { getItems, createItem, updateItem } from '@/api/watchlist.js'
-import { searchMulti, fetchMovieDetail, fetchTvDetail, fetchWatchProviders, buildSeasonProgress } from '@/api/tmdb.js'
-import { genreFacets, genresFromTmdbDetail, hasGenre, genrePillClass } from '@/utils/genres.js'
+import { genreFacets, hasGenre } from '@/utils/genres.js'
 import { watchlistSurfaces } from '@/utils/pluginSurfaces.js'
-import { searchAll } from '@/utils/globalSearch.js'
-import { itemRoute } from '@/utils/routes.js'
 import ItemCard from '@/components/ItemCard.vue'
 import ItemFormModal from '@/components/ItemFormModal.vue'
 import ManageCollectionsModal from '@/components/ManageCollectionsModal.vue'
-import WatchlistNav from '@/components/WatchlistNav.vue'
-import TemplateModal from '@core/TemplateModal.vue'
-import AppSidebar from '@core/AppSidebar.vue'
-import AppHeader from '@core/AppHeader.vue'
-import BackgroundBlobs from '@core/BackgroundBlobs.vue'
-import WatchlistStats from '@/components/WatchlistStats.vue'
-import SettingsButton from '@/components/SettingsButton.vue'
+import ContextMenu from '@core/ContextMenu.vue'
 import FavoriteHeart from '@core/FavoriteHeart.vue'
 import { useI18n } from '@core/useI18n.js'
 import { useCollections } from '@/composables/useCollections.js'
 import { useRegistry } from '@core/useRegistry.js'
 import { useOpenSettings } from '@/composables/useOpenSettings.js'
 import { useWatchlistHost } from '@/composables/useWatchlistHost.js'
-import { Icon } from '@core/icons'
-import VideoCameraIcon from '@/assets/icons/video-camera.svg?component'
-import ClockAltIcon from '@/assets/icons/clock-alt.svg?component'
-import CalendarIcon from '@/assets/icons/calendar.svg?component'
-import StarOutlineIcon from '@/assets/icons/star-outline.svg?component'
-import SortIcon from '@/assets/icons/sort.svg?component'
-import ListIcon from '@/assets/icons/list.svg?component'
-import ViewColumns2Icon from '@/assets/icons/view-columns-2.svg?component'
-import ViewColumns3Icon from '@/assets/icons/view-columns-3.svg?component'
+import { itemsVersion } from '@/composables/useItemSheet.js'
+import { ICONS } from '@core/icons'
+import HomeShell from '@/ui/HomeShell.vue'
+import SegmentPills from '@/ui/SegmentPills.vue'
+import GlassCircleButton from '@/ui/GlassCircleButton.vue'
+import Glyph from '@/ui/Glyph.vue'
+import EmptyState from '@/ui/EmptyState.vue'
+import { genreColor } from '@/ui/palette.js'
 
 const { t } = useI18n()
-const { applyMembership, collections } = useCollections()
+const { applyMembership } = useCollections()
 const { isPluginEnabled } = useRegistry()
 const { placementOf } = useOpenSettings()
 
@@ -41,16 +31,12 @@ const panelSurfaces = computed(() =>
   watchlistSurfaces.filter((s) => isPluginEnabled(s.pluginId) && placementOf(s) === 'panel')
 )
 
-const WARN_THRESHOLD = 10
-const sidebarOpen = ref(false)
-const showStats = ref(false)
 const gridStyle = ref(localStorage.getItem('watchlist-grid') || 'small')
-watch(gridStyle, val => localStorage.setItem('watchlist-grid', val))
-
+watch(gridStyle, (val) => localStorage.setItem('watchlist-grid', val))
 const gridClass = computed(() => ({
-  list:  'grid-cols-1',
-  big:   'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4',
-  small: 'grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5',
+  list: 'grid-cols-1 lg:grid-cols-2 gap-3',
+  big: 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-5',
+  small: 'grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-x-3 gap-y-4',
 }[gridStyle.value]))
 
 const items = ref([])
@@ -67,67 +53,68 @@ const activeType = ref('all')
 const onlyFavorite = ref(false)
 const sortBy = ref('alphabetical')
 const sortDir = ref('asc')
-const searchQuery = ref('')
 const activeGenres = ref([])
-const searchOpen = ref(false)
-const hits = computed(() => searchAll(items.value, collections.value, searchQuery.value))
-const hasHits = computed(() => hits.value.collections.length || hits.value.items.length)
 
-const showRefreshWarning = ref(false)
-const refreshing = ref(false)
-const refreshCurrent = ref(0)
-const refreshTotal = ref(0)
-const refreshDone = ref(false)
-const refreshFailed = ref(0)
-const refreshCancelled = ref(false)
-
-const STATUS_TABS = computed(() => [
-  { key: 'all', label: t('watchlist.status.all') },
-  { key: 'planned', label: t('watchlist.status.planned') },
-  { key: 'watching', label: t('watchlist.status.watching') },
-  { key: 'completed', label: t('watchlist.status.completed') },
-])
-
+const STATUS_TABS = computed(() => ['all', 'planned', 'watching', 'completed'].map((key) => ({ key, label: t('watchlist.status.' + key) })))
 const TYPE_TABS = computed(() => [
   { key: 'all', label: t('watchlist.type.all') },
   { key: 'movie', label: t('watchlist.type.movies') },
   { key: 'show', label: t('watchlist.type.shows') },
 ])
 
+// A–Z goes up, the rest come down, as on iOS.
+const SORTS = [
+  { key: 'alphabetical', label: 'watchlist.sort.alphabetical', dir: 'asc' },
+  { key: 'dateAdded', label: 'watchlist.sort.dateAdded', dir: 'desc' },
+  { key: 'dateReleased', label: 'watchlist.sort.dateReleased', dir: 'desc' },
+  { key: 'rating', label: 'watchlist.sort.rating', dir: 'desc' },
+  { key: 'runtime', label: 'watchlist.sort.runtime', dir: 'desc' },
+]
+const LAYOUTS = [
+  { key: 'list', label: 'watchlist.list.viewList', glyph: 'listBullet' },
+  { key: 'big', label: 'watchlist.list.viewGrid2', glyph: 'grid2' },
+  { key: 'small', label: 'watchlist.list.viewGrid3', glyph: 'grid3' },
+]
 
-
-const SORT_DEFAULTS = { dateAdded: 'desc', dateReleased: 'desc', rating: 'desc', alphabetical: 'asc', runtime: 'desc' }
-
-function toggleSort(key) {
-  if (sortBy.value === key) {
-    sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc'
-  } else {
+function pickSort(key) {
+  if (sortBy.value === key) sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc'
+  else {
     sortBy.value = key
-    sortDir.value = SORT_DEFAULTS[key]
+    sortDir.value = SORTS.find((s) => s.key === key).dir
   }
 }
 
-const preGenre = computed(() => {
-  const q = searchQuery.value.trim().toLowerCase()
-  return items.value.filter((i) => {
-    const statusOk = activeStatus.value === 'all' || i.status === activeStatus.value
-    const typeOk = activeType.value === 'all' || i.type === activeType.value
-    const favOk = !onlyFavorite.value || i.favorite
-    const searchOk = !q || i.title.toLowerCase().includes(q) || (i.notes && i.notes.toLowerCase().includes(q))
-    return statusOk && typeOk && favOk && searchOk
-  })
-})
+const menu = ref({ show: false, x: 0, y: 0, items: [] })
+function openMenu(e, kind) {
+  const r = e.currentTarget.getBoundingClientRect()
+  const tick = ICONS.check
+  const items = kind === 'sort'
+    ? [
+        ...SORTS.map((s) => ({ label: t(s.label), icon: sortBy.value === s.key ? tick : ' ', action: () => pickSort(s.key) })),
+        { divider: true },
+        { label: t(sortDir.value === 'asc' ? 'watchlist.sort.ascending' : 'watchlist.sort.descending'), icon: sortDir.value === 'asc' ? ICONS.chevronUp : ICONS.chevronDown, action: () => (sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc') },
+      ]
+    : LAYOUTS.map((l) => ({ label: t(l.label), icon: gridStyle.value === l.key ? tick : ' ', action: () => (gridStyle.value = l.key) }))
+  menu.value = { show: true, x: r.right - 192, y: r.bottom + 8, items }
+}
+const layoutGlyph = computed(() => LAYOUTS.find((l) => l.key === gridStyle.value)?.glyph ?? 'grid3')
+const sortActive = computed(() => sortBy.value !== 'alphabetical' || sortDir.value !== 'asc')
+
+const preGenre = computed(() =>
+  items.value.filter((i) =>
+    (activeStatus.value === 'all' || i.status === activeStatus.value) &&
+    (activeType.value === 'all' || i.type === activeType.value) &&
+    (!onlyFavorite.value || i.favorite)
+  )
+)
 
 const genreOptions = computed(() => genreFacets(preGenre.value))
-
+const isGenreOn = (name) => activeGenres.value.some((g) => g.toLowerCase() === name.toLowerCase())
 function toggleGenre(name) {
-  const key = name.toLowerCase()
-  const next = activeGenres.value.filter((g) => g.toLowerCase() !== key)
+  const next = activeGenres.value.filter((g) => g.toLowerCase() !== name.toLowerCase())
   if (next.length === activeGenres.value.length) next.push(name)
   activeGenres.value = next
 }
-
-const isGenreOn = (name) => activeGenres.value.some((g) => g.toLowerCase() === name.toLowerCase())
 
 // Drop selections missing from the current facets, or they would filter invisibly.
 watch(genreOptions, (opts) => {
@@ -144,40 +131,27 @@ const filtered = computed(() => {
   const dir = sortDir.value === 'asc' ? 1 : -1
   return [...base].sort((a, b) => {
     switch (sortBy.value) {
-      case 'dateAdded':
-        return (new Date(a.dateAdded) - new Date(b.dateAdded)) * dir
-      case 'dateReleased':
-        return ((a.year ?? 0) - (b.year ?? 0)) * dir
-      case 'rating':
-        return ((a.rating ?? a.tmdbRating ?? 0) - (b.rating ?? b.tmdbRating ?? 0)) * dir
-      case 'alphabetical':
-        return a.title.localeCompare(b.title) * dir
+      case 'dateAdded': return (new Date(a.dateAdded) - new Date(b.dateAdded)) * dir
+      case 'dateReleased': return ((a.year ?? 0) - (b.year ?? 0)) * dir
+      case 'rating': return ((a.rating ?? a.tmdbRating ?? 0) - (b.rating ?? b.tmdbRating ?? 0)) * dir
       case 'runtime': {
-        const aRt = a.type === 'movie' ? (a.runtime ?? 0) : (a.showRuntime ?? 0)
-        const bRt = b.type === 'movie' ? (b.runtime ?? 0) : (b.showRuntime ?? 0)
-        return (aRt - bRt) * dir
+        const rt = (i) => (i.type === 'movie' ? i.runtime : i.showRuntime) ?? 0
+        return (rt(a) - rt(b)) * dir
       }
-      default:
-        return 0
+      default: return a.title.localeCompare(b.title) * dir
     }
   })
 })
 
-const stats = computed(() => ({
-  total: items.value.length,
-  completed: items.value.filter((i) => i.status === 'completed').length,
-  watching: items.value.filter((i) => i.status === 'watching').length,
-}))
-
-const refreshWarningMessage = computed(() => {
-  const n = items.value.length
-  const secs = Math.round(n * 0.8)
-  const time = secs >= 60 ? `~${Math.round(secs / 60)} min` : `~${secs}s`
-  return t('watchlist.refresh.warningMessage', { count: n, time })
-})
+function clearFilters() {
+  activeStatus.value = 'all'
+  activeType.value = 'all'
+  onlyFavorite.value = false
+  activeGenres.value = []
+}
 
 async function load() {
-  loading.value = true
+  loading.value = !items.value.length
   error.value = null
   try {
     items.value = await getItems()
@@ -199,11 +173,8 @@ async function handleSubmit(data, addAnother = false) {
     const created = await createItem(data)
     applyMembership([], created.collectionIds || [])
     items.value.unshift(created)
-    if (addAnother) {
-      modalResetKey.value++
-    } else {
-      closeModal()
-    }
+    if (addAnother) modalResetKey.value++
+    else closeModal()
   }
 }
 
@@ -211,436 +182,97 @@ function openAdd() {
   editingItem.value = null
   showModal.value = true
 }
-
 function openEdit(item) {
   editingItem.value = item
   showModal.value = true
 }
-
 function closeModal() {
   showModal.value = false
   editingItem.value = null
 }
-
 function handleUpdated(updated) {
   items.value = items.value.map((i) => (i._id === updated._id ? updated : i))
 }
-
 function openManage(item) {
   managingItem.value = item
   showManage.value = true
 }
-
 function handleDeleted(id) {
   items.value = items.value.filter((i) => i._id !== id)
 }
 
-function requestRefresh() {
-  if (items.value.length === 0) return
-  if (items.value.length > WARN_THRESHOLD) {
-    showRefreshWarning.value = true
-  } else {
-    runRefresh()
-  }
-}
-
-async function runRefresh() {
-  showRefreshWarning.value = false
-  refreshing.value = true
-  refreshDone.value = false
-  refreshFailed.value = 0
-  refreshCancelled.value = false
-  refreshCurrent.value = 0
-  refreshTotal.value = items.value.length
-
-  for (const item of items.value) {
-    if (refreshCancelled.value) break
-
-    try {
-      const isMovie = item.type === 'movie'
-      const mediaType = isMovie ? 'movie' : 'tv'
-
-      let tmdbId = item.tmdbId
-      let posterPath = null
-      if (!tmdbId) {
-        const results = await searchMulti(item.title)
-        const candidates = results.filter((r) => r.media_type === mediaType)
-
-        if (candidates.length === 0) {
-          refreshFailed.value++
-          refreshCurrent.value++
-          continue
-        }
-
-        let match = candidates[0]
-        if (item.year) {
-          const exact = candidates.find(
-            (r) => (r.release_date || r.first_air_date)?.slice(0, 4) === String(item.year)
-          )
-          if (exact) match = exact
-        }
-        tmdbId = match.id
-        posterPath = match.poster_path
-      }
-
-      const [detail, streaming] = await Promise.all([
-        isMovie ? fetchMovieDetail(tmdbId) : fetchTvDetail(tmdbId),
-        fetchWatchProviders(tmdbId, mediaType),
-      ])
-
-      const patch = {}
-
-      if (!item.tmdbId) patch.tmdbId = tmdbId
-      if (detail.vote_average) patch.tmdbRating = Math.round(detail.vote_average * 10) / 10
-
-      // Don't overwrite uploaded posters.
-      if (!item.posterUrl || item.posterUrl.startsWith('https://image.tmdb.org')) {
-        const poster = posterPath ?? detail.poster_path
-        if (poster) patch.posterUrl = `https://image.tmdb.org/t/p/w500${poster}`
-      }
-
-      // Blank-fill only, so hand-edited genres survive a refresh.
-      if (!item.genres?.length) {
-        const genres = genresFromTmdbDetail(detail)
-        if (genres.length) patch.genres = genres
-      }
-
-      if (!item.year && detail.release_date) patch.year = Number(detail.release_date.slice(0, 4))
-      if (!item.year && detail.first_air_date) patch.year = Number(detail.first_air_date.slice(0, 4))
-      if (isMovie && !item.runtime && detail.runtime) patch.runtime = detail.runtime
-      if (!isMovie) {
-        if (!item.seasons && detail.number_of_seasons) patch.seasons = detail.number_of_seasons
-        if (!item.episodes && detail.number_of_episodes) patch.episodes = detail.number_of_episodes
-        if (!item.showRuntime && detail.number_of_episodes && detail.episode_run_time?.length) {
-          patch.showRuntime = detail.number_of_episodes * detail.episode_run_time[0]
-        }
-        const sp = buildSeasonProgress(detail, item.seasonProgress)
-        if (sp.length) patch.seasonProgress = sp
-      }
-
-      if (streaming) {
-        patch.watchLink = streaming.link
-        patch.streamingProvider = streaming.name
-        patch.streamingLogo = streaming.logo
-      }
-
-      if (Object.keys(patch).length > 0) {
-        const updated = await updateItem(item._id, patch)
-        items.value = items.value.map((i) => (i._id === updated._id ? updated : i))
-      }
-    } catch {
-      refreshFailed.value++
-    }
-
-    refreshCurrent.value++
-    await new Promise((r) => setTimeout(r, 300))
-  }
-
-  refreshDone.value = true
-}
-
-function closeRefreshModal() {
-  refreshing.value = false
-  refreshDone.value = false
-}
-
-const refreshProgress = computed(() =>
-  refreshTotal.value > 0 ? (refreshCurrent.value / refreshTotal.value) * 100 : 0
-)
-
 onMounted(load)
+watch(itemsVersion, load)
 </script>
 
 <template>
-  <div class="relative min-h-screen bg-slate-100 dark:bg-[#0d0d1a] text-slate-900 dark:text-white overflow-x-hidden">
-    <BackgroundBlobs />
-    <div class="relative z-10">
-    <AppHeader>
-      <template #left>
-        <button
-          @click="sidebarOpen = !sidebarOpen"
-          class="cursor-pointer flex flex-col justify-center gap-[5px] p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
-          :title="t('watchlist.header.menu')"
-        >
-          <span class="block w-5 h-0.5 rounded-full bg-current transition-all duration-200"
-                :class="sidebarOpen ? 'rotate-45 translate-y-[7px]' : ''" />
-          <span class="block w-5 h-0.5 rounded-full bg-current transition-all duration-200"
-                :class="sidebarOpen ? 'opacity-0 scale-x-0' : ''" />
-          <span class="block w-5 h-0.5 rounded-full bg-current transition-all duration-200"
-                :class="sidebarOpen ? '-rotate-45 -translate-y-[7px]' : ''" />
-        </button>
-        <p class="hidden md:block text-xs text-slate-500 dark:text-slate-400">
-          {{ t('watchlist.header.stats', { total: stats.total, watching: stats.watching, completed: stats.completed }) }}
-        </p>
-      </template>
+  <HomeShell :items="items" addable :search-prompt="t('watchlist.search.promptAll')" @add="openAdd">
+    <div v-if="loading" class="text-center py-16 text-[var(--wl-text-2)]">{{ t('watchlist.state.loading') }}</div>
 
-      <template #right>
-        <div class="relative">
-          <Icon name="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500 pointer-events-none" />
-          <input
-            v-model="searchQuery"
-            type="text"
-            :placeholder="t('watchlist.header.search')"
-            autocomplete="off"
-            @focus="searchOpen = true"
-            @blur="searchOpen = false"
-            @keydown.esc="searchOpen = false"
-            class="w-32 sm:w-48 pl-9 pr-3 py-1.5 text-sm bg-black/5 dark:bg-white/8 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-lg border border-transparent focus:border-indigo-500/50 focus:outline-none focus:bg-white dark:focus:bg-white/12 transition-all duration-200"
-          />
-          <button
-            v-if="searchQuery"
-            @click="searchQuery = ''"
-            class="cursor-pointer absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-          >
-            <Icon name="close" class="w-3.5 h-3.5" :sw="2.5" />
-          </button>
+    <EmptyState v-else-if="error" icon="warning" :title="error">
+      <button type="button" class="wl-btn wl-btn-secondary mt-2" @click="load">{{ t('watchlist.state.retry') }}</button>
+    </EmptyState>
 
-          <div
-            v-if="searchOpen && searchQuery.trim()"
-            class="absolute right-0 top-full mt-2 z-50 w-72 sm:w-80 max-h-96 overflow-y-auto rounded-xl bg-white dark:bg-slate-800 border border-black/5 dark:border-white/10 shadow-xl py-1.5"
-            @mousedown.prevent
-          >
-            <template v-if="hits.collections.length">
-              <p class="px-3 pt-1.5 pb-1 text-[11px] uppercase tracking-wide text-slate-400 dark:text-slate-500">{{ t('watchlist.search.collections') }}</p>
-              <RouterLink
-                v-for="c in hits.collections"
-                :key="c._id"
-                :to="{ name: 'collection', params: { id: String(c._id) } }"
-                class="flex items-center justify-between gap-3 px-3 py-2 text-sm text-slate-800 dark:text-slate-100 hover:bg-black/5 dark:hover:bg-white/10 no-underline"
-              >
-                <span class="truncate">{{ c.name }}</span>
-                <span class="shrink-0 text-xs text-slate-400 dark:text-slate-500">{{ t('watchlist.collections.itemCount', { count: c.itemCount || 0 }) }}</span>
-              </RouterLink>
-            </template>
-            <template v-if="hits.items.length">
-              <p class="px-3 pt-2 pb-1 text-[11px] uppercase tracking-wide text-slate-400 dark:text-slate-500">{{ t('watchlist.search.titles') }}</p>
-              <RouterLink
-                v-for="i in hits.items"
-                :key="i._id"
-                :to="itemRoute(i._id)"
-                class="flex items-center justify-between gap-3 px-3 py-2 text-sm text-slate-800 dark:text-slate-100 hover:bg-black/5 dark:hover:bg-white/10 no-underline"
-              >
-                <span class="truncate">{{ i.title }}</span>
-                <span class="shrink-0 text-xs text-slate-400 dark:text-slate-500">{{ [i.year, t('watchlist.status.' + i.status)].filter(Boolean).join(' · ') }}</span>
-              </RouterLink>
-            </template>
-            <div v-if="!hasHits" class="px-3 py-4 text-center">
-              <p class="text-sm font-medium text-slate-600 dark:text-slate-300">{{ t('watchlist.search.noMatches') }}</p>
-              <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{{ t('watchlist.search.noMatchesHint', { query: searchQuery.trim() }) }}</p>
-            </div>
-          </div>
-        </div>
+    <EmptyState v-else-if="!items.length" icon="film" :title="t('watchlist.empty.title')" :message="t('watchlist.empty.message')" class="pt-16">
+      <button type="button" class="wl-btn wl-btn-primary mt-3 w-full max-w-[280px]" @click="openAdd">{{ t('watchlist.empty.add') }}</button>
+    </EmptyState>
 
-        <button
-          v-if="stats.total > 0"
-          @click="showStats = !showStats"
-          :title="showStats ? t('watchlist.header.backToList') : t('watchlist.header.statistics')"
-          :class="['cursor-pointer p-2 rounded-lg transition-colors', showStats ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-slate-700' : 'text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700']"
-        >
-          <Icon name="stats" class="w-4 h-4" />
-        </button>
-        <SettingsButton />
-        <button
-          v-if="stats.total > 0 && !showStats"
-          @click="requestRefresh"
-          :disabled="refreshing"
-          :title="t('watchlist.header.refresh')"
-          class="hidden sm:block cursor-pointer p-2 text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-default"
-        >
-          <Icon name="refresh" class="w-4 h-4" />
-        </button>
-        <button
-          @click="openAdd"
-          class="group nuc-press cursor-pointer flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium px-3 sm:px-4 py-2 rounded-lg transition-colors"
-        >
-          <Icon name="plus" class="w-4 h-4 nuc-pop" :sw="2.5" />
-          <span class="hidden sm:inline">{{ t('watchlist.header.add') }}</span>
-        </button>
-      </template>
-    </AppHeader>
-
-    <main class="max-w-4xl mx-auto px-4 py-6 flex flex-col gap-6">
-      <div class="flex justify-center">
-        <WatchlistNav />
+    <template v-else>
+      <div class="flex flex-col gap-4 mb-5">
+        <component
+          :is="s.component"
+          v-for="s in panelSurfaces"
+          :key="s.pluginId"
+          :items="items"
+          :host="host"
+          placement="panel"
+          @changed="load"
+        />
       </div>
 
-      <WatchlistStats v-if="showStats" :items="items" />
-      <template v-else>
-      <component
-        v-for="s in panelSurfaces"
-        :key="s.pluginId"
-        :is="s.component"
-        :items="items"
-        :host="host"
-        placement="panel"
-        @changed="load"
-      />
+      <div class="max-w-3xl mx-auto flex flex-col gap-3 mb-5">
+        <SegmentPills v-model="activeStatus" :items="STATUS_TABS" fill />
 
-      <div class="glass rounded-2xl p-2 flex flex-col gap-2.5">
-        <div class="flex items-center gap-3">
-          <div class="min-w-0 flex-1 overflow-x-auto no-scrollbar">
-            <div class="inline-flex items-center gap-0.5 bg-black/[0.04] dark:bg-white/5 rounded-xl p-1">
-              <button
-                v-for="tab in STATUS_TABS"
-                :key="tab.key"
-                @click="activeStatus = tab.key"
-                :class="[
-                  'cursor-pointer whitespace-nowrap px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all',
-                  activeStatus === tab.key
-                    ? 'bg-white dark:bg-white/15 text-slate-900 dark:text-white shadow-sm'
-                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white',
-                ]"
-              >
-                {{ tab.label }}
-              </button>
-            </div>
-          </div>
-          <span class="hidden sm:block shrink-0 text-xs text-slate-400 dark:text-slate-500 tabular-nums pr-1">
-            {{ t('watchlist.list.showing', { shown: filtered.length, total: stats.total }) }}
+        <div class="flex items-center gap-2">
+          <SegmentPills v-model="activeType" :items="TYPE_TABS" />
+          <div class="flex-1" />
+          <span class="hidden sm:block text-xs text-[var(--wl-text-2)] tabular-nums pr-1">
+            {{ t('watchlist.list.showing', { shown: filtered.length, total: items.length }) }}
           </span>
+          <GlassCircleButton
+            :title="t('watchlist.filter.favorites')"
+            :active="onlyFavorite"
+            :class="['nuc-fav', onlyFavorite ? '!text-rose-500' : '']"
+            @click="onlyFavorite = !onlyFavorite"
+          >
+            <FavoriteHeart :active="onlyFavorite" class="w-[18px] h-[18px]" stroke-width="2" />
+          </GlassCircleButton>
+          <GlassCircleButton icon="sortArrows" :title="t('watchlist.sort.title')" :active="sortActive" @click="openMenu($event, 'sort')" />
+          <GlassCircleButton :icon="layoutGlyph" :title="t('watchlist.list.layout')" @click="openMenu($event, 'layout')" />
         </div>
 
-        <div class="h-px bg-black/[0.06] dark:bg-white/8 -mx-2" />
-
-        <div class="flex flex-col gap-2.5 lg:flex-row lg:items-center lg:justify-between">
-          <div class="flex items-center gap-2 self-start">
-            <div class="inline-flex items-center gap-0.5 bg-black/[0.04] dark:bg-white/5 rounded-xl p-1">
-              <button
-                v-for="tab in TYPE_TABS"
-                :key="tab.key"
-                @click="activeType = tab.key"
-                :class="[
-                  'cursor-pointer whitespace-nowrap px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all',
-                  activeType === tab.key
-                    ? 'bg-white dark:bg-white/15 text-slate-900 dark:text-white shadow-sm'
-                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white',
-                ]"
-              >
-                {{ tab.label }}
-              </button>
-            </div>
+        <div v-if="genreOptions.length" class="-mx-4 px-4 overflow-x-auto no-scrollbar">
+          <div class="inline-flex items-center gap-1.5 py-0.5">
             <button
-              @click="onlyFavorite = !onlyFavorite"
-              :title="t('watchlist.filter.favorites')"
-              :class="[
-                'nuc-fav nuc-press cursor-pointer inline-flex items-center gap-1.5 h-9 px-3 rounded-xl text-sm font-medium transition-colors',
-                onlyFavorite
-                  ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400'
-                  : 'bg-black/[0.04] dark:bg-white/5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white',
-              ]"
+              v-for="g in genreOptions"
+              :key="g.name"
+              type="button"
+              class="wl-chip nuc-press cursor-pointer transition-colors"
+              :style="isGenreOn(g.name) ? { background: genreColor(g.name), color: '#fff' } : undefined"
+              @click="toggleGenre(g.name)"
             >
-              <FavoriteHeart :active="onlyFavorite" class="w-4 h-4" />
-              <span class="hidden sm:inline">{{ t('watchlist.filter.favorites') }}</span>
+              {{ g.name }}
+              <span :class="['tabular-nums', isGenreOn(g.name) ? 'text-white/70' : 'text-[var(--wl-text-2)]']">{{ g.count }}</span>
             </button>
-          </div>
-
-          <div class="flex items-center gap-1.5 shrink-0">
-            <div class="flex items-center gap-0.5">
-              <button
-                @click="toggleSort('runtime')"
-                :title="t('watchlist.sort.runtime') + ' ' + (sortBy === 'runtime' ? (sortDir === 'asc' ? '↑' : '↓') : '')"
-                :class="['cursor-pointer h-9 px-2 rounded-lg transition-colors inline-flex items-center gap-0.5', sortBy === 'runtime' ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/15' : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/8']"
-              >
-                <VideoCameraIcon class="w-4 h-4" />
-                <svg v-if="sortBy === 'runtime'" class="w-2.5 h-2.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" :d="sortDir === 'asc' ? 'M4.5 15.75l7.5-7.5 7.5 7.5' : 'M19.5 8.25l-7.5 7.5-7.5-7.5'" /></svg>
-              </button>
-              <button
-                @click="toggleSort('dateAdded')"
-                :title="t('watchlist.sort.dateAdded') + ' ' + (sortBy === 'dateAdded' ? (sortDir === 'asc' ? '↑' : '↓') : '')"
-                :class="['cursor-pointer h-9 px-2 rounded-lg transition-colors inline-flex items-center gap-0.5', sortBy === 'dateAdded' ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/15' : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/8']"
-              >
-                <ClockAltIcon class="w-4 h-4" />
-                <svg v-if="sortBy === 'dateAdded'" class="w-2.5 h-2.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" :d="sortDir === 'asc' ? 'M4.5 15.75l7.5-7.5 7.5 7.5' : 'M19.5 8.25l-7.5 7.5-7.5-7.5'" /></svg>
-              </button>
-              <button
-                @click="toggleSort('dateReleased')"
-                :title="t('watchlist.sort.dateReleased') + ' ' + (sortBy === 'dateReleased' ? (sortDir === 'asc' ? '↑' : '↓') : '')"
-                :class="['cursor-pointer h-9 px-2 rounded-lg transition-colors inline-flex items-center gap-0.5', sortBy === 'dateReleased' ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/15' : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/8']"
-              >
-                <CalendarIcon class="w-4 h-4" />
-                <svg v-if="sortBy === 'dateReleased'" class="w-2.5 h-2.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" :d="sortDir === 'asc' ? 'M4.5 15.75l7.5-7.5 7.5 7.5' : 'M19.5 8.25l-7.5 7.5-7.5-7.5'" /></svg>
-              </button>
-              <button
-                @click="toggleSort('rating')"
-                :title="t('watchlist.sort.rating') + ' ' + (sortBy === 'rating' ? (sortDir === 'asc' ? '↑' : '↓') : '')"
-                :class="['cursor-pointer h-9 px-2 rounded-lg transition-colors inline-flex items-center gap-0.5', sortBy === 'rating' ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/15' : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/8']"
-              >
-                <StarOutlineIcon class="w-4 h-4" />
-                <svg v-if="sortBy === 'rating'" class="w-2.5 h-2.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" :d="sortDir === 'asc' ? 'M4.5 15.75l7.5-7.5 7.5 7.5' : 'M19.5 8.25l-7.5 7.5-7.5-7.5'" /></svg>
-              </button>
-              <button
-                @click="toggleSort('alphabetical')"
-                :title="t('watchlist.sort.alphabetical') + ' ' + (sortBy === 'alphabetical' ? (sortDir === 'asc' ? 'A→Z' : 'Z→A') : '')"
-                :class="['cursor-pointer h-9 px-2 rounded-lg transition-colors inline-flex items-center gap-0.5', sortBy === 'alphabetical' ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/15' : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/8']"
-              >
-                <SortIcon class="w-4 h-4" />
-                <svg v-if="sortBy === 'alphabetical'" class="w-2.5 h-2.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" :d="sortDir === 'asc' ? 'M4.5 15.75l7.5-7.5 7.5 7.5' : 'M19.5 8.25l-7.5 7.5-7.5-7.5'" /></svg>
-              </button>
-            </div>
-
-            <div class="flex items-center h-9 bg-black/[0.05] dark:bg-white/5 rounded-lg p-1 gap-0.5">
-              <button @click="gridStyle = 'list'" :title="t('watchlist.list.viewList')" :class="['cursor-pointer h-full px-2.5 rounded-md inline-flex items-center transition-colors', gridStyle === 'list' ? 'text-indigo-600 dark:text-white bg-white dark:bg-white/15 shadow-sm' : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-white']">
-                <ListIcon class="w-4 h-4" />
-              </button>
-              <button @click="gridStyle = 'big'" :title="t('watchlist.list.viewGrid2')" :class="['cursor-pointer h-full px-2.5 rounded-md inline-flex items-center transition-colors', gridStyle === 'big' ? 'text-indigo-600 dark:text-white bg-white dark:bg-white/15 shadow-sm' : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-white']">
-                <ViewColumns2Icon class="w-4 h-4" />
-              </button>
-              <button @click="gridStyle = 'small'" :title="t('watchlist.list.viewGrid3')" :class="['cursor-pointer h-full px-2.5 rounded-md inline-flex items-center transition-colors', gridStyle === 'small' ? 'text-indigo-600 dark:text-white bg-white dark:bg-white/15 shadow-sm' : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-white']">
-                <ViewColumns3Icon class="w-4 h-4" />
-              </button>
-            </div>
           </div>
         </div>
-
-        <template v-if="genreOptions.length">
-          <div class="h-px bg-black/[0.06] dark:bg-white/8 -mx-2" />
-          <div class="flex items-center gap-2">
-            <div class="min-w-0 flex-1 overflow-x-auto no-scrollbar">
-              <div class="inline-flex items-center gap-1.5 py-0.5">
-                <button
-                  v-for="g in genreOptions"
-                  :key="g.name"
-                  @click="toggleGenre(g.name)"
-                  :class="[
-                    'cursor-pointer whitespace-nowrap inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all',
-                    isGenreOn(g.name)
-                      ? 'ring-1 ring-inset ring-current ' + genrePillClass(g.name)
-                      : 'bg-black/[0.04] dark:bg-white/5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white',
-                  ]"
-                >
-                  {{ g.name }}
-                  <span class="tabular-nums opacity-60">{{ g.count }}</span>
-                </button>
-              </div>
-            </div>
-            <button
-              v-if="activeGenres.length"
-              @click="activeGenres = []"
-              class="cursor-pointer shrink-0 text-xs text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors pr-1"
-            >
-              {{ t('watchlist.filter.clearGenres') }}
-            </button>
-          </div>
-        </template>
       </div>
 
-      <div v-if="loading" class="text-center py-16 text-slate-400 dark:text-slate-500">{{ t('watchlist.state.loading') }}</div>
+      <EmptyState v-if="!filtered.length" icon="magnifier" :title="t('watchlist.search.noMatches')" :message="t('watchlist.filter.noMatches')">
+        <button type="button" class="wl-btn wl-btn-secondary mt-2" @click="clearFilters">{{ t('watchlist.filter.clear') }}</button>
+      </EmptyState>
 
-      <div v-else-if="error" class="text-center py-16">
-        <p class="text-red-400 text-sm">{{ error }}</p>
-        <button @click="load" class="cursor-pointer mt-3 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white underline">{{ t('watchlist.state.retry') }}</button>
-      </div>
-
-      <div v-else-if="filtered.length === 0" class="grid gap-3" :class="gridClass">
-        <button
-          @click="openAdd"
-          class="cursor-pointer min-h-36 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-indigo-500 hover:bg-slate-100/50 dark:hover:bg-slate-800/50 text-slate-400 dark:text-slate-600 hover:text-indigo-500 dark:hover:text-indigo-400 transition-all flex items-center justify-center"
-        >
-          <Icon name="plus" class="w-8 h-8" :sw="1.5" />
-        </button>
-      </div>
-
-      <div v-else class="grid gap-3 nuc-stagger" :class="gridClass" style="--nuc-step: 32ms">
+      <div v-else :class="['grid nuc-stagger', gridClass]" style="--nuc-step: 28ms">
         <ItemCard
           v-for="item in filtered"
           :key="item._id"
@@ -651,93 +283,18 @@ onMounted(load)
           @edit="openEdit"
           @manage-collections="openManage"
         />
-        <button
-          @click="openAdd"
-          class="cursor-pointer min-h-36 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-indigo-500 hover:bg-slate-100/50 dark:hover:bg-slate-800/50 text-slate-400 dark:text-slate-600 hover:text-indigo-500 dark:hover:text-indigo-400 transition-all flex items-center justify-center"
-        >
-          <Icon name="plus" class="w-8 h-8" :sw="1.5" />
-        </button>
       </div>
-      </template>
-    </main>
+    </template>
+  </HomeShell>
 
-    <AppSidebar :open="sidebarOpen" @close="sidebarOpen = false" />
-
-    <ItemFormModal
-      :show="showModal"
-      :initial="editingItem"
-      :reset-key="modalResetKey"
-      @close="closeModal"
-      @submit="handleSubmit"
-      @deleted="handleDeleted"
-    />
-
-
-    <ManageCollectionsModal
-      :show="showManage"
-      :item="managingItem"
-      @close="showManage = false"
-      @updated="handleUpdated"
-    />
-
-    <TemplateModal
-      :show="showRefreshWarning"
-      :title="t('watchlist.refresh.warningTitle')"
-      :message="refreshWarningMessage"
-      :confirm-label="t('watchlist.refresh.confirm')"
-      @confirm="runRefresh"
-      @cancel="showRefreshWarning = false"
-    />
-
-    <TemplateModal
-      :show="refreshing"
-      header
-      :closeable="false"
-      size="sm"
-      :title="refreshDone ? (refreshCancelled ? t('watchlist.refresh.cancelled') : t('watchlist.refresh.done')) : t('watchlist.refresh.running')"
-      body-class="px-6 pt-4 pb-2"
-    >
-      <div class="flex flex-col gap-4">
-        <p class="text-sm text-slate-500 dark:text-slate-400">
-          <template v-if="refreshDone">
-            {{ t('watchlist.refresh.updated', { done: refreshCurrent - refreshFailed, total: refreshTotal }) }}
-            <span v-if="refreshFailed > 0" class="text-slate-500">{{ t('watchlist.refresh.notFound', { count: refreshFailed }) }}</span>
-          </template>
-          <template v-else>
-            {{ t('watchlist.refresh.progress', { current: refreshCurrent, total: refreshTotal }) }}
-          </template>
-        </p>
-        <div class="h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-          <div
-            class="h-full bg-indigo-500 rounded-full transition-all duration-300"
-            :style="{ width: `${refreshProgress}%` }"
-          />
-        </div>
-      </div>
-      <template #footer>
-        <div class="flex justify-end w-full">
-          <button
-            v-if="refreshDone"
-            @click="closeRefreshModal"
-            class="cursor-pointer px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-500 rounded-lg transition-colors"
-          >
-            {{ t('watchlist.refresh.close') }}
-          </button>
-          <button
-            v-else
-            @click="refreshCancelled = true"
-            class="cursor-pointer px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/15 rounded-lg transition-colors"
-          >
-            {{ t('watchlist.refresh.cancel') }}
-          </button>
-        </div>
-      </template>
-    </TemplateModal>
-  </div>
-  </div>
+  <ItemFormModal
+    :show="showModal"
+    :initial="editingItem"
+    :reset-key="modalResetKey"
+    @close="closeModal"
+    @submit="handleSubmit"
+    @deleted="handleDeleted"
+  />
+  <ManageCollectionsModal :show="showManage" :item="managingItem" @close="showManage = false" @updated="handleUpdated" />
+  <ContextMenu :show="menu.show" :x="menu.x" :y="menu.y" :items="menu.items" @close="menu.show = false" />
 </template>
-
-<style scoped>
-.fade-enter-active, .fade-leave-active { transition: opacity 0.15s ease; }
-.fade-enter-from, .fade-leave-to { opacity: 0; }
-</style>

@@ -174,7 +174,7 @@ export function useWatchlistHost({ items, changed = () => {} }) {
       if (url && /^https?:\/\//i.test(url)) window.open(url, '_blank', 'noopener')
     },
 
-    openItem: (id) => router.push(`/item/${id}`),
+    openItem: (id) => router.push(itemRoute(id)),
 
     // The ways to reset a title's progress, named for the person: [{ id, title, isDestructive }].
     resetActions(id) {

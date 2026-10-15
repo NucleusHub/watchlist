@@ -9,11 +9,12 @@
     "test": "node --test src/movieDNA/engine.test.js src/utils/*.test.js"
   },
   "dependencies": {
+    "@avenra/liquid-glass": "1.2.0",
     "@tailwindcss/vite": "^4.3.0",
-    "@zaosoula/liquid-glass-vue": "^1.1.2",
     "axios": "^1.7.0",
-    "qrcode": "1.5.4",
     "canvas-confetti": "^1.9.4",
+    "figma-squircle": "1.1.0",
+    "qrcode": "1.5.4",
     "tailwindcss": "^4.3.0",
     "vue": "^3.5.32",
     "vue-router": "^5.1.0"

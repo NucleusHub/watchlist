@@ -35,7 +35,7 @@ function set(v) {
 </script>
 
 <template>
-  <div class="inline-flex items-center gap-2">
+  <div class="inline-flex flex-wrap items-center gap-x-2 gap-y-1">
     <div class="flex items-center" :class="readonly ? '' : 'gap-0.5'" @mouseleave="hover = 0">
       <div
         v-for="n in max"

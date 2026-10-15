@@ -132,3 +132,9 @@ export const movieDNAUses = Object.entries(manifests).flatMap(([file, m]) => {
     ? [{ pluginId: m.id || dirOf(file), purpose }]
     : []
 })
+
+// Every plugin that targets the watchlist, for Settings → Plugins.
+export const watchlistPlugins = Object.entries(manifests)
+  .filter(([, m]) => forWatchlist(m))
+  .map(([file, m]) => ({ id: m.id || dirOf(file), name: m.name || m.id || dirOf(file), description: m.description || '', version: m.version || '', author: m.author || '' }))
+  .sort((a, b) => a.name.localeCompare(b.name))

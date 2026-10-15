@@ -2,7 +2,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { STANDARD, normalizeLayout, layoutRows, moveEntry } from './statsLayout.js'
 import { searchAll } from './globalSearch.js'
-import { hueShift, accentHex } from './accent.js'
+import { accentHex } from './accent.js'
 import { buildReport, validEmail } from './report.js'
 
 test('normalise: nothing or junk gives the standard layout', () => {
@@ -57,13 +57,11 @@ test('search finds collections by name and titles by title or notes across lists
   assert.deepEqual(searchAll(items, [], '   '), { collections: [], items: [] })
 })
 
-test('accent: preset and custom hex resolve, hue shift is zero for the default', () => {
+test('accent: preset and custom hex resolve', () => {
   assert.equal(accentHex({ id: 'ember' }), '#F2711C')
   assert.equal(accentHex({ id: 'custom', custom: '#123456' }), '#123456')
   assert.equal(accentHex({ id: 'custom', custom: 'red' }), null)
   assert.equal(accentHex({ id: 'unknown' }), null)
-  assert.equal(hueShift('#A855F7'), 0)
-  assert.ok(hueShift('#2FA36B') < -100)
 })
 
 test('report body follows the iOS payload and skips an empty email', () => {

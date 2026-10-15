@@ -1,21 +1,20 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import AppHeader from '@core/AppHeader.vue'
-import BackgroundBlobs from '@core/BackgroundBlobs.vue'
-import { Icon, Spinner } from '@core/icons'
+import { Spinner } from '@core/icons'
 import { useI18n } from '@core/useI18n.js'
 import { getItems, createItem } from '@/api/watchlist.js'
 import { BUILTIN_SOURCES } from '@/api/sources.js'
 import { fetchMovieDetail, fetchTvDetail, fetchExtras, hasTMDbKey } from '@/api/tmdb.js'
 import { metaLine } from '@/utils/progress.js'
-import { genrePillClass } from '@/utils/genres.js'
 import { itemRoute } from '@/utils/routes.js'
-import DetailSection from '@/components/DetailSection.vue'
 import TrailersSection from '@/components/TrailersSection.vue'
 import ItemPluginSections from '@/components/ItemPluginSections.vue'
-import SettingsButton from '@/components/SettingsButton.vue'
-import ArchiveBoxIcon from '@/assets/icons/archive-box.svg?component'
+import PageShell from '@/ui/PageShell.vue'
+import WlSection from '@/ui/WlSection.vue'
+import Glyph from '@/ui/Glyph.vue'
+import EmptyState from '@/ui/EmptyState.vue'
+import { genreColor } from '@/ui/palette.js'
 
 // A TMDb title that isn't in the library (yet); `kind` is 'movie' or 'show'.
 const props = defineProps({
@@ -64,18 +63,13 @@ async function load() {
 }
 watch(() => [props.kind, props.tmdbId], load, { immediate: true })
 
-function goBack() {
-  if (window.history.state?.back) router.back()
-  else router.push('/')
-}
-
 // Adds it and swaps this preview for the title's own page.
 async function add() {
   if (adding.value || !draft.value) return
   adding.value = true
   try {
     const created = await createItem({ ...draft.value, year: Number(draft.value.year) || null, status: 'planned' })
-    router.replace(itemRoute(created._id))
+    router.replace({ path: '/', ...itemRoute(created._id) })
   } finally {
     adding.value = false
   }
@@ -83,87 +77,52 @@ async function add() {
 </script>
 
 <template>
-  <div class="relative min-h-screen bg-slate-100 dark:bg-[#0d0d1a] text-slate-900 dark:text-white overflow-x-hidden">
-    <BackgroundBlobs />
-    <div class="relative z-10">
-      <AppHeader>
-        <template #left>
-          <button
-            @click="goBack"
-            :title="t('watchlist.header.backToList')"
-            class="cursor-pointer p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
-          >
-            <Icon name="arrowLeft" class="w-5 h-5" />
-          </button>
-        </template>
-        <template #right>
-          <SettingsButton />
-        </template>
-      </AppHeader>
-
-      <main class="max-w-2xl mx-auto px-4 py-6 flex flex-col gap-5">
-        <div v-if="loading" class="flex justify-center py-24">
-          <Spinner class="w-6 h-6 text-slate-400 animate-spin" />
-        </div>
-
-        <div v-else-if="failed || !draft" class="text-center py-24 flex flex-col items-center gap-3">
-          <p class="text-base font-semibold">{{ t('watchlist.preview.failed') }}</p>
-          <p class="text-sm text-slate-500 dark:text-slate-400">{{ t('watchlist.preview.failedHint') }}</p>
-          <button @click="load" class="cursor-pointer text-sm text-indigo-600 dark:text-indigo-400 hover:underline">{{ t('watchlist.state.retry') }}</button>
-        </div>
-
-        <template v-else>
-          <div class="flex flex-col items-center gap-3 pb-2 text-center">
-            <div class="w-44 sm:w-52 aspect-[2/3] overflow-hidden rounded-2xl bg-slate-100 dark:bg-slate-700/60 shadow-2xl shadow-black/30">
-              <img v-if="draft.posterUrl" :src="draft.posterUrl" :alt="draft.title" class="w-full h-full object-cover" />
-              <div v-else class="w-full h-full flex items-center justify-center">
-                <ArchiveBoxIcon class="w-10 h-10 text-slate-300 dark:text-slate-600" />
-              </div>
-            </div>
-            <h1 class="mt-2 text-2xl font-bold tracking-tight">{{ draft.title }}</h1>
-            <p v-if="meta" class="text-sm text-slate-500 dark:text-slate-400">{{ meta }}</p>
-            <div class="flex items-center justify-center gap-1.5 flex-wrap">
-              <span :class="['text-xs font-medium px-2 py-0.5 rounded-full', type === 'movie' ? 'bg-purple-900 text-purple-300' : 'bg-amber-900 text-amber-300']">
-                {{ type === 'movie' ? t('watchlist.type.movie') : t('watchlist.type.show') }}
-              </span>
-              <span v-if="draft.tmdbRating" class="text-xs font-medium px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300">
-                TMDb ★ {{ Number(draft.tmdbRating).toFixed(1) }}
-              </span>
-            </div>
-          </div>
-
-          <RouterLink
-            v-if="existing"
-            :to="itemRoute(existing._id)"
-            class="nuc-press h-11 inline-flex items-center justify-center gap-2 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold no-underline transition-colors"
-          >
-            {{ t('watchlist.preview.openInLibrary') }}
-          </RouterLink>
-          <button
-            v-else
-            @click="add"
-            :disabled="adding"
-            class="nuc-press cursor-pointer h-11 inline-flex items-center justify-center gap-2 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold transition-colors disabled:cursor-wait disabled:opacity-60"
-          >
-            <Icon name="plus" class="w-4 h-4" :sw="2.5" />
-            {{ t('watchlist.form.addTitle') }}
-          </button>
-
-          <DetailSection v-if="overview" :title="t('watchlist.detail.overview')">
-            <p class="text-sm text-slate-700 dark:text-slate-200 leading-relaxed whitespace-pre-line">{{ overview }}</p>
-          </DetailSection>
-
-          <TrailersSection v-if="videos.length" :videos="videos" />
-
-          <DetailSection v-if="draft.genres?.length" :title="t('watchlist.form.genres')">
-            <div class="flex flex-wrap gap-1.5">
-              <span v-for="g in draft.genres" :key="g" :class="['text-xs font-medium px-2.5 py-1 rounded-full', genrePillClass(g)]">{{ g }}</span>
-            </div>
-          </DetailSection>
-
-          <ItemPluginSections :item="{ type, tmdbId: Number(tmdbId), title: draft.title }" />
-        </template>
-      </main>
+  <PageShell>
+    <div v-if="loading" class="flex justify-center py-24">
+      <Spinner class="w-6 h-6 text-[var(--wl-text-2)] animate-spin" />
     </div>
-  </div>
+
+    <EmptyState v-else-if="failed || !draft" icon="film" :title="t('watchlist.preview.failed')" :message="t('watchlist.preview.failedHint')" class="pt-16">
+      <button type="button" class="wl-btn wl-btn-secondary mt-2" @click="load">{{ t('watchlist.state.retry') }}</button>
+    </EmptyState>
+
+    <template v-else>
+      <div class="flex flex-col items-center gap-3.5 pb-6 text-center nuc-in">
+        <div class="relative w-[200px] sm:w-[220px] aspect-[2/3] rounded-[22px] shadow-[0_14px_40px_-10px_rgb(0_0_0/0.5)]">
+          <div v-squircle class="absolute inset-0 rounded-[22px] overflow-hidden bg-[var(--wl-well)] grid place-items-center">
+            <img v-if="draft.posterUrl" :src="draft.posterUrl" :alt="draft.title" class="w-full h-full object-cover" />
+            <Glyph v-else :name="type === 'show' ? 'tv' : 'film'" :sw="1" class="w-12 h-12 text-[var(--wl-text-2)]" />
+          </div>
+        </div>
+        <h1 class="mt-1 text-[26px] leading-tight font-bold tracking-[-0.015em]">{{ draft.title }}</h1>
+        <p v-if="meta" class="text-[15px] text-[var(--wl-text-2)]">{{ meta }}</p>
+        <div class="flex items-center justify-center gap-1.5 flex-wrap">
+          <span class="wl-tag">{{ type === 'movie' ? t('watchlist.type.movie') : t('watchlist.type.show') }}</span>
+          <span v-if="draft.tmdbRating" class="wl-tag">TMDb ★ {{ Number(draft.tmdbRating).toFixed(1) }}</span>
+        </div>
+      </div>
+
+      <RouterLink v-if="existing" :to="itemRoute(existing._id)" class="wl-btn wl-btn-primary w-full !min-h-[52px] !text-base mb-7">
+        {{ t('watchlist.preview.openInLibrary') }}
+      </RouterLink>
+      <button v-else type="button" :disabled="adding" class="wl-btn wl-btn-primary w-full !min-h-[52px] !text-base mb-7" @click="add">
+        <Glyph name="plus" :sw="2.75" class="w-4 h-4" />
+        {{ t('watchlist.form.addTitle') }}
+      </button>
+
+      <WlSection v-if="overview" :title="t('watchlist.detail.overview')" padded>
+        <p class="text-[15px] leading-relaxed whitespace-pre-line">{{ overview }}</p>
+      </WlSection>
+
+      <TrailersSection v-if="videos.length" :videos="videos" />
+
+      <WlSection v-if="draft.genres?.length" :title="t('watchlist.form.genres')" padded>
+        <div class="flex flex-wrap gap-1.5">
+          <span v-for="g in draft.genres" :key="g" class="wl-chip !h-7 !text-white" :style="{ background: genreColor(g) }">{{ g }}</span>
+        </div>
+      </WlSection>
+
+      <ItemPluginSections :item="{ type, tmdbId: Number(tmdbId), title: draft.title }" />
+    </template>
+  </PageShell>
 </template>

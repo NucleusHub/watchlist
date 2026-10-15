@@ -18,7 +18,7 @@ const playing = ref(null)
 
 <template>
   <DetailSection :title="t('watchlist.detail.trailers')">
-    <div class="-m-1 flex gap-3 overflow-x-auto p-1">
+    <div class="-m-4 flex gap-3 overflow-x-auto no-scrollbar p-4">
       <div v-for="video in videos.slice(0, MAX_VIDEOS)" :key="video.key" class="group/video relative w-56 shrink-0">
         <button
           type="button"
@@ -26,16 +26,16 @@ const playing = ref(null)
           :aria-label="`${video.kind}: ${video.name}`"
           class="nuc-press cursor-pointer flex w-full flex-col gap-1.5 text-left"
         >
-          <div class="relative aspect-video w-full overflow-hidden rounded-xl bg-slate-200 dark:bg-slate-700">
+          <div v-squircle class="relative aspect-video w-full overflow-hidden rounded-[14px] bg-[var(--wl-well)]">
             <img :src="videoThumb(video.key)" :alt="video.name" loading="lazy" class="h-full w-full object-cover" />
             <span class="absolute inset-0 flex items-center justify-center">
-              <span class="flex h-11 w-11 items-center justify-center rounded-full bg-black/55 text-white transition-transform group-hover/video:scale-110">
+              <span class="flex h-11 w-11 items-center justify-center rounded-full bg-black/40 backdrop-blur-md text-white transition-transform group-hover/video:scale-110">
                 <Icon name="play" class="h-5 w-5" />
               </span>
             </span>
           </div>
-          <span class="line-clamp-2 text-sm font-medium text-slate-900 dark:text-white">{{ video.name }}</span>
-          <span class="text-xs text-slate-400 dark:text-slate-500">{{ video.kind }}</span>
+          <span class="line-clamp-2 text-sm font-medium text-[var(--wl-text)]">{{ video.name }}</span>
+          <span class="text-xs text-[var(--wl-text-2)]">{{ video.kind }}</span>
         </button>
         <a
           :href="videoWatchUrl(video.key)"

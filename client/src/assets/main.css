@@ -5,26 +5,327 @@
 
 @source "../**/*.{vue,js}";
 @source "../../core/**/*.{vue,js}";
+@source "../../plugins/*/client/**/*.{vue,js}";
 
-html { background-color: #f1f5f9; }
-html.dark { background-color: #0d0d1a; }
+/* Web side of nucleus-native-ui tokens.json, so the web app and the iOS app share one look. */
+:root {
+  --wl-base: #f4f3fa;
+  --wl-text: #0f172a;
+  --wl-text-2: #64748b;
+  --wl-glyph: #475569;
+  --wl-sep: rgb(15 23 42 / 0.08);
+  --wl-well: rgb(15 23 42 / 0.05);
+  --wl-danger: #dc2626;
+  --wl-success: #059669;
+  --wl-accent: var(--color-purple-500);
+  --wl-gradient: linear-gradient(135deg, var(--color-indigo-500), var(--color-violet-500));
+  --wl-glass-tint: rgb(255 255 255 / 0.32);
+  --wl-glass-frost: rgb(255 255 255 / 0.5);
+  --wl-glass-edge: rgb(255 255 255 / 0.6);
+  --wl-glass-shadow: 0 8px 28px -10px rgb(15 23 42 / 0.22), 0 1px 0 0 rgb(255 255 255 / 0.7) inset;
+  --wl-pill: #fff;
+  --wl-edge-rgb: 244 243 250;
+  --wl-r-card: 26px;
+  --wl-r-field: 12px;
+  --wl-r-track: 13px;
+  --wl-r-pill: 9px;
+}
+:root.dark {
+  --wl-base: #08060f;
+  --wl-text: #fff;
+  --wl-text-2: rgb(255 255 255 / 0.45);
+  --wl-glyph: rgb(255 255 255 / 0.75);
+  --wl-sep: rgb(255 255 255 / 0.08);
+  --wl-well: rgb(255 255 255 / 0.07);
+  --wl-danger: #f87171;
+  --wl-success: #34d399;
+  --wl-accent: var(--color-purple-400);
+  --wl-glass-tint: rgb(14 10 28 / 0.35);
+  --wl-glass-frost: rgb(24 18 44 / 0.55);
+  --wl-glass-edge: rgb(255 255 255 / 0.12);
+  --wl-glass-shadow: 0 10px 34px -12px rgb(0 0 0 / 0.6), 0 1px 0 0 rgb(255 255 255 / 0.07) inset;
+  --wl-pill: rgb(255 255 255 / 0.15);
+  --wl-edge-rgb: 8 6 15;
+}
 
-.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-.no-scrollbar::-webkit-scrollbar { display: none; }
+html { background-color: var(--wl-base); }
+body { color: var(--wl-text); -webkit-font-smoothing: antialiased; }
 
-/* backdrop-filter left unprefixed: Lightning CSS adds -webkit- at build. */
+.no-scrollbar, [class~="overflow-x-auto"] { -ms-overflow-style: none; scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar, [class~="overflow-x-auto"]::-webkit-scrollbar { display: none; }
+
+/* G2 corners: native superellipse where the browser has it. The radii grow because a squircle
+   reads tighter than a circular arc of the same size, like iOS's continuous corners. */
+@supports (corner-shape: squircle) {
+  :root {
+    --radius-sm: 0.375rem;
+    --radius-md: 0.5625rem;
+    --radius-lg: 0.75rem;
+    --radius-xl: 1.125rem;
+    --radius-2xl: 1.5rem;
+    --radius-3xl: 2.25rem;
+    --wl-r-card: 38px;
+    --wl-r-field: 18px;
+    --wl-r-track: 19px;
+    --wl-r-pill: 14px;
+  }
+  [class*="rounded"]:not([class*="rounded-full"]),
+  .sq, .wl-group, .wl-seg, .wl-seg-pill, .wl-field, .wl-tile, .wl-card, .tm-panel {
+    corner-shape: squircle;
+  }
+  .lg-inner { corner-shape: inherit; }
+}
+
+/* Glass. `.glass` alone is frosted; v-glass adds real refraction (Chromium) on top. */
 .glass {
-  background: rgba(255, 255, 255, 0.42);
-  backdrop-filter: blur(22px) saturate(190%);
-  border: 1px solid rgba(255, 255, 255, 0.55);
-  box-shadow:
-    0 1px 0 0 rgba(255, 255, 255, 0.75) inset,
-    0 10px 34px -14px rgba(15, 23, 42, 0.28);
+  background: var(--wl-glass-frost);
+  backdrop-filter: blur(24px) saturate(180%);
+  border: 0.5px solid var(--wl-glass-edge);
+  box-shadow: var(--wl-glass-shadow);
 }
-.dark .glass {
-  background: rgba(28, 24, 52, 0.44);
-  border-color: rgba(160, 135, 235, 0.20);
-  box-shadow:
-    0 1px 0 0 rgba(190, 170, 255, 0.12) inset,
-    0 12px 38px -14px rgba(0, 0, 0, 0.65);
+.lg-host { isolation: isolate; }
+.lg-host > .lg-clone { display: none; }
+.lg-host > .lg-inner {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  background: var(--wl-glass-tint);
 }
+/* Lists of many rows: a tinted surface without any backdrop filter, so long lists scroll smoothly. */
+.wl-surface {
+  background: color-mix(in oklab, var(--wl-base) 62%, transparent);
+  border: 0.5px solid var(--wl-glass-edge);
+  box-shadow: var(--wl-glass-shadow);
+}
+/* The refracting layer does the backdrop, so the host must not (it would hide the page from it). */
+.lg-host.lg-live { background: transparent !important; backdrop-filter: none !important; }
+
+/* Grouped list (NucleusSection): glass card, rows with an inset hairline between them. */
+.wl-group {
+  position: relative;
+  border-radius: var(--wl-r-card);
+  overflow: hidden;
+}
+.wl-group > :not(.lg-clone, .lg-inner, svg) { position: relative; }
+.wl-group > :not(.lg-clone, .lg-inner, svg) ~ :not(.lg-clone, .lg-inner, svg)::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 16px;
+  right: 0;
+  height: 1px;
+  background: var(--wl-sep);
+  pointer-events: none;
+}
+.wl-heading {
+  padding: 0 16px 8px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--wl-text-2);
+}
+.wl-foot {
+  padding: 8px 16px 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--wl-text-2);
+}
+.wl-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 52px;
+  padding: 10px 16px;
+  text-align: left;
+  font-size: 16px;
+  color: var(--wl-text);
+  text-decoration: none;
+  transition: background-color 0.15s;
+}
+:is(a, button).wl-row { cursor: pointer; }
+:is(a, button).wl-row:hover { background-color: var(--wl-well); }
+:is(a, button).wl-row:active { background-color: var(--wl-sep); }
+.wl-row:disabled { opacity: 0.5; cursor: default; }
+.wl-sub { font-size: 13px; color: var(--wl-text-2); }
+
+/* Segmented control (NucleusSegmented): recessed track, white sliding pill. */
+.wl-seg {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  border-radius: var(--wl-r-track);
+  background: rgb(0 0 0 / 0.04);
+}
+.dark .wl-seg { background: rgb(255 255 255 / 0.05); }
+.wl-seg.glass { background: var(--wl-glass-frost); }
+.wl-seg-pill {
+  position: absolute;
+  border-radius: var(--wl-r-pill);
+  background: var(--wl-pill);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.08);
+  transition: transform 0.3s var(--nuc-ease), width 0.3s var(--nuc-ease);
+}
+.wl-seg-item {
+  position: relative;
+  z-index: 1;
+  padding: 7px 14px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.25;
+  white-space: nowrap;
+  color: var(--wl-text-2);
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.wl-seg-item:hover, .wl-seg-item[aria-selected="true"] { color: var(--wl-text); }
+/* Plugins can't use the app's sliding SegmentPills; `.wl-seg-static` draws the pill on the item itself. */
+.wl-seg-static .wl-seg-item { border-radius: var(--wl-r-pill); transition: color 0.2s, background-color 0.25s; }
+.wl-seg-static .wl-seg-item[aria-selected="true"] { background: var(--wl-pill); box-shadow: 0 1px 3px rgb(0 0 0 / 0.08); }
+
+/* Buttons. */
+.wl-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 20px;
+  border-radius: 9999px;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.16s ease-out, opacity 0.15s, filter 0.15s;
+}
+.wl-btn:active { transform: scale(0.97); }
+.wl-btn:disabled { opacity: 0.5; cursor: default; transform: none; }
+.wl-btn-primary {
+  color: #fff;
+  background: var(--wl-gradient);
+  box-shadow: 0 8px 20px -8px color-mix(in oklab, var(--color-indigo-600) 70%, transparent), inset 0 0 0 1px rgb(255 255 255 / 0.18);
+}
+.wl-btn-primary:hover:not(:disabled) { filter: brightness(1.08); }
+.wl-btn-secondary { color: var(--wl-text); background: var(--wl-well); }
+.wl-btn-secondary:hover:not(:disabled) { background: var(--wl-sep); }
+.wl-btn-danger { color: #fff; background: linear-gradient(180deg, #f87171, #dc2626); }
+
+/* Chips and tags (Tag, genre chips). */
+.wl-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 9999px;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  color: var(--wl-glyph);
+  background: var(--wl-well);
+}
+.wl-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--wl-glyph);
+  background: var(--wl-well);
+}
+
+/* Recessed text input (.set-input / NucleusField). */
+.wl-field {
+  width: 100%;
+  padding: 11px 12px;
+  border-radius: var(--wl-r-field);
+  font-size: 15px;
+  color: var(--wl-text);
+  background: var(--wl-well);
+  border: 1px solid transparent;
+  outline: none;
+  transition: border-color 0.15s, background-color 0.15s;
+}
+.wl-field::placeholder { color: var(--wl-text-2); }
+.wl-field:focus { border-color: color-mix(in oklab, var(--wl-accent) 45%, transparent); }
+
+/* Gradient icon tile (IconTile). */
+.wl-tile {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  color: #fff;
+}
+
+/* Modals from core take the same glass and capsule buttons. */
+.tm-panel {
+  border-radius: var(--wl-r-card) !important;
+  background: var(--wl-glass-frost) !important;
+  border: 0.5px solid var(--wl-glass-edge) !important;
+}
+.tm-panel button.bg-indigo-600 {
+  border-radius: 9999px;
+  background: var(--wl-gradient);
+}
+.tm-panel button.bg-red-600 { border-radius: 9999px; }
+.tm-panel .px-4.py-2.rounded-lg { border-radius: 9999px; }
+.tm-panel :is(input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"], [type="file"]), textarea, select) {
+  border-radius: var(--wl-r-field);
+}
+.tm-panel :is([class~="bg-white"], [class*="dark:bg-slate-7"], [class*="dark:bg-slate-8"], [class*="dark:bg-white/8"]):not(button, .absolute) {
+  background-color: var(--wl-well) !important;
+}
+/* Popovers inside modals (search suggestions, pickers) stay solid so the form doesn't show through. */
+.tm-panel .absolute[class*="shadow"]:is([class~="bg-white"], [class*="dark:bg-slate-7"], [class*="dark:bg-slate-8"]) {
+  background-color: color-mix(in oklab, var(--wl-base) 92%, white 4%) !important;
+  backdrop-filter: blur(30px) saturate(160%);
+  border-color: var(--wl-glass-edge) !important;
+  border-radius: 16px;
+}
+.tm-panel :is(input, textarea, select):focus { --tw-ring-color: color-mix(in oklab, var(--wl-accent) 50%, transparent); }
+/* Context menus from core: the same frosted glass. */
+.z-\[120\] > .min-w-48 {
+  border-radius: 18px;
+  background: var(--wl-glass-frost);
+  backdrop-filter: blur(24px) saturate(180%);
+  border: 0.5px solid var(--wl-glass-edge);
+  padding: 6px;
+}
+.z-\[120\] > .min-w-48 > :is(a, button) { border-radius: 10px; }
+
+/* Scroll edge (iOS): a tint behind a sticky header that grows in as content slides under it.
+   No backdrop filter, so it costs nothing while scrolling; it fades on an eased curve with no visible edge. */
+.wl-scroll-edge {
+  position: absolute;
+  top: 0;
+  bottom: -110px;
+  left: 50%;
+  width: 100vw;
+  transform: translateX(-50%);
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s var(--nuc-ease);
+  background: linear-gradient(to bottom,
+    rgb(var(--wl-edge-rgb) / 0.86) 0%,
+    rgb(var(--wl-edge-rgb) / 0.860) calc(100% - 150px),
+    rgb(var(--wl-edge-rgb) / 0.836) calc(100% - 135px),
+    rgb(var(--wl-edge-rgb) / 0.771) calc(100% - 120px),
+    rgb(var(--wl-edge-rgb) / 0.674) calc(100% - 105px),
+    rgb(var(--wl-edge-rgb) / 0.557) calc(100% - 90px),
+    rgb(var(--wl-edge-rgb) / 0.430) calc(100% - 75px),
+    rgb(var(--wl-edge-rgb) / 0.303) calc(100% - 60px),
+    rgb(var(--wl-edge-rgb) / 0.186) calc(100% - 45px),
+    rgb(var(--wl-edge-rgb) / 0.089) calc(100% - 30px),
+    rgb(var(--wl-edge-rgb) / 0.024) calc(100% - 15px),
+    rgb(var(--wl-edge-rgb) / 0.000) calc(100% - 0px));
+}
+.wl-scroll-edge.on { opacity: 1; }

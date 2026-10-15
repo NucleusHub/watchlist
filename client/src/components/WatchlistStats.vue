@@ -87,8 +87,8 @@ const available = computed(() => {
 })
 const rows = computed(() => layoutRows(layout.value, available.value))
 const pct = (n) => (props.items.length ? (n / props.items.length) * 100 : 0)
-const CARD = 'bg-white dark:bg-slate-800 rounded-xl p-4 flex flex-col gap-1 shadow-sm dark:shadow-none'
-const LABEL = 'text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide'
+const CARD = 'glass wl-card rounded-[var(--wl-r-card)] p-5 flex flex-col gap-1'
+const LABEL = 'text-[13px] font-semibold text-[var(--wl-text-2)] uppercase tracking-[0.04em]'
 const numClass = (size) => (size === 'small' ? 'text-2xl' : 'text-3xl')
 </script>
 
@@ -98,7 +98,7 @@ const numClass = (size) => (size === 'small' ? 'text-2xl' : 'text-3xl')
     <div class="flex justify-end">
       <button
         type="button"
-        class="cursor-pointer inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+        class="wl-btn wl-btn-secondary !min-h-9 !px-3.5 !text-[13px]"
         @click="customizing = true"
       >
         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" /></svg>
@@ -116,15 +116,15 @@ const numClass = (size) => (size === 'small' ? 'text-2xl' : 'text-3xl')
 
         <div v-if="entry.card === 'watched' && entry.size === 'large'" :class="[CARD, 'gap-3 p-5']">
           <p :class="LABEL">{{ t('watchlist.stats.watched') }}</p>
-          <p class="text-4xl font-bold text-green-400 tabular-nums">{{ completedTime }}</p>
+          <p class="text-4xl font-bold text-[#1BAF7A] tabular-nums">{{ completedTime }}</p>
           <div class="flex h-3.5 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-700">
-            <div class="bg-green-400 h-full" :style="{ width: `${pct(completed.length) * shown}%` }" />
-            <div class="bg-blue-400 h-full" :style="{ width: `${pct(watching.length) * shown}%` }" />
+            <div class="bg-[#1BAF7A] h-full" :style="{ width: `${pct(completed.length) * shown}%` }" />
+            <div class="bg-[#2A78D6] h-full" :style="{ width: `${pct(watching.length) * shown}%` }" />
             <div class="bg-slate-400 dark:bg-slate-500 h-full" :style="{ width: `${pct(planned.length) * shown}%` }" />
           </div>
           <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-400">
-            <span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-green-400" />{{ t('watchlist.status.completed') }} <span class="tabular-nums">{{ cnt(completed.length) }}</span></span>
-            <span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-blue-400" />{{ t('watchlist.status.watching') }} <span class="tabular-nums">{{ cnt(watching.length) }}</span></span>
+            <span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-[#1BAF7A]" />{{ t('watchlist.status.completed') }} <span class="tabular-nums">{{ cnt(completed.length) }}</span></span>
+            <span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-[#2A78D6]" />{{ t('watchlist.status.watching') }} <span class="tabular-nums">{{ cnt(watching.length) }}</span></span>
             <span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-slate-400 dark:bg-slate-500" />{{ t('watchlist.status.planned') }} <span class="tabular-nums">{{ cnt(planned.length) }}</span></span>
           </div>
           <p class="text-xs text-slate-400 dark:text-slate-500">{{ t('watchlist.stats.watchedNote') }}</p>
@@ -132,13 +132,13 @@ const numClass = (size) => (size === 'small' ? 'text-2xl' : 'text-3xl')
 
         <div v-else-if="entry.card === 'watched'" :class="CARD">
           <p :class="LABEL">{{ t('watchlist.stats.watched') }}</p>
-          <p class="text-2xl font-bold text-green-400 tabular-nums">{{ completedTime }}</p>
+          <p class="text-2xl font-bold text-[#1BAF7A] tabular-nums">{{ completedTime }}</p>
           <p class="text-xs text-slate-400 dark:text-slate-500">{{ t('watchlist.stats.titlesWatched', { count: cnt(completed.length) }) }}</p>
         </div>
 
         <div v-else-if="entry.card === 'inProgress'" :class="CARD">
           <p :class="LABEL">{{ t('watchlist.stats.inProgress') }}</p>
-          <p :class="[numClass(entry.size), 'font-bold text-blue-400 tabular-nums']">{{ watchingTime }}</p>
+          <p :class="[numClass(entry.size), 'font-bold text-[#2A78D6] tabular-nums']">{{ watchingTime }}</p>
           <p class="text-xs text-slate-400 dark:text-slate-500">{{ t('watchlist.stats.titlesLeft', { count: cnt(watching.length) }) }}</p>
         </div>
 
@@ -179,7 +179,7 @@ const numClass = (size) => (size === 'small' ? 'text-2xl' : 'text-3xl')
 
         <div v-else-if="entry.card === 'byType' && entry.size === 'small'" :class="CARD">
           <p :class="LABEL">{{ t('watchlist.stats.typeBreakdown') }}</p>
-          <p class="text-2xl font-bold text-green-400 tabular-nums">{{ cnt(completed.length) }}</p>
+          <p class="text-2xl font-bold text-[#1BAF7A] tabular-nums">{{ cnt(completed.length) }}</p>
           <p class="text-xs text-slate-400 dark:text-slate-500">{{ t('watchlist.stats.ofWatched', { total: items.length }) }}</p>
         </div>
 

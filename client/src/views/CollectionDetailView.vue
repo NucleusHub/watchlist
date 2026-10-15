@@ -1,30 +1,31 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import AppHeader from '@core/AppHeader.vue'
-import BackgroundBlobs from '@core/BackgroundBlobs.vue'
+import { useRouter, useRoute } from 'vue-router'
 import TemplateModal from '@core/TemplateModal.vue'
-import TrashIcon from '@core/TrashIcon.vue'
+import ContextMenu from '@core/ContextMenu.vue'
 import FavoriteHeart from '@core/FavoriteHeart.vue'
-import { Icon } from '@core/icons'
+import { ICONS } from '@core/icons'
 import { useI18n } from '@core/useI18n.js'
 import { useCollections } from '@/composables/useCollections.js'
 import { getItems, updateItem, saveCollectionOrder } from '@/api/watchlist.js'
-import ArchiveBoxIcon from '@/assets/icons/archive-box.svg?component'
-import ListIcon from '@/assets/icons/list.svg?component'
-import ViewColumns2Icon from '@/assets/icons/view-columns-2.svg?component'
-import ViewColumns3Icon from '@/assets/icons/view-columns-3.svg?component'
 import ItemCard from '@/components/ItemCard.vue'
 import ItemFormModal from '@/components/ItemFormModal.vue'
 import ManageCollectionsModal from '@/components/ManageCollectionsModal.vue'
 import CollectionFormModal from '@/components/CollectionFormModal.vue'
 import AddItemsModal from '@/components/AddItemsModal.vue'
-import SettingsButton from '@/components/SettingsButton.vue'
+import CollectionCover from '@/components/CollectionCover.vue'
+import PageShell from '@/ui/PageShell.vue'
+import GlassCircleButton from '@/ui/GlassCircleButton.vue'
+import SegmentPills from '@/ui/SegmentPills.vue'
+import Glyph from '@/ui/Glyph.vue'
+import EmptyState from '@/ui/EmptyState.vue'
+import { itemsVersion } from '@/composables/useItemSheet.js'
 
 const props = defineProps({ id: { type: String, required: true } })
 
 const { t } = useI18n()
 const router = useRouter()
+const route = useRoute()
 const { collections, update, remove, reload, applyMembership, applyOrder } = useCollections()
 
 const collection = computed(() => collections.value.find((c) => c._id === props.id) || null)
@@ -45,10 +46,36 @@ const orderedItems = computed(() => {
 const gridStyle = ref(localStorage.getItem('watchlist-grid') || 'small')
 watch(gridStyle, (v) => localStorage.setItem('watchlist-grid', v))
 const gridClass = computed(() => ({
-  list:  'grid-cols-1',
-  big:   'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4',
-  small: 'grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5',
+  list: 'grid-cols-1 lg:grid-cols-2 gap-3',
+  big: 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-5',
+  small: 'grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-x-3 gap-y-4',
 }[gridStyle.value]))
+const LAYOUTS = [
+  { key: 'list', label: 'watchlist.list.viewList', glyph: 'listBullet' },
+  { key: 'big', label: 'watchlist.list.viewGrid2', glyph: 'grid2' },
+  { key: 'small', label: 'watchlist.list.viewGrid3', glyph: 'grid3' },
+]
+const layoutGlyph = computed(() => LAYOUTS.find((l) => l.key === gridStyle.value)?.glyph ?? 'grid3')
+const coverPosters = computed(() => {
+  const c = collection.value
+  if (c?.coverPosters?.length) return c.coverPosters
+  return (c?.previewPosters?.length ? c.previewPosters : items.value.map((i) => i.posterUrl).filter(Boolean)).slice(0, c?.coverCount || 4)
+})
+
+// The ⋯ menu and the layout menu share one ContextMenu.
+const menu = ref({ show: false, x: 0, y: 0, items: [] })
+function openMenu(e, kind) {
+  const r = e.currentTarget.getBoundingClientRect()
+  const items = kind === 'layout'
+    ? LAYOUTS.map((l) => ({ label: t(l.label), icon: gridStyle.value === l.key ? ICONS.check : ' ', action: () => (gridStyle.value = l.key) }))
+    : [
+        { label: t('watchlist.collections.rename'), icon: ICONS.pencil, action: () => (showRename.value = true) },
+        ...(items.value.length > 1 ? [{ label: t('watchlist.collections.reorder'), icon: ICONS.menu, action: startReorder }] : []),
+        { divider: true },
+        { label: t('watchlist.collections.delete'), iconTrash: true, danger: true, action: () => (showDeleteCol.value = true) },
+      ]
+  menu.value = { show: true, x: r.right - 200, y: r.bottom + 8, items }
+}
 
 const searchQuery = ref('')
 const activeStatus = ref('all')
@@ -164,8 +191,16 @@ async function load() {
     loading.value = false
   }
 }
-onMounted(load)
+onMounted(() => {
+  load()
+  // Collections → ⋯ → Add titles lands here with ?add=1.
+  if (route.query.add) {
+    showAdd.value = true
+    router.replace({ query: {} })
+  }
+})
 watch(() => props.id, load)
+watch(itemsVersion, load)
 
 function reconcile(updated) {
   const inHere = (updated.collectionIds || []).map(String).includes(String(props.id))
@@ -217,337 +252,150 @@ function onItemsAdded(added) {
 </script>
 
 <template>
-  <div class="relative min-h-screen bg-slate-100 dark:bg-[#0d0d1a] text-slate-900 dark:text-white overflow-x-hidden">
-    <BackgroundBlobs />
-    <div class="relative z-10">
-      <AppHeader>
-        <template #left>
-          <RouterLink
-            to="/collections"
-            class="cursor-pointer p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-colors no-underline"
-            :title="t('watchlist.collections.back')"
+  <PageShell wide back="/collections">
+    <template v-if="collection" #actions>
+      <template v-if="reordering">
+        <button v-glass type="button" class="cursor-pointer h-10 px-4 rounded-full text-[15px] font-medium" @click="cancelReorder">{{ t('watchlist.form.cancel') }}</button>
+        <button type="button" :disabled="savingOrder" class="wl-btn wl-btn-primary !min-h-10" @click="saveOrder">{{ t('watchlist.collections.done') }}</button>
+      </template>
+      <template v-else>
+        <GlassCircleButton icon="plus" :title="t('watchlist.collections.addItems')" @click="showAdd = true" />
+        <GlassCircleButton icon="ellipsis" :title="t('watchlist.collections.options')" @click="openMenu($event, 'more')" />
+      </template>
+    </template>
+
+    <div v-if="loading && !collection" class="text-center py-16 text-[var(--wl-text-2)]">{{ t('watchlist.state.loading') }}</div>
+
+    <EmptyState v-else-if="notFound" icon="folder" :message="t('watchlist.collections.notFound')" class="pt-16">
+      <RouterLink to="/collections" class="wl-btn wl-btn-secondary mt-2">{{ t('watchlist.collections.backToCollections') }}</RouterLink>
+    </EmptyState>
+
+    <template v-else-if="collection">
+      <div class="relative aspect-[16/7] max-h-72 w-full rounded-[26px] shadow-[0_14px_30px_-12px_rgb(0_0_0/0.45)] mb-6 nuc-in">
+        <div v-squircle class="absolute inset-0 rounded-[26px] overflow-hidden">
+          <CollectionCover :image="collection.coverUrl" :posters="coverPosters" />
+          <div class="absolute inset-x-0 bottom-0 px-5 pt-12 pb-5 bg-gradient-to-b from-transparent to-black/70 text-white">
+            <h1 class="text-[30px] leading-tight font-bold tracking-[-0.02em] [text-shadow:0_2px_8px_rgb(0_0_0/0.4)]">{{ collection.name }}</h1>
+            <p class="text-sm font-medium opacity-80">{{ t('watchlist.collections.itemCount', { count: items.length }) }}</p>
+          </div>
+        </div>
+      </div>
+      <p v-if="collection.description" class="-mt-2 mb-6 px-1 text-[15px] leading-relaxed text-[var(--wl-text-2)]">{{ collection.description }}</p>
+
+      <EmptyState v-if="!loading && !items.length" icon="folder" :message="t('watchlist.collections.emptyItemsHint')">
+        <button type="button" class="wl-btn wl-btn-primary mt-2" @click="showAdd = true">
+          <Glyph name="plus" :sw="2.75" class="w-4 h-4" />
+          {{ t('watchlist.collections.addItems') }}
+        </button>
+      </EmptyState>
+
+      <template v-else-if="reordering">
+        <p class="flex items-center gap-2 mb-3 px-1 text-sm text-[var(--wl-text-2)]">
+          <Glyph name="menu" class="w-4 h-4 shrink-0" />
+          {{ t('watchlist.collections.reorderHint') }}
+        </p>
+        <ul class="flex flex-col gap-2 max-w-[680px]">
+          <li
+            v-for="(item, i) in draft"
+            :key="item._id"
+            draggable="true"
+            :class="['wl-row wl-surface rounded-[20px] !py-2 select-none transition-transform', dragIndex === i ? 'scale-[1.01] ring-2 ring-[color-mix(in_oklab,var(--wl-accent)_45%,transparent)]' : '']"
+            @dragstart="onDragStart(i, $event)"
+            @dragover.prevent="onDragOver(i)"
+            @dragend="onDragEnd"
           >
-            <Icon name="arrowLeft" class="w-5 h-5" />
-          </RouterLink>
-          <p v-if="collection" class="text-sm font-semibold text-slate-900 dark:text-white truncate max-w-[40vw]">{{ collection.name }}</p>
-        </template>
-
-        <template #right>
-          <template v-if="reordering">
-            <button
-              @click="cancelReorder"
-              class="cursor-pointer px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/15 rounded-lg transition-colors"
-            >
-              {{ t('watchlist.form.cancel') }}
-            </button>
-            <button
-              @click="saveOrder"
-              :disabled="savingOrder"
-              class="nuc-press cursor-pointer bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
-            >
-              {{ t('watchlist.collections.done') }}
-            </button>
-          </template>
-
-          <template v-else>
-            <SettingsButton />
-            <button
-              v-if="collection"
-              @click="showAdd = true"
-              :title="t('watchlist.collections.addItems')"
-              class="group nuc-press cursor-pointer flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium px-3 sm:px-4 py-2 rounded-lg transition-colors"
-            >
-              <Icon name="plus" class="w-4 h-4 nuc-pop" :sw="2.5" />
-              <span class="hidden sm:inline">{{ t('watchlist.collections.addItems') }}</span>
-            </button>
-            <button
-              v-if="collection && items.length > 1"
-              @click="startReorder"
-              :title="t('watchlist.collections.reorder')"
-              class="cursor-pointer p-2 text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
-            >
-              <Icon name="menu" class="w-4 h-4" />
-            </button>
-            <button
-              v-if="collection"
-              @click="showRename = true"
-              :title="t('watchlist.collections.rename')"
-              class="cursor-pointer p-2 text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
-            >
-              <Icon name="edit" class="w-4 h-4" />
-            </button>
-            <button
-              v-if="collection"
-              @click="showDeleteCol = true"
-              :title="t('watchlist.collections.delete')"
-              class="nuc-trash cursor-pointer p-2 text-slate-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
-            >
-              <TrashIcon class="w-4 h-4" stroke-width="2" />
-            </button>
-          </template>
-        </template>
-      </AppHeader>
-
-      <main class="max-w-4xl mx-auto px-4 py-6 flex flex-col gap-6">
-        <div v-if="collection" class="flex items-start gap-4">
-          <div class="w-12 h-12 shrink-0 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-500/10 dark:from-indigo-500/25 dark:to-purple-500/10 text-indigo-600 dark:text-indigo-300 flex items-center justify-center ring-1 ring-inset ring-white/50 dark:ring-white/10">
-            <Icon name="folder" class="w-6 h-6" :sw="1.5" />
-          </div>
-          <div class="min-w-0 flex flex-col gap-1 pt-0.5">
-            <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white truncate">{{ collection.name }}</h1>
-            <p class="text-sm text-slate-400 dark:text-slate-500">{{ t('watchlist.collections.itemCount', { count: items.length }) }}</p>
-            <p v-if="collection.description" class="text-sm text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">{{ collection.description }}</p>
-          </div>
-        </div>
-
-        <div v-if="loading" class="text-center py-16 text-slate-400 dark:text-slate-500">{{ t('watchlist.state.loading') }}</div>
-
-        <div v-else-if="notFound" class="text-center py-16 flex flex-col items-center gap-3">
-          <p class="text-sm text-slate-500 dark:text-slate-400">{{ t('watchlist.collections.notFound') }}</p>
-          <RouterLink to="/collections" class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">{{ t('watchlist.collections.backToCollections') }}</RouterLink>
-        </div>
-
-        <div v-else-if="!items.length" class="text-center py-16 flex flex-col items-center gap-4">
-          <div class="w-14 h-14 rounded-2xl bg-indigo-500/10 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 flex items-center justify-center">
-            <Icon name="folder" class="w-7 h-7" :sw="1.5" />
-          </div>
-          <p class="text-sm text-slate-400 dark:text-slate-500">{{ t('watchlist.collections.emptyItemsHint') }}</p>
-          <button
-            @click="showAdd = true"
-            class="nuc-press cursor-pointer inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
-          >
-            <Icon name="plus" class="w-4 h-4" :sw="2.5" />
-            {{ t('watchlist.collections.addItems') }}
-          </button>
-        </div>
-
-        <template v-else-if="reordering">
-          <div class="flex items-center gap-2 -mt-2 text-sm text-slate-400 dark:text-slate-500">
-            <Icon name="menu" class="w-4 h-4 shrink-0" />
-            <span>{{ t('watchlist.collections.reorderHint') }}</span>
-          </div>
-          <ul class="flex flex-col gap-2">
-            <li
-              v-for="(item, i) in draft"
-              :key="item._id"
-              draggable="true"
-              @dragstart="onDragStart(i, $event)"
-              @dragover.prevent="onDragOver(i)"
-              @dragend="onDragEnd"
-              :class="[
-                'group flex items-center gap-2.5 sm:gap-3 p-2 rounded-xl border bg-white/80 dark:bg-slate-800/70 backdrop-blur-sm transition-all duration-150 select-none',
-                dragIndex === i
-                  ? 'border-indigo-400/70 ring-2 ring-indigo-400/40 shadow-lg shadow-indigo-500/10 opacity-95 scale-[1.01]'
-                  : 'border-white/60 dark:border-white/8 shadow-sm hover:border-indigo-300/70 dark:hover:border-indigo-400/25',
-              ]"
-            >
-              <span
-                class="shrink-0 cursor-grab active:cursor-grabbing text-slate-300 dark:text-slate-600 group-hover:text-slate-400 dark:group-hover:text-slate-400 transition-colors"
-                :title="t('watchlist.collections.reorder')"
-              >
-                <Icon name="menu" class="w-4 h-4" />
-              </span>
-
-              <input
-                :value="i + 1"
-                type="number"
-                min="1"
-                :max="draft.length"
-                inputmode="numeric"
-                :title="t('watchlist.collections.positionHint')"
-                @change="moveTo(i, $event.target.value)"
-                @keydown.enter.prevent="$event.target.blur()"
-                @focus="$event.target.select()"
-                class="pos-input w-9 h-9 shrink-0 rounded-lg bg-black/[0.04] dark:bg-white/8 text-center text-sm font-semibold tabular-nums text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-slate-700 transition-colors"
-              />
-
-              <div class="w-9 h-12 shrink-0 rounded-md overflow-hidden bg-slate-100 dark:bg-slate-700 flex items-center justify-center ring-1 ring-black/5 dark:ring-white/10">
-                <img v-if="item.posterUrl" :src="item.posterUrl" :alt="item.title" class="w-full h-full object-cover" />
-                <ArchiveBoxIcon v-else class="w-4 h-4 text-slate-300 dark:text-slate-600" />
-              </div>
-
-              <div class="flex-1 min-w-0">
-                <p class="text-sm font-medium text-slate-900 dark:text-white truncate">{{ item.title }}</p>
-                <p class="text-xs text-slate-400 dark:text-slate-500 truncate">
-                  {{ item.type === 'movie' ? t('watchlist.type.movie') : t('watchlist.type.show') }}<span v-if="item.year"> · {{ item.year }}</span>
-                </p>
-              </div>
-
-              <div class="flex items-center shrink-0 rounded-lg bg-black/[0.03] dark:bg-white/5 p-0.5 gap-0.5">
-                <button
-                  type="button"
-                  :disabled="i === 0"
-                  @click="move(i, i - 1)"
-                  :title="t('watchlist.collections.moveUp')"
-                  class="cursor-pointer w-7 h-7 rounded-md flex items-center justify-center text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-white/10 transition-colors disabled:opacity-25 disabled:cursor-default disabled:hover:bg-transparent"
-                >
-                  <Icon name="chevronUp" class="w-4 h-4" :sw="2.5" />
-                </button>
-                <button
-                  type="button"
-                  :disabled="i === draft.length - 1"
-                  @click="move(i, i + 1)"
-                  :title="t('watchlist.collections.moveDown')"
-                  class="cursor-pointer w-7 h-7 rounded-md flex items-center justify-center text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-white/10 transition-colors disabled:opacity-25 disabled:cursor-default disabled:hover:bg-transparent"
-                >
-                  <Icon name="chevronDown" class="w-4 h-4" :sw="2.5" />
-                </button>
-              </div>
-            </li>
-          </ul>
-        </template>
-
-        <template v-else>
-          <div class="glass rounded-2xl p-2 flex flex-col gap-2.5">
-            <div class="relative">
-              <Icon name="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500 pointer-events-none" />
-              <input
-                v-model="searchQuery"
-                type="text"
-                :placeholder="t('watchlist.header.search')"
-                autocomplete="off"
-                class="w-full pl-9 pr-8 py-1.5 text-sm bg-black/5 dark:bg-white/8 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-lg border border-transparent focus:border-indigo-500/50 focus:outline-none focus:bg-white dark:focus:bg-white/12 transition-all"
-              />
-              <button
-                v-if="searchQuery"
-                @click="searchQuery = ''"
-                class="cursor-pointer absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-              >
-                <Icon name="close" class="w-3.5 h-3.5" :sw="2.5" />
+            <Glyph name="menu" class="w-4 h-4 shrink-0 cursor-grab active:cursor-grabbing text-[var(--wl-text-2)]" />
+            <input
+              :value="i + 1"
+              type="number"
+              min="1"
+              :max="draft.length"
+              inputmode="numeric"
+              :title="t('watchlist.collections.positionHint')"
+              class="pos-input w-9 h-9 shrink-0 rounded-[10px] bg-[var(--wl-well)] text-center text-sm font-semibold tabular-nums outline-none focus:ring-2 focus:ring-[var(--wl-accent)]"
+              @change="moveTo(i, $event.target.value)"
+              @keydown.enter.prevent="$event.target.blur()"
+              @focus="$event.target.select()"
+            />
+            <div class="w-9 h-[54px] shrink-0 rounded-[6px] overflow-hidden bg-[var(--wl-well)] grid place-items-center">
+              <img v-if="item.posterUrl" :src="item.posterUrl" :alt="item.title" class="w-full h-full object-cover" />
+              <Glyph v-else :name="item.type === 'show' ? 'tv' : 'film'" class="w-4 h-4 text-[var(--wl-text-2)]" />
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="font-medium truncate">{{ item.title }}</p>
+              <p class="wl-sub truncate">{{ item.type === 'movie' ? t('watchlist.type.movie') : t('watchlist.type.show') }}<span v-if="item.year"> · {{ item.year }}</span></p>
+            </div>
+            <div class="flex items-center shrink-0 gap-1">
+              <button type="button" :disabled="i === 0" :title="t('watchlist.collections.moveUp')" class="cursor-pointer w-8 h-8 rounded-full grid place-items-center bg-[var(--wl-well)] disabled:opacity-30 disabled:cursor-default" @click="move(i, i - 1)">
+                <Glyph name="chevronUp" :sw="2.5" class="w-4 h-4" />
+              </button>
+              <button type="button" :disabled="i === draft.length - 1" :title="t('watchlist.collections.moveDown')" class="cursor-pointer w-8 h-8 rounded-full grid place-items-center bg-[var(--wl-well)] disabled:opacity-30 disabled:cursor-default" @click="move(i, i + 1)">
+                <Glyph name="chevronDown" :sw="2.5" class="w-4 h-4" />
               </button>
             </div>
+          </li>
+        </ul>
+      </template>
 
-            <div class="h-px bg-black/[0.06] dark:bg-white/8 -mx-2" />
-
-            <div class="flex items-center gap-3">
-              <div class="min-w-0 flex-1 overflow-x-auto no-scrollbar">
-                <div class="inline-flex items-center gap-0.5 bg-black/[0.04] dark:bg-white/5 rounded-xl p-1">
-                  <button
-                    v-for="tab in STATUS_TABS"
-                    :key="tab.key"
-                    @click="activeStatus = tab.key"
-                    :class="[
-                      'cursor-pointer whitespace-nowrap px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all',
-                      activeStatus === tab.key ? 'bg-white dark:bg-white/15 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white',
-                    ]"
-                  >
-                    {{ tab.label }}
-                  </button>
-                </div>
-              </div>
-              <span class="hidden sm:block shrink-0 text-xs text-slate-400 dark:text-slate-500 tabular-nums pr-1">
-                {{ t('watchlist.list.showing', { shown: visible.length, total: items.length }) }}
-              </span>
-            </div>
-
-            <div class="h-px bg-black/[0.06] dark:bg-white/8 -mx-2" />
-
-            <div class="flex flex-col gap-2.5 lg:flex-row lg:items-center lg:justify-between">
-              <div class="flex items-center gap-2 self-start">
-                <div class="inline-flex items-center gap-0.5 bg-black/[0.04] dark:bg-white/5 rounded-xl p-1">
-                  <button
-                    v-for="tab in TYPE_TABS"
-                    :key="tab.key"
-                    @click="activeType = tab.key"
-                    :class="[
-                      'cursor-pointer whitespace-nowrap px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all',
-                      activeType === tab.key ? 'bg-white dark:bg-white/15 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white',
-                    ]"
-                  >
-                    {{ tab.label }}
-                  </button>
-                </div>
-                <button
-                  @click="onlyFavorite = !onlyFavorite"
-                  :title="t('watchlist.filter.favorites')"
-                  :class="[
-                    'nuc-fav nuc-press cursor-pointer inline-flex items-center gap-1.5 h-9 px-3 rounded-xl text-sm font-medium transition-colors',
-                    onlyFavorite ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400' : 'bg-black/[0.04] dark:bg-white/5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white',
-                  ]"
-                >
-                  <FavoriteHeart :active="onlyFavorite" class="w-4 h-4" />
-                  <span class="hidden sm:inline">{{ t('watchlist.filter.favorites') }}</span>
-                </button>
-              </div>
-
-              <div class="flex items-center h-9 bg-black/[0.05] dark:bg-white/5 rounded-lg p-1 gap-0.5 self-start">
-                <button @click="gridStyle = 'list'" :title="t('watchlist.list.viewList')" :class="['cursor-pointer h-full px-2.5 rounded-md inline-flex items-center transition-colors', gridStyle === 'list' ? 'text-indigo-600 dark:text-white bg-white dark:bg-white/15 shadow-sm' : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-white']">
-                  <ListIcon class="w-4 h-4" />
-                </button>
-                <button @click="gridStyle = 'big'" :title="t('watchlist.list.viewGrid2')" :class="['cursor-pointer h-full px-2.5 rounded-md inline-flex items-center transition-colors', gridStyle === 'big' ? 'text-indigo-600 dark:text-white bg-white dark:bg-white/15 shadow-sm' : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-white']">
-                  <ViewColumns2Icon class="w-4 h-4" />
-                </button>
-                <button @click="gridStyle = 'small'" :title="t('watchlist.list.viewGrid3')" :class="['cursor-pointer h-full px-2.5 rounded-md inline-flex items-center transition-colors', gridStyle === 'small' ? 'text-indigo-600 dark:text-white bg-white dark:bg-white/15 shadow-sm' : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-white']">
-                  <ViewColumns3Icon class="w-4 h-4" />
-                </button>
-              </div>
-            </div>
+      <template v-else-if="items.length">
+        <div class="max-w-3xl mx-auto flex flex-col gap-3 mb-5">
+          <div class="relative">
+            <Glyph name="magnifier" :sw="2.25" class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--wl-text-2)] pointer-events-none" />
+            <input v-model="searchQuery" type="search" autocomplete="off" :placeholder="t('watchlist.collections.searchItems')" class="wl-field !pl-10 [&::-webkit-search-cancel-button]:hidden" />
           </div>
-
-          <div v-if="!visible.length" class="text-center py-12 flex flex-col items-center gap-3">
-            <p class="text-sm text-slate-400 dark:text-slate-500">{{ t('watchlist.collections.noMatches') }}</p>
-            <button
-              v-if="filtersActive"
-              @click="clearFilters"
-              class="cursor-pointer text-sm text-indigo-600 dark:text-indigo-400 hover:underline"
-            >
-              {{ t('watchlist.collections.clearFilters') }}
-            </button>
+          <SegmentPills v-model="activeStatus" :items="STATUS_TABS" fill />
+          <div class="flex items-center gap-2">
+            <SegmentPills v-model="activeType" :items="TYPE_TABS" />
+            <div class="flex-1" />
+            <span class="hidden sm:block text-xs text-[var(--wl-text-2)] tabular-nums pr-1">{{ t('watchlist.list.showing', { shown: visible.length, total: items.length }) }}</span>
+            <GlassCircleButton :title="t('watchlist.filter.favorites')" :class="['nuc-fav', onlyFavorite ? '!text-rose-500' : '']" @click="onlyFavorite = !onlyFavorite">
+              <FavoriteHeart :active="onlyFavorite" class="w-[18px] h-[18px]" stroke-width="2" />
+            </GlassCircleButton>
+            <GlassCircleButton :icon="layoutGlyph" :title="t('watchlist.list.layout')" @click="openMenu($event, 'layout')" />
           </div>
+        </div>
 
-          <div v-else class="grid gap-3 nuc-stagger" :class="gridClass" style="--nuc-step: 32ms">
-            <ItemCard
-              v-for="item in visible"
-              :key="item._id"
-              :item="item"
-              :grid-style="gridStyle"
-              :collection-id="id"
-              @updated="reconcile"
-              @deleted="handleDeleted"
-              @edit="openEdit"
-              @manage-collections="openManage"
-            />
-          </div>
-        </template>
-      </main>
+        <EmptyState v-if="!visible.length" icon="magnifier" :message="t('watchlist.collections.noMatches')">
+          <button v-if="filtersActive" type="button" class="wl-btn wl-btn-secondary mt-2" @click="clearFilters">{{ t('watchlist.collections.clearFilters') }}</button>
+        </EmptyState>
 
-      <ItemFormModal
-        :show="showEditItem"
-        :initial="editingItem"
-        @close="showEditItem = false; editingItem = null"
-        @submit="submitEdit"
-        @deleted="handleDeleted"
-      />
-      <ManageCollectionsModal
-        :show="showManage"
-        :item="managingItem"
-        @close="showManage = false"
-        @updated="onManaged"
-      />
-      <CollectionFormModal
-        :show="showRename"
-        :initial="collection"
-        @close="showRename = false"
-        @submit="submitRename"
-      />
-      <AddItemsModal
-        :show="showAdd"
-        :collection-id="id"
-        :member-ids="items.map((i) => i._id)"
-        @close="showAdd = false"
-        @added="onItemsAdded"
-      />
-      <TemplateModal
-        :show="showDeleteCol"
-        :title="t('watchlist.collections.deleteTitle')"
-        :message="t('watchlist.collections.deleteMessage', { name: collection?.name })"
-        :confirm-label="t('watchlist.collections.delete')"
-        :busy="deletingBusy"
-        @confirm="confirmDeleteCol"
-        @cancel="showDeleteCol = false"
-      />
-    </div>
-  </div>
+        <div v-else :class="['grid nuc-stagger', gridClass]" style="--nuc-step: 28ms">
+          <ItemCard
+            v-for="item in visible"
+            :key="item._id"
+            :item="item"
+            :grid-style="gridStyle"
+            :collection-id="id"
+            @updated="reconcile"
+            @deleted="handleDeleted"
+            @edit="openEdit"
+            @manage-collections="openManage"
+          />
+        </div>
+      </template>
+    </template>
+  </PageShell>
+
+  <ItemFormModal
+    :show="showEditItem"
+    :initial="editingItem"
+    @close="showEditItem = false; editingItem = null"
+    @submit="submitEdit"
+    @deleted="handleDeleted"
+  />
+  <ManageCollectionsModal :show="showManage" :item="managingItem" @close="showManage = false" @updated="onManaged" />
+  <CollectionFormModal :show="showRename" :initial="collection" @close="showRename = false" @submit="submitRename" />
+  <AddItemsModal :show="showAdd" :collection-id="id" :member-ids="items.map((i) => i._id)" @close="showAdd = false" @added="onItemsAdded" />
+  <ContextMenu :show="menu.show" :x="menu.x" :y="menu.y" :items="menu.items" @close="menu.show = false" />
+  <TemplateModal
+    :show="showDeleteCol"
+    :title="t('watchlist.collections.deleteTitle')"
+    :message="t('watchlist.collections.deleteMessage', { name: collection?.name })"
+    :confirm-label="t('watchlist.collections.delete')"
+    :busy="deletingBusy"
+    @confirm="confirmDeleteCol"
+    @cancel="showDeleteCol = false"
+  />
 </template>
 
 <style scoped>

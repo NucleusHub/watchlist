@@ -1,31 +1,24 @@
 <script setup>
+// A title as a poster card, or as a list row in `list` layout (iOS ItemCard / ItemRow).
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import confetti from 'canvas-confetti'
 import { updateItem, deleteItem } from '@/api/watchlist.js'
-import { logoUrl } from '@/api/tmdb.js'
-import { showTotals, watchedFraction, remainingMinutes, formatRuntime, metaLine, markWatchedPatch } from '@/utils/progress.js'
+import { watchedFraction, metaLine, markWatchedPatch } from '@/utils/progress.js'
 import { itemRoute } from '@/utils/routes.js'
 import TemplateModal from '@core/TemplateModal.vue'
-import TrashIcon from '@core/TrashIcon.vue'
 import ContextMenu from '@core/ContextMenu.vue'
-import SeasonProgressModal from '@/components/SeasonProgressModal.vue'
-import RatingControl from '@/components/RatingControl.vue'
 import FavoriteHeart from '@core/FavoriteHeart.vue'
+import SeasonProgressModal from '@/components/SeasonProgressModal.vue'
 import { useI18n } from '@core/useI18n.js'
 import { useRegistry } from '@core/useRegistry.js'
 import { useOpenSettings } from '@/composables/useOpenSettings.js'
 import { useCollections } from '@/composables/useCollections.js'
 import { resolveTarget, buildOpenUrl } from '@/utils/openTarget.js'
 import { watchlistIndicators } from '@/utils/pluginIndicators.js'
-import { genrePillClass } from '@/utils/genres.js'
-import { Icon, ICONS } from '@core/icons'
-import ArchiveBoxIcon from '@/assets/icons/archive-box.svg?component'
-import ClockIcon from '@/assets/icons/clock.svg?component'
-import ListBulletIcon from '@/assets/icons/list-bullet.svg?component'
-import InfoCircleIcon from '@/assets/icons/info-circle.svg?component'
-import StarIcon from '@/assets/icons/star.svg?component'
-import CheckCircleIcon from '@/assets/icons/check-circle.svg?component'
+import { ICONS } from '@core/icons'
+import Glyph from '@/ui/Glyph.vue'
+import { STATUS_COLOR } from '@/ui/palette.js'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -40,88 +33,37 @@ const props = defineProps({
   gridStyle: { type: String, default: 'small' },
   collectionId: { type: String, default: null },
 })
-
-const isList    = computed(() => props.gridStyle === 'list')
-const isCompact = computed(() => props.gridStyle === 'list' || props.gridStyle === 'small')
 const emit = defineEmits(['updated', 'deleted', 'edit', 'manage-collections'])
 
-const STATUS_COLORS = {
-  planned:   'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300',
-  watching:  'bg-blue-100  dark:bg-blue-900  text-blue-700  dark:text-blue-300',
-  completed: 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300',
-}
-
-const TYPE_COLORS = {
-  movie: 'bg-purple-900 text-purple-300',
-  show: 'bg-amber-900 text-amber-300',
-}
-
-const CARD_GENRES = 2
-const cardGenres = computed(() => (props.item.genres ?? []).slice(0, CARD_GENRES))
-const extraGenres = computed(() => Math.max(0, (props.item.genres?.length ?? 0) - CARD_GENRES))
+const isList = computed(() => props.gridStyle === 'list')
+const compact = computed(() => props.gridStyle === 'small')
+const isShow = computed(() => props.item.type === 'show')
+const done = computed(() => props.item.status === 'completed')
+const fraction = computed(() => (isShow.value ? watchedFraction(props.item) : 0))
+const meta = computed(() => metaLine(props.item, t))
+const openUrl = computed(() => buildOpenUrl(resolveTarget(props.item, defaults), props.item))
+// TMDb serves smaller renditions; small cards and list thumbnails don't need the w500 poster.
+const poster = computed(() => {
+  const url = props.item.posterUrl
+  return url && props.gridStyle !== 'big' ? url.replace('/t/p/w500/', isList.value ? '/t/p/w154/' : '/t/p/w342/') : url
+})
 
 const cardRef = ref(null)
-const deleting = ref(false)
 const showConfirm = ref(false)
 const marking = ref(false)
 const showProgress = ref(false)
 
-const totals = computed(() => showTotals(props.item))
-const progressPct = computed(() => {
-  if (props.item.status === 'completed') return 100
-  return totals.value.totalEp ? Math.round((totals.value.watchedEp / totals.value.totalEp) * 100) : 0
-})
-const isShow = computed(() => props.item.type === 'show')
-const isPartial = computed(
-  () => props.item.status !== 'completed' && totals.value.watchedEp > 0 && totals.value.watchedEp < totals.value.totalEp
-)
-const remainingLabel = computed(() => {
-  if (!isPartial.value) return null
-  return t('watchlist.card.timeLeft', { time: formatRuntime(remainingMinutes(props.item)) })
-})
-
-const openUrl = computed(() => buildOpenUrl(resolveTarget(props.item, defaults), props.item))
-
-function openDetail() {
-  router.push(itemRoute(props.item._id))
-}
-
-function openPoster() {
-  if (openUrl.value) window.open(openUrl.value, '_blank', 'noopener,noreferrer')
-  else openDetail()
-}
-
-// Clicks on the card's own buttons and links keep their meaning.
-function onBodyClick(e) {
-  if (!e.target.closest('button, a')) openDetail()
-}
-
-function handleProgressUpdated(updated) {
-  emit('updated', updated)
-}
-
-const runtimeLabel = computed(() => (isShow.value ? null : formatRuntime(props.item.runtime)))
-
-const meta = computed(() => metaLine(props.item, t))
+const openDetail = () => router.push(itemRoute(props.item._id))
 
 async function toggleFavorite() {
-  const updated = await updateItem(props.item._id, { favorite: !props.item.favorite })
-  emit('updated', updated)
-}
-
-async function cycleStatus() {
-  const order = ['planned', 'watching', 'completed']
-  const next = order[(order.indexOf(props.item.status) + 1) % order.length]
-  const updated = await updateItem(props.item._id, { status: next })
-  emit('updated', updated)
+  emit('updated', await updateItem(props.item._id, { favorite: !props.item.favorite }))
 }
 
 async function markWatched() {
-  if (marking.value) return
+  if (marking.value || done.value) return
   marking.value = true
   try {
-    const updated = await updateItem(props.item._id, markWatchedPatch(props.item))
-    emit('updated', updated)
+    emit('updated', await updateItem(props.item._id, markWatchedPatch(props.item)))
     fireConfetti()
   } finally {
     marking.value = false
@@ -134,7 +76,6 @@ function fireConfetti() {
   const x = (rect.left + rect.width / 2) / window.innerWidth
   const y = (rect.top + rect.height / 2) / window.innerHeight
   const colors = ['#6366f1', '#a78bfa', '#34d399', '#fbbf24', '#f472b6']
-
   confetti({ particleCount: 70, spread: 80, origin: { x, y }, colors, scalar: 0.85, startVelocity: 30 })
   setTimeout(() => {
     confetti({ particleCount: 40, spread: 50, origin: { x, y: y - 0.04 }, colors, scalar: 0.65, startVelocity: 18, gravity: 0.6 })
@@ -143,14 +84,12 @@ function fireConfetti() {
 
 async function confirmDelete() {
   showConfirm.value = false
-  deleting.value = true
   await deleteItem(props.item._id)
   applyMembership(props.item.collectionIds || [], [])
   emit('deleted', props.item._id)
 }
 
 async function removeFromCollection() {
-  if (!props.collectionId) return
   const prev = props.item.collectionIds || []
   const next = prev.filter((id) => String(id) !== String(props.collectionId))
   const updated = await updateItem(props.item._id, { collectionIds: next })
@@ -159,226 +98,109 @@ async function removeFromCollection() {
 }
 
 const menu = ref({ show: false, x: 0, y: 0 })
-const menuItems = computed(() => {
-  const items = [
-    { label: t('watchlist.card.details'), icon: ICONS.eye, action: openDetail },
-    { label: t('watchlist.card.edit'), icon: ICONS.pencil, action: () => emit('edit', props.item) },
-    { label: t('watchlist.collections.manage'), icon: ICONS.folder, action: () => emit('manage-collections', props.item) },
-  ]
-  if (props.collectionId) {
-    items.push({ label: t('watchlist.collections.removeFromThis'), icon: ICONS.minus, action: removeFromCollection })
-  }
-  items.push(
-    { label: props.item.favorite ? t('watchlist.card.unfavorite') : t('watchlist.card.favorite'), iconHeart: true, iconActive: props.item.favorite, action: toggleFavorite },
-    { divider: true },
-    { label: t('watchlist.card.delete'), iconTrash: true, danger: true, action: () => (showConfirm.value = true) },
-  )
-  return items
-})
-function openMenu(e) {
-  menu.value = { show: true, x: e.clientX, y: e.clientY }
-}
+const menuItems = computed(() => [
+  { label: t('watchlist.card.details'), icon: ICONS.eye, action: openDetail },
+  ...(openUrl.value ? [{ label: t('watchlist.card.openExternal'), icon: ICONS.externalLink, action: () => window.open(openUrl.value, '_blank', 'noopener,noreferrer') }] : []),
+  { label: t('watchlist.card.edit'), icon: ICONS.pencil, action: () => emit('edit', props.item) },
+  ...(isShow.value ? [{ label: t('watchlist.card.trackEpisodes'), icon: ICONS.check, action: () => (showProgress.value = true) }] : []),
+  { label: t('watchlist.collections.manage'), icon: ICONS.folder, action: () => emit('manage-collections', props.item) },
+  ...(props.collectionId ? [{ label: t('watchlist.collections.removeFromThis'), icon: ICONS.minus, action: removeFromCollection }] : []),
+  { label: props.item.favorite ? t('watchlist.card.unfavorite') : t('watchlist.card.favorite'), iconHeart: true, iconActive: props.item.favorite, action: toggleFavorite },
+  { divider: true },
+  { label: t('watchlist.card.delete'), iconTrash: true, danger: true, action: () => (showConfirm.value = true) },
+])
+const openMenu = (e) => (menu.value = { show: true, x: e.clientX, y: e.clientY })
 </script>
 
 <template>
-  <div ref="cardRef" @contextmenu.prevent="openMenu" :class="['group h-full rounded-xl overflow-hidden flex transition-all duration-200 ease-out hover:-translate-y-0.5 backdrop-blur-sm shadow-sm', isList ? 'flex-row' : 'flex-col', item.status === 'completed' ? 'bg-green-50/80 dark:bg-green-900/20 ring-1 ring-inset ring-green-500/50 dark:ring-green-500/25 shadow-green-500/10' : item.status === 'watching' ? 'bg-blue-50/80 dark:bg-blue-900/20 ring-1 ring-inset ring-blue-500/50 dark:ring-blue-500/25 shadow-blue-500/10' : 'bg-white/70 dark:bg-slate-800/70 border border-white/60 dark:border-white/8 hover:bg-white/85 dark:hover:bg-slate-800/85 hover:shadow-md']">
-    <div
-      :class="['relative shrink-0 overflow-hidden bg-slate-100 dark:bg-slate-700/60', isList ? 'w-14 self-stretch' : 'w-full aspect-[2/3]', openUrl ? 'cursor-pointer group/poster' : '']"
-      @click="openPoster"
-      :title="openUrl ? t('watchlist.card.openExternal') : undefined"
-    >
-      <img v-if="item.posterUrl" :src="item.posterUrl" :alt="item.title" class="w-full h-full object-cover" />
-      <div v-else class="w-full h-full flex items-center justify-center">
-        <ArchiveBoxIcon class="w-8 h-8 text-slate-300 dark:text-slate-600" />
+  <!-- List layout: a glass row. -->
+  <div
+    v-if="isList"
+    ref="cardRef"
+    class="wl-row wl-surface rounded-[20px] !py-2.5 !px-3.5 cursor-pointer"
+    @click="openDetail"
+    @contextmenu.prevent="openMenu"
+  >
+    <div v-squircle class="relative w-[52px] h-[78px] shrink-0 rounded-[8px] overflow-hidden bg-[var(--wl-well)] grid place-items-center">
+      <img v-if="item.posterUrl" :src="poster" :alt="item.title" loading="lazy" decoding="async" class="w-full h-full object-cover" />
+      <Glyph v-else :name="isShow ? 'tv' : 'film'" :sw="1.25" class="w-6 h-6 text-[var(--wl-text-2)]" />
+    </div>
+    <div class="min-w-0 flex-1 flex flex-col gap-1">
+      <h3 :class="['font-semibold leading-snug line-clamp-2', done ? 'text-[var(--wl-text-2)]' : '']">{{ item.title }}</h3>
+      <p v-if="meta" class="wl-sub truncate">{{ meta }}</p>
+      <div class="flex items-center gap-1.5 flex-wrap">
+        <span class="wl-tag"><span class="w-1.5 h-1.5 rounded-full" :style="{ background: STATUS_COLOR[item.status] }" />{{ t('watchlist.status.' + item.status) }}</span>
+        <span v-if="item.genres?.[0]" class="wl-tag">{{ item.genres[0] }}</span>
+        <span v-if="item.rating" class="wl-tag text-amber-500">★ {{ item.rating }}</span>
       </div>
-
-      <div v-if="indicators.length" class="absolute bottom-1.5 right-1.5 z-20 hidden sm:flex">
-        <component
-          v-for="ind in indicators"
-          :key="ind.pluginId"
-          :is="ind.component"
-          :item="item"
-          variant="overlay"
-        />
-      </div>
-
-      <div
-        v-if="openUrl"
-        class="pointer-events-none absolute inset-0 hidden sm:flex items-center justify-center bg-black/0 group-hover/poster:bg-black/30 transition-colors"
-      >
-        <Icon name="externalLink" class="w-5 h-5 text-white opacity-0 group-hover/poster:opacity-100 transition-opacity drop-shadow" />
-      </div>
-
+    </div>
+    <div class="flex flex-col gap-2 shrink-0">
       <button
-        v-if="item.status === 'planned'"
-        @click.stop="markWatched"
-        :disabled="marking"
-        :title="t('watchlist.card.markWatched')"
-        class="cursor-pointer watched-btn absolute top-2 left-2 w-7 h-7 rounded-full border-2 border-white/60 bg-black/40 backdrop-blur-sm flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-200 hover:border-white hover:bg-black/60 hover:scale-110 disabled:cursor-wait"
-      >
-        <Icon name="checkBold" class="w-3.5 h-3.5 text-white/80" :sw="3" />
-      </button>
-
-      <button
-        v-else-if="item.status === 'watching'"
-        @click.stop="markWatched"
-        :disabled="marking"
-        :title="t('watchlist.card.markWatched')"
-        class="cursor-pointer watched-btn absolute top-2 left-2 w-7 h-7 rounded-full bg-blue-500 shadow-md flex items-center justify-center transition-all duration-200 hover:bg-green-500 hover:scale-110 disabled:cursor-wait group/clock"
-      >
-        <ClockIcon class="w-3.5 h-3.5 text-white group-hover/clock:hidden" />
-        <Icon name="checkBold" class="w-3.5 h-3.5 text-white hidden group-hover/clock:block" :sw="3" />
-      </button>
-
-      <div
-        v-else
-        class="absolute top-2 left-2 w-7 h-7 rounded-full bg-green-500 flex items-center justify-center shadow-md"
-      >
-        <Icon name="checkBold" class="w-3.5 h-3.5 text-white" :sw="3" />
-      </div>
-
-      <button
-        v-if="isShow"
-        @click.stop="showProgress = true"
-        :title="t('watchlist.card.trackEpisodes')"
-        class="cursor-pointer watched-btn absolute top-10 left-2 w-7 h-7 rounded-full border-2 border-white/60 bg-black/40 backdrop-blur-sm flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 hover:border-white hover:bg-black/60 hover:scale-110"
-      >
-        <ListBulletIcon class="w-3.5 h-3.5 text-white/80" />
-      </button>
-
-      <a
-        v-if="item.streamingLogo"
-        :href="item.watchLink || undefined"
-        :target="item.watchLink ? '_blank' : undefined"
-        :rel="item.watchLink ? 'noopener noreferrer' : undefined"
-        class="absolute bottom-1.5 left-1.5"
-        :class="item.watchLink ? 'cursor-pointer' : 'cursor-default'"
-        @click.stop
-      >
-        <img :src="logoUrl(item.streamingLogo)" :alt="item.streamingProvider" class="w-6 h-6 rounded-md object-cover shadow-md" />
-      </a>
-
-      <button
-        @click.stop="toggleFavorite"
-        :title="item.favorite ? t('watchlist.card.unfavorite') : t('watchlist.card.favorite')"
-        class="nuc-fav nuc-press cursor-pointer absolute top-2 right-2 w-7 h-7 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-200 hover:bg-black/60 hover:scale-110"
-        :class="{ '!opacity-100': item.favorite }"
-      >
-        <FavoriteHeart :active="item.favorite" class="w-4 h-4 text-white/80" />
-      </button>
-
-      <button
-        v-if="!isList"
         type="button"
-        @click.stop="openDetail"
-        :title="t('watchlist.card.details')"
-        class="sm:hidden nuc-press cursor-pointer absolute bottom-1.5 right-1.5 w-7 h-7 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-white/80 transition-all duration-200 hover:bg-black/60 hover:scale-110"
+        :disabled="marking"
+        :title="done ? t('watchlist.detail.watched') : t('watchlist.card.markWatched')"
+        class="nuc-press cursor-pointer w-7 h-7 rounded-full grid place-items-center"
+        :style="done ? { background: STATUS_COLOR.completed } : item.status === 'watching' ? { background: STATUS_COLOR.watching } : { boxShadow: 'inset 0 0 0 1.6px var(--wl-text-2)' }"
+        @click.stop="markWatched"
       >
-        <InfoCircleIcon class="w-4 h-4" />
+        <Glyph v-if="done" name="checkBold" :sw="3" class="w-3.5 h-3.5 text-white" />
+        <Glyph v-else-if="item.status === 'watching'" name="clock" :sw="2.25" class="w-3.5 h-3.5 text-white" />
+      </button>
+      <button
+        type="button"
+        :title="item.favorite ? t('watchlist.card.unfavorite') : t('watchlist.card.favorite')"
+        :class="['nuc-fav nuc-press cursor-pointer w-7 h-7 rounded-full grid place-items-center', item.favorite ? 'text-rose-500' : 'text-[var(--wl-text-2)]']"
+        @click.stop="toggleFavorite"
+      >
+        <FavoriteHeart :active="item.favorite" class="w-[18px] h-[18px]" />
       </button>
     </div>
+  </div>
 
-    <div @click="onBodyClick" :class="['flex-1 flex flex-col min-w-0 cursor-pointer', isList ? 'p-2 gap-0.5' : isCompact ? 'p-3 gap-1' : 'p-4 gap-1.5']">
-      <div class="flex items-start justify-between gap-1.5">
-        <h3
-          :class="['font-semibold text-slate-900 dark:text-white text-sm leading-tight', !isList ? 'line-clamp-2 sm:line-clamp-none' : '', 'hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors']"
-        >{{ item.title }}</h3>
-        <div :class="['gap-0.5 shrink-0', isList ? 'flex' : 'hidden sm:flex']">
-          <button
-            @click="$emit('edit', item)"
-            class="nuc-press cursor-pointer text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors p-1 rounded"
-            :title="t('watchlist.card.edit')"
-          >
-            <Icon name="edit" class="w-3.5 h-3.5" />
-          </button>
-          <button
-            @click="showConfirm = true"
-            :disabled="deleting"
-            class="nuc-trash nuc-press cursor-pointer text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 transition-colors p-1 rounded disabled:opacity-40 disabled:cursor-default"
-            :title="t('watchlist.card.delete')"
-          >
-            <TrashIcon class="w-3.5 h-3.5" stroke-width="2" />
-          </button>
-        </div>
+  <!-- Grid layouts: the poster with its buttons, the title under it. -->
+  <div v-else ref="cardRef" class="group flex flex-col gap-2 cursor-pointer" @click="openDetail" @contextmenu.prevent="openMenu">
+    <div
+      :class="['relative aspect-[2/3] shadow-[0_8px_20px_-8px_rgb(0_0_0/0.45)] transition-transform duration-300 group-hover:-translate-y-1', compact ? 'rounded-[14px]' : 'rounded-[18px]']"
+    >
+      <div v-squircle :class="['absolute inset-0 overflow-hidden bg-[var(--wl-well)] grid place-items-center', compact ? 'rounded-[14px]' : 'rounded-[18px]']">
+        <img v-if="item.posterUrl" :src="poster" :alt="item.title" loading="lazy" decoding="async" class="w-full h-full object-cover" />
+        <Glyph v-else :name="isShow ? 'tv' : 'film'" :sw="1" class="w-9 h-9 text-[var(--wl-text-2)]" />
       </div>
 
-      <div v-if="meta || item.tmdbRating" :class="['items-start gap-1.5', isList ? 'flex' : 'hidden sm:flex']">
-        <p v-if="meta" class="min-w-0 flex-1 text-xs text-slate-400 dark:text-slate-500 leading-snug line-clamp-2">{{ meta }}</p>
-        <div v-if="item.tmdbRating" class="shrink-0 flex items-center gap-0.5 text-xs text-amber-400 mt-px">
-          <StarIcon class="w-3 h-3 fill-current" />
-          {{ item.tmdbRating }}
-        </div>
+      <button
+        type="button"
+        :disabled="marking"
+        :title="done ? t('watchlist.detail.watched') : t('watchlist.card.markWatched')"
+        :class="['absolute rounded-full grid place-items-center nuc-press cursor-pointer transition-transform hover:scale-110', compact ? 'top-1.5 left-1.5 w-[26px] h-[26px]' : 'top-2 left-2 w-[30px] h-[30px]']"
+        :style="done ? { background: STATUS_COLOR.completed } : item.status === 'watching' ? { background: STATUS_COLOR.watching + 'e6' } : { background: 'rgb(0 0 0 / 0.35)', boxShadow: 'inset 0 0 0 1.6px rgb(255 255 255 / 0.85)' }"
+        @click.stop="markWatched"
+      >
+        <Glyph v-if="done" name="checkBold" :sw="3.25" class="w-[45%] h-[45%] text-white" />
+        <Glyph v-else-if="item.status === 'watching'" name="clock" :sw="2.25" class="w-[50%] h-[50%] text-white" />
+      </button>
+
+      <button
+        v-if="item.favorite || !compact"
+        type="button"
+        :title="item.favorite ? t('watchlist.card.unfavorite') : t('watchlist.card.favorite')"
+        :class="['nuc-fav absolute rounded-full grid place-items-center bg-black/35 text-white nuc-press cursor-pointer transition-transform hover:scale-110', compact ? 'top-1.5 right-1.5 w-[26px] h-[26px]' : 'top-2 right-2 w-[30px] h-[30px]']"
+        @click.stop="toggleFavorite"
+      >
+        <FavoriteHeart :active="item.favorite" class="w-[60%] h-[60%]" stroke-width="2" />
+      </button>
+
+      <div v-if="indicators.length" class="absolute bottom-2 right-2 hidden sm:flex" @click.stop>
+        <component :is="ind.component" v-for="ind in indicators" :key="ind.pluginId" :item="item" variant="overlay" />
       </div>
 
-      <p v-if="!isList && runtimeLabel" class="sm:hidden text-xs text-slate-400 dark:text-slate-500">{{ runtimeLabel }}</p>
-
-      <p v-if="item.notes && !isCompact" class="hidden sm:block text-xs text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-2">{{ item.notes }}</p>
-
-      <div :class="['mt-auto flex flex-col', isList ? 'gap-1 pt-1' : isCompact ? 'gap-1.5 pt-1.5' : 'gap-2 pt-2']">
-        <template v-if="isShow">
-          <button
-            v-if="totals.totalEp > 0"
-            @click.stop="showProgress = true"
-            :title="t('watchlist.card.trackProgressCount', { watched: totals.watchedEp, total: totals.totalEp })"
-            class="cursor-pointer group/prog flex flex-col gap-1 w-full text-left"
-          >
-            <div v-if="!isList" :class="['items-center justify-between gap-2 text-xs min-w-0', 'hidden sm:flex']">
-              <span class="min-w-0 truncate text-slate-500 dark:text-slate-400">{{ t('watchlist.card.episodeProgress', { watched: item.status === 'completed' ? totals.totalEp : totals.watchedEp, total: totals.totalEp }) }}</span>
-              <span v-if="remainingLabel" class="shrink-0 text-slate-400 dark:text-slate-500">{{ remainingLabel }}</span>
-            </div>
-            <div class="h-1.5 bg-slate-200/80 dark:bg-slate-700/80 rounded-full overflow-hidden">
-              <div
-                class="h-full rounded-full transition-all duration-300"
-                :class="item.status === 'completed' ? 'bg-green-500' : 'bg-indigo-500 group-hover/prog:bg-indigo-400'"
-                :style="{ width: `${progressPct}%` }"
-              />
-            </div>
-          </button>
-          <button
-            v-else
-            @click.stop="showProgress = true"
-            class="cursor-pointer self-start flex items-center gap-1 text-xs text-slate-400 dark:text-slate-500 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors"
-          >
-            <CheckCircleIcon class="w-3.5 h-3.5" />
-            {{ t('watchlist.card.trackProgress') }}
-          </button>
-        </template>
-
-        <div :class="['items-center gap-1.5 flex-wrap', isList ? 'flex' : 'hidden sm:flex']">
-          <span :class="['shrink-0 text-xs font-medium px-2 py-0.5 rounded-full', TYPE_COLORS[item.type]]">
-            {{ item.type === 'movie' ? t('watchlist.type.movie') : t('watchlist.type.show') }}
-          </span>
-          <button
-            @click="cycleStatus"
-            :class="['shrink-0 cursor-pointer text-xs font-medium px-2 py-0.5 rounded-full transition-opacity hover:opacity-80', STATUS_COLORS[item.status]]"
-            :title="t('watchlist.card.cycleStatus')"
-          >
-            {{ t('watchlist.status.' + item.status) }}
-          </button>
-          <template v-if="gridStyle !== 'small'">
-            <span
-              v-for="g in cardGenres"
-              :key="g"
-              :class="['shrink-0 text-xs font-medium px-2 py-0.5 rounded-full', genrePillClass(g)]"
-            >
-              {{ g }}
-            </span>
-            <span v-if="extraGenres" class="shrink-0 text-xs text-slate-400 dark:text-slate-500">+{{ extraGenres }}</span>
-          </template>
-          <RatingControl
-            v-if="item.rating && !isCompact"
-            :model-value="item.rating"
-            :max="10"
-            readonly
-            size="sm"
-            :show-value="false"
-            class="ml-auto"
-          />
-          <span v-else-if="item.rating" class="text-xs text-amber-400 font-medium ml-auto">
-            ★ {{ item.rating }}/10
-          </span>
-        </div>
+      <div v-if="fraction > 0 && fraction < 1" class="absolute inset-x-2.5 bottom-2.5 h-1 rounded-full bg-white/25 overflow-hidden">
+        <div class="h-full rounded-full" :style="{ width: `${fraction * 100}%`, background: STATUS_COLOR.watching }" />
       </div>
+    </div>
+
+    <div class="px-0.5 flex flex-col gap-0.5">
+      <h3 :class="['font-semibold leading-snug line-clamp-2', compact ? 'text-[13px]' : 'text-[15px]', done ? 'text-[var(--wl-text-2)]' : '']">{{ item.title }}</h3>
+      <p v-if="meta" :class="['text-[var(--wl-text-2)] truncate', compact ? 'text-[11px]' : 'text-xs']">{{ meta }}</p>
     </div>
   </div>
 
@@ -391,23 +213,7 @@ function openMenu(e) {
     @cancel="showConfirm = false"
   />
 
-  <SeasonProgressModal
-    v-if="isShow"
-    :show="showProgress"
-    :item="item"
-    @close="showProgress = false"
-    @updated="handleProgressUpdated"
-  />
+  <SeasonProgressModal v-if="isShow" :show="showProgress" :item="item" @close="showProgress = false" @updated="emit('updated', $event)" />
 
   <ContextMenu :show="menu.show" :x="menu.x" :y="menu.y" :items="menuItems" @close="menu.show = false" />
 </template>
-
-<style scoped>
-.watched-btn {
-  transition: opacity 0.2s ease, transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
-}
-
-.watched-btn:active {
-  transform: scale(0.9);
-}
-</style>
