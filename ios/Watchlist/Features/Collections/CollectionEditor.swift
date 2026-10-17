@@ -98,7 +98,7 @@ struct CollectionEditor: View {
                                     } label: {
                                         Poster(url: item.posterUrl, type: item.type, cornerRadius: 8)
                                             .frame(width: 60, height: 90)
-                                            .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(on ? Nucleus.accent : .clear, lineWidth: 3))
+                                            .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(on ? Nucleus.accent : .clear, lineWidth: 3))
                                             .overlay(alignment: .topTrailing) {
                                                 if on {
                                                     Image(systemName: "checkmark.circle.fill").foregroundStyle(.white, Nucleus.accent).padding(4)

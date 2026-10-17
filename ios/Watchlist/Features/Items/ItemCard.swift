@@ -62,7 +62,7 @@ struct ItemCard: View {
     }
 }
 
-/// A title as a list row, with native swipe actions.
+/// A title as a glass card row, with the shared Nucleus swipe actions.
 struct ItemRow: View {
     let item: Item
     var collectionID: String? = nil
@@ -99,27 +99,22 @@ struct ItemRow: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(NucleusRowButtonStyle())
+        .nucleusSwipeActions(
+            leading: item.isCompleted
+                ? NucleusSwipeAction("Favorite", icon: item.favorite ? "heart.slash.fill" : "heart.fill", tint: Color(hex: 0xF43F5E)) { store.toggleFavorite(item.id) }
+                : NucleusSwipeAction("Watched", icon: "checkmark", tint: WatchStatus.completed.color) { Haptics.success(); store.markWatched(item.id) },
+            trailing: .delete { confirmingDelete = true }
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .nucleusGlass(cornerRadius: 20)
         .contextMenu {
             ItemMenu(item: item, collectionID: collectionID) { confirmingDelete = true }
-        }
-        .swipeActions(edge: .leading, allowsFullSwipe: true) {
-            if item.isCompleted {
-                Button { store.toggleFavorite(item.id) } label: { Label("Favorite", systemImage: item.favorite ? "heart.slash" : "heart.fill") }
-                    .tint(Color(hex: 0xF43F5E))
-            } else {
-                Button { Haptics.success(); store.markWatched(item.id) } label: { Label("Watched", systemImage: "checkmark") }
-                    .tint(WatchStatus.completed.color)
-            }
-        }
-        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-            Button { confirmingDelete = true } label: { Label("Delete", systemImage: "trash") }
-                .tint(.red)
         }
         .modifier(DeleteItemDialog(item: item, isPresented: $confirmingDelete))
     }
 }
 
-/// Titles in the chosen layout: a native list (swipe actions) or a poster grid.
+/// Titles in the chosen layout: a list of swipeable rows or a poster grid.
 struct ItemGrid<Header: View>: View {
     let items: [Item]
     let style: GridStyle
@@ -136,7 +131,7 @@ struct ItemGrid<Header: View>: View {
                 ForEach(items) { item in
                     ItemRow(item: item, collectionID: collectionID)
                         .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
-                        .listRowBackground(Color.clear.nucleusGlass(cornerRadius: 20).padding(.horizontal, 16).padding(.vertical, 6))
+                        .listRowBackground(Color.clear)
                         .listRowSeparator(.hidden)
                 }
             }

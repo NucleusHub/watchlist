@@ -117,7 +117,7 @@ struct Poster: View {
                 }
             }
         }
-        .clipShape(RoundedRectangle(cornerRadius: 4))
+        .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
     }
 }
 

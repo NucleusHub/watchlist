@@ -221,7 +221,7 @@ struct SearchResults: View {
                     ForEach(items) { item in
                         ItemRow(item: item)
                             .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
-                            .listRowBackground(Color.clear.nucleusGlass(cornerRadius: 20).padding(.horizontal, 16).padding(.vertical, 6))
+                            .listRowBackground(Color.clear)
                             .listRowSeparator(.hidden)
                     }
                 } header: { sectionHeader("Titles") }

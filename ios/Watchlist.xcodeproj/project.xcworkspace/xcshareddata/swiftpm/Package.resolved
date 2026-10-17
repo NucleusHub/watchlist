@@ -6,8 +6,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/NucleusHub/nucleus-native-ui",
       "state" : {
-        "revision" : "440dca36d8fe72a329f0a3f30ff5adede1de3824",
-        "version" : "0.3.0"
+        "revision" : "8271bf72a9e9be5dc6b79034a16deb47d783f065",
+        "version" : "0.5.0"
       }
     }
   ],

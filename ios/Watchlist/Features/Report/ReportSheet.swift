@@ -72,7 +72,7 @@ struct ReportSheet: View {
                             PhotosPicker(selection: $picks, maxSelectionCount: 4 - shots.count, matching: .screenshots) {
                                 Image(systemName: "plus").font(.system(size: 22, weight: .semibold)).foregroundStyle(Nucleus.accent)
                                     .frame(width: 70, height: 120)
-                                    .background(RoundedRectangle(cornerRadius: 10).strokeBorder(Nucleus.accent.opacity(0.4), style: StrokeStyle(lineWidth: 1.5, dash: [5, 4])))
+                                    .background(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(Nucleus.accent.opacity(0.4), style: StrokeStyle(lineWidth: 1.5, dash: [5, 4])))
                             }
                         }
                     }
