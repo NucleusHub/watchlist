@@ -20,7 +20,7 @@ import SegmentPills from '@/ui/SegmentPills.vue'
 import GlassCircleButton from '@/ui/GlassCircleButton.vue'
 import Glyph from '@/ui/Glyph.vue'
 import EmptyState from '@/ui/EmptyState.vue'
-import { genreColor } from '@/ui/palette.js'
+import { genreColor, STATUS_COLOR } from '@/ui/palette.js'
 
 const { t } = useI18n()
 const { applyMembership } = useCollections()
@@ -99,6 +99,13 @@ function openMenu(e, kind) {
 }
 const layoutGlyph = computed(() => LAYOUTS.find((l) => l.key === gridStyle.value)?.glyph ?? 'grid3')
 const sortActive = computed(() => sortBy.value !== 'alphabetical' || sortDir.value !== 'asc')
+
+// How much of the library is watched, so the planned backlog has a sense of progress.
+const watchedProgress = computed(() => {
+  const all = items.value.filter((i) => activeType.value === 'all' || i.type === activeType.value)
+  const watched = all.filter((i) => i.status === 'completed').length
+  return { watched, total: all.length, percent: all.length ? (watched / all.length) * 100 : 0 }
+})
 
 const preGenre = computed(() =>
   items.value.filter((i) =>
@@ -232,6 +239,18 @@ watch(itemsVersion, load)
 
       <div class="max-w-3xl mx-auto flex flex-col gap-3 mb-5">
         <SegmentPills v-model="activeStatus" :items="STATUS_TABS" fill />
+
+        <div class="flex flex-col gap-1.5">
+          <span class="text-[13px] text-[var(--wl-text-2)] tabular-nums">
+            {{ t('watchlist.list.watchedOf', { watched: watchedProgress.watched, total: watchedProgress.total }) }}
+          </span>
+          <div class="h-1.5 rounded-full bg-[var(--wl-well)] overflow-hidden">
+            <div
+              class="h-full rounded-full transition-[width] duration-300"
+              :style="{ width: watchedProgress.percent + '%', background: STATUS_COLOR.planned }"
+            />
+          </div>
+        </div>
 
         <div class="flex items-center gap-2">
           <SegmentPills v-model="activeType" :items="TYPE_TABS" />

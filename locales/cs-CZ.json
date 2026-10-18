@@ -110,6 +110,7 @@
   "watchlist.open.cancel": "Zrušit",
 
   "watchlist.list.showing": "zobrazeno {shown} z {total}",
+  "watchlist.list.watchedOf": "zhlédnuto {watched} z {total}",
   "watchlist.list.viewList": "Seznam",
   "watchlist.list.viewGrid2": "Mřížka 2 sloupce",
   "watchlist.list.viewGrid3": "Mřížka 3 sloupce",

@@ -110,6 +110,7 @@
   "watchlist.open.cancel": "Cancel",
 
   "watchlist.list.showing": "showing {shown} of {total}",
+  "watchlist.list.watchedOf": "{watched} of {total} watched",
   "watchlist.list.viewList": "List",
   "watchlist.list.viewGrid2": "2-column grid",
   "watchlist.list.viewGrid3": "3-column grid",
