@@ -212,13 +212,19 @@ struct WatchlistTab: View {
         let done = all.filter(\.isCompleted).count
         let fraction = all.isEmpty ? 0 : Double(done) / Double(all.count)
         return VStack(alignment: .leading, spacing: 6) {
-            Text("\(done) of \(all.count) watched")
-                .font(.system(size: 13).monospacedDigit())
-                .foregroundStyle(Nucleus.secondaryText)
+            HStack {
+                Text("\(done) of \(all.count) watched")
+                Spacer()
+                Text(fraction, format: .percent.precision(.fractionLength(0)))
+                    .fontWeight(.semibold)
+                    .foregroundStyle(WatchStatus.completed.color)
+            }
+            .font(.system(size: 13).monospacedDigit())
+            .foregroundStyle(Nucleus.secondaryText)
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
                     Capsule().fill(Nucleus.well)
-                    Capsule().fill(WatchStatus.planned.color).frame(width: geo.size.width * fraction)
+                    Capsule().fill(WatchStatus.completed.color).frame(width: geo.size.width * fraction)
                 }
             }
             .frame(height: 6)
