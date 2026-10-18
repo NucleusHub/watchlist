@@ -141,6 +141,8 @@ struct WatchlistTab: View {
                 (nil, "All"), (.planned, "Planned"), (.watching, "Watching"), (.completed, "Watched"),
             ], fill: true)
 
+            plannedProgress
+
             HStack(spacing: 8) {
                 NucleusSegmented(selection: $filter.type, items: [(nil, "All"), (.movie, "Movies"), (.show, "Shows")])
                     .fixedSize()
@@ -202,6 +204,26 @@ struct WatchlistTab: View {
         .padding(.horizontal, 16)
         .padding(.top, 4)
         .padding(.bottom, 16)
+    }
+
+    /// How much of the library is watched, so the planned backlog has a sense of progress.
+    private var plannedProgress: some View {
+        let all = store.items.filter { filter.type == nil || $0.type == filter.type }
+        let done = all.filter(\.isCompleted).count
+        let fraction = all.isEmpty ? 0 : Double(done) / Double(all.count)
+        return VStack(alignment: .leading, spacing: 6) {
+            Text("\(done) of \(all.count) watched")
+                .font(.system(size: 13).monospacedDigit())
+                .foregroundStyle(Nucleus.secondaryText)
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    Capsule().fill(Nucleus.well)
+                    Capsule().fill(WatchStatus.planned.color).frame(width: geo.size.width * fraction)
+                }
+            }
+            .frame(height: 6)
+            .animation(NucleusMotion.quick, value: fraction)
+        }
     }
 
     private var layoutSymbol: String {
