@@ -22,7 +22,7 @@ import Glyph from '@/ui/Glyph.vue'
 import EmptyState from '@/ui/EmptyState.vue'
 import { genreColor, STATUS_COLOR } from '@/ui/palette.js'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const { applyMembership } = useCollections()
 const { isPluginEnabled } = useRegistry()
 const { placementOf } = useOpenSettings()
@@ -106,6 +106,9 @@ const watchedProgress = computed(() => {
   const watched = all.filter((i) => i.status === 'completed').length
   return { watched, total: all.length, percent: all.length ? (watched / all.length) * 100 : 0 }
 })
+const watchedPercentLabel = computed(() =>
+  new Intl.NumberFormat(locale.value, { style: 'percent', maximumFractionDigits: 0 }).format(watchedProgress.value.percent / 100)
+)
 
 const preGenre = computed(() =>
   items.value.filter((i) =>
@@ -241,13 +244,14 @@ watch(itemsVersion, load)
         <SegmentPills v-model="activeStatus" :items="STATUS_TABS" fill />
 
         <div class="flex flex-col gap-1.5">
-          <span class="text-[13px] text-[var(--wl-text-2)] tabular-nums">
-            {{ t('watchlist.list.watchedOf', { watched: watchedProgress.watched, total: watchedProgress.total }) }}
-          </span>
+          <div class="flex items-center justify-between text-[13px] text-[var(--wl-text-2)] tabular-nums">
+            <span>{{ t('watchlist.list.watchedOf', { watched: watchedProgress.watched, total: watchedProgress.total }) }}</span>
+            <span class="font-semibold" :style="{ color: STATUS_COLOR.completed }">{{ watchedPercentLabel }}</span>
+          </div>
           <div class="h-1.5 rounded-full bg-[var(--wl-well)] overflow-hidden">
             <div
               class="h-full rounded-full transition-[width] duration-300"
-              :style="{ width: watchedProgress.percent + '%', background: STATUS_COLOR.planned }"
+              :style="{ width: watchedProgress.percent + '%', background: STATUS_COLOR.completed }"
             />
           </div>
         </div>
