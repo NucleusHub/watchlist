@@ -33,7 +33,7 @@ struct TMDbSource: ItemSource {
 
     func search(_ query: String) async throws -> [SourceHit] {
         try await tmdb.search(query).map { r in
-            SourceHit(id: "tmdb:\(r.id)", sourceID: id, sourceName: name, title: r.title, detail: r.year, thumbnail: r.thumbURL,
+            SourceHit(id: "tmdb:\(r.type.rawValue):\(r.id)", sourceID: id, sourceName: name, title: r.title, detail: r.year, thumbnail: r.thumbURL,
                       type: r.type, payload: (try? JSONEncoder().encode(r)) ?? Data())
         }
     }
