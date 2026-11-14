@@ -48,6 +48,13 @@ export async function searchMulti(query) {
   return (data.results || []).filter((r) => r.media_type === 'movie' || r.media_type === 'tv')
 }
 
+// A bare TMDb id can be a movie or a show, so try both; missing ones are dropped.
+export async function findById(id) {
+  const hits = await Promise.all(['movie', 'tv'].map((type) =>
+    get(`/${type}/${id}`).then((d) => ({ ...d, media_type: type })).catch(() => null)))
+  return hits.filter(Boolean)
+}
+
 export async function fetchMovieDetail(id) {
   return get(`/movie/${id}`)
 }

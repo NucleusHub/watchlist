@@ -5,7 +5,7 @@
 //   search(q)     -> [{ key, title, subtitle, poster, type, _raw }]   (dropdown)
 //   toForm(r,ctx) -> partial form fields to merge (ctx.existing = current form)
 import {
-  searchMulti, fetchMovieDetail, fetchTvDetail, fetchWatchProviders, buildSeasonProgress,
+  searchMulti, findById, fetchMovieDetail, fetchTvDetail, fetchWatchProviders, buildSeasonProgress,
 } from './tmdb.js'
 import { genresFromTmdbDetail } from '@/utils/genres.js'
 
@@ -14,7 +14,9 @@ const tmdbSource = {
   label: 'TMDb',
 
   async search(q) {
-    const results = (await searchMulti(q)).slice(0, 7)
+    const isId = /^\d+$/.test(q.trim())
+    const [byId, byName] = await Promise.all([isId ? findById(q.trim()) : [], searchMulti(q)])
+    const results = [...byId, ...byName.filter((r) => !byId.some((h) => h.id === r.id && h.media_type === r.media_type))].slice(0, 7)
     return results.map((r) => {
       const isMovie = r.media_type === 'movie'
       const year = (isMovie ? r.release_date : r.first_air_date)?.slice(0, 4) || ''
