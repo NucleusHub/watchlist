@@ -21,7 +21,7 @@ const tmdbSource = {
       const isMovie = r.media_type === 'movie'
       const year = (isMovie ? r.release_date : r.first_air_date)?.slice(0, 4) || ''
       return {
-        key: `tmdb:${r.id}`,
+        key: `tmdb:${r.media_type}:${r.id}`,
         title: isMovie ? r.title : r.name,
         subtitle: year,
         poster: r.poster_path ? `https://image.tmdb.org/t/p/w92${r.poster_path}` : null,
