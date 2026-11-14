@@ -81,8 +81,25 @@ struct TMDb {
         }
     }
 
+    /// A bare TMDb id can be a movie or a show, so try both; missing ones are dropped.
+    func findById(_ id: Int) async -> [JSONValue] {
+        async let movie = try? get("/movie/\(id)")
+        async let tv = try? get("/tv/\(id)")
+        return await [(movie, "movie"), (tv, "tv")].compactMap { raw, type in
+            guard var o = raw?.object else { return nil }
+            o["media_type"] = .string(type)
+            return .object(o)
+        }
+    }
+
     func search(_ query: String) async throws -> [SearchResult] {
-        try await searchMulti(query).prefix(7).compactMap(Self.result)
+        let q = query.trimmingCharacters(in: .whitespaces)
+        async let byName = searchMulti(query)
+        var byId: [JSONValue] = []
+        if q.allSatisfy({ $0.isASCII && $0.isNumber }), let id = Int(q) { byId = await findById(id) }
+        let ids = byId.compactMap(Self.result)
+        let names = try await byName.compactMap(Self.result).filter { !ids.contains($0) }
+        return Array((ids + names).prefix(7))
     }
 
     static func result(_ raw: JSONValue) -> SearchResult? {
